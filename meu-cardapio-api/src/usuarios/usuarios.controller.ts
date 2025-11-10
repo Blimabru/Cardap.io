@@ -1,3 +1,23 @@
+/**
+ * ============================================================================
+ * USUARIOS.CONTROLLER.TS - CONTROLLER DE USUÁRIOS
+ * ============================================================================
+ * 
+ * Gerencia CRUD completo de usuários do sistema.
+ * 
+ * PERMISSÕES:
+ * - Criar/Atualizar/Deletar: Apenas Administrador
+ * - Listar: Administrador e Dono
+ * 
+ * FUNCIONALIDADES:
+ * - Criar usuário com qualquer perfil (Admin, Dono, Cliente)
+ * - Listar todos os usuários
+ * - Listar por perfil
+ * - Atualizar dados do usuário
+ * - Desativar/Reativar usuário (soft delete)
+ * - Deletar permanentemente
+ */
+
 import { 
   Controller, 
   Get, 
@@ -17,9 +37,7 @@ import { Perfis } from '../auth/decorators/perfis.decorator';
 
 /**
  * Controller de Usuários
- * 
- * Gerencia CRUD de usuários
- * Apenas Administradores têm acesso total
+ * Todas as rotas requerem autenticação JWT
  */
 @Controller('usuarios')
 @UseGuards(JwtAuthGuard, PerfisGuard)
@@ -28,7 +46,22 @@ export class UsuariosController {
 
   /**
    * POST /usuarios
-   * Cria novo usuário (apenas Admin)
+   * Cria novo usuário no sistema
+   * 
+   * PERMISSÕES: Apenas Administrador
+   * 
+   * DIFERENÇA DE /auth/registro:
+   * - /auth/registro: Qualquer pessoa cria conta Cliente (público)
+   * - /usuarios (esta rota): Admin cria usuário com qualquer perfil (protegido)
+   * 
+   * REQUEST:
+   * {
+   *   "nome_completo": "João Silva",
+   *   "email": "joao@email.com",
+   *   "senha": "senha123",
+   *   "telefone": "(11) 98765-4321",
+   *   "id_perfil": "uuid-do-perfil" // Admin, Dono ou Cliente
+   * }
    */
   @Post()
   @Perfis('Administrador')
@@ -38,7 +71,26 @@ export class UsuariosController {
 
   /**
    * GET /usuarios
-   * Lista todos os usuários (Admin e Dono)
+   * Lista todos os usuários do sistema
+   * 
+   * PERMISSÕES: Administrador e Dono
+   * 
+   * RESPONSE:
+   * [
+   *   {
+   *     "id": "uuid",
+   *     "nome_completo": "João Silva",
+   *     "email": "joao@email.com",
+   *     "telefone": "(11) 98765-4321",
+   *     "ativo": true,
+   *     "perfil": { "id": "uuid", "nome_perfil": "Cliente" },
+   *     "criado_em": "2025-11-10T...",
+   *     "atualizado_em": "2025-11-10T..."
+   *   },
+   *   ...
+   * ]
+   * 
+   * NOTA: Senha NUNCA é retornada
    */
   @Get()
   @Perfis('Administrador', 'Dono')
@@ -48,7 +100,14 @@ export class UsuariosController {
 
   /**
    * GET /usuarios/perfil/:nome_perfil
-   * Lista usuários por perfil (Admin e Dono)
+   * Lista usuários por perfil específico
+   * 
+   * PERMISSÕES: Administrador e Dono
+   * 
+   * EXEMPLOS:
+   * - GET /usuarios/perfil/Administrador
+   * - GET /usuarios/perfil/Dono
+   * - GET /usuarios/perfil/Cliente
    */
   @Get('perfil/:nome_perfil')
   @Perfis('Administrador', 'Dono')
@@ -58,7 +117,9 @@ export class UsuariosController {
 
   /**
    * GET /usuarios/:id
-   * Busca usuário por ID (Admin e Dono)
+   * Busca usuário específico por ID
+   * 
+   * PERMISSÕES: Administrador e Dono
    */
   @Get(':id')
   @Perfis('Administrador', 'Dono')
@@ -68,7 +129,23 @@ export class UsuariosController {
 
   /**
    * PUT /usuarios/:id
-   * Atualiza usuário (apenas Admin)
+   * Atualiza dados do usuário
+   * 
+   * PERMISSÕES: Apenas Administrador
+   * 
+   * REQUEST (todos campos opcionais):
+   * {
+   *   "nome_completo": "João Silva Junior",
+   *   "email": "novoemail@email.com",
+   *   "telefone": "(11) 99999-9999",
+   *   "senha": "novasenha123",
+   *   "id_perfil": "uuid-novo-perfil"
+   * }
+   * 
+   * COMPORTAMENTO:
+   * - Atualiza apenas campos fornecidos
+   * - Se senha fornecida, é hashada automaticamente
+   * - Se email alterado, valida se não está em uso
    */
   @Put(':id')
   @Perfis('Administrador')
@@ -81,7 +158,16 @@ export class UsuariosController {
 
   /**
    * PUT /usuarios/:id/desativar
-   * Desativa usuário (apenas Admin)
+   * Desativa usuário (soft delete)
+   * 
+   * PERMISSÕES: Apenas Administrador
+   * 
+   * COMPORTAMENTO:
+   * - Define campo ativo = false
+   * - Usuário NÃO é deletado do banco
+   * - Não consegue mais fazer login
+   * - Pode ser reativado com /reativar
+   * - Dados são preservados
    */
   @Put(':id/desativar')
   @Perfis('Administrador')
@@ -92,7 +178,13 @@ export class UsuariosController {
 
   /**
    * PUT /usuarios/:id/reativar
-   * Reativa usuário (apenas Admin)
+   * Reativa usuário previamente desativado
+   * 
+   * PERMISSÕES: Apenas Administrador
+   * 
+   * COMPORTAMENTO:
+   * - Define campo ativo = true
+   * - Usuário volta a conseguir fazer login
    */
   @Put(':id/reativar')
   @Perfis('Administrador')
@@ -103,7 +195,19 @@ export class UsuariosController {
 
   /**
    * DELETE /usuarios/:id
-   * Deleta usuário permanentemente (apenas Admin)
+   * Deleta usuário permanentemente do banco
+   * 
+   * PERMISSÕES: Apenas Administrador
+   * 
+   * COMPORTAMENTO:
+   * - Remove registro do banco de dados
+   * - AÇÃO IRREVERSÍVEL!
+   * - Pedidos do usuário são mantidos (integridade referencial)
+   * - Use com CUIDADO!
+   * 
+   * RECOMENDAÇÃO:
+   * - Prefira usar /desativar ao invés de deletar
+   * - Deletar apenas em casos excepcionais
    */
   @Delete(':id')
   @Perfis('Administrador')
@@ -113,4 +217,22 @@ export class UsuariosController {
   }
 }
 
-
+/**
+ * ============================================================================
+ * DIFERENÇAS: DESATIVAR vs DELETAR
+ * ============================================================================
+ * 
+ * DESATIVAR (/usuarios/:id/desativar):
+ * ✅ Usuário não consegue fazer login
+ * ✅ Dados são preservados
+ * ✅ Pode ser revertido (/reativar)
+ * ✅ Histórico mantido
+ * ✅ RECOMENDADO para maioria dos casos
+ * 
+ * DELETAR (/usuarios/:id):
+ * ❌ Usuário é removido permanentemente
+ * ❌ Dados são perdidos
+ * ❌ NÃO pode ser revertido
+ * ❌ Histórico parcialmente mantido (pedidos permanecem)
+ * ⚠️  Usar apenas em casos excepcionais
+ */

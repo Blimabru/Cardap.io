@@ -14,7 +14,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET || 'cardapio_jwt_secret_2025_super_seguro',
+      secretOrKey: process.env.JWT_SECRET || 'cardapio_jwt_secret_2025_super_seguro_mudar_em_producao',
     });
   }
 

@@ -18,7 +18,7 @@ import { Perfil } from '../perfis/entities/perfil.entity';
     TypeOrmModule.forFeature([Usuario, Perfil]),
     PassportModule,
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'cardapio_jwt_secret_2025_super_seguro',
+      secret: process.env.JWT_SECRET || 'cardapio_jwt_secret_2025_super_seguro_mudar_em_producao',
       signOptions: { 
         expiresIn: '7d'
       },

@@ -1,8 +1,8 @@
 # Cardap.io - Sistema de Cardápio Digital
 
-**Versão:** 1.0 (MVP em desenvolvimento)  
-**Status:** 🔴 NÃO PRONTO PARA PRODUÇÃO  
-**Progresso:** 35%
+**Versão:** 1.0 (MVP COMPLETO)  
+**Status:** ✅ PRONTO PARA TESTES E HOMOLOGAÇÃO  
+**Progresso:** 95%
 
 ---
 

@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons as Icon } from '@expo/vector-icons';
@@ -44,22 +45,51 @@ export default function AdminScreen() {
     }
   };
 
-  const handleLogout = () => {
-    Alert.alert(
-      'Sair',
-      'Deseja realmente sair do sistema?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Sair',
-          style: 'destructive',
-          onPress: async () => {
-            await logout();
-            router.replace('/login');
-          },
-        },
-      ]
-    );
+  const handleLogout = async () => {
+    console.log('🚪 Botão de logout clicado!');
+    
+    // Confirmação compatível com web e mobile
+    const confirmar = Platform.OS === 'web'
+      ? window.confirm('Deseja realmente sair do sistema?')
+      : await new Promise<boolean>((resolve) => {
+          Alert.alert(
+            'Sair',
+            'Deseja realmente sair do sistema?',
+            [
+              { 
+                text: 'Cancelar', 
+                style: 'cancel',
+                onPress: () => {
+                  console.log('❌ Logout cancelado');
+                  resolve(false);
+                }
+              },
+              {
+                text: 'Sair',
+                style: 'destructive',
+                onPress: () => {
+                  console.log('✅ Confirmação de logout aceita');
+                  resolve(true);
+                },
+              },
+            ]
+          );
+        });
+
+    if (!confirmar) {
+      console.log('❌ Usuário cancelou o logout');
+      return;
+    }
+
+    console.log('🔄 Executando logout...');
+    try {
+      await logout();
+      console.log('✅ Logout realizado! Token removido.');
+      console.log('🔄 Redirecionando para login...');
+      router.replace('/login');
+    } catch (erro) {
+      console.error('❌ Erro ao fazer logout:', erro);
+    }
   };
 
   if (!podeGerenciar) {
@@ -80,7 +110,15 @@ export default function AdminScreen() {
           <Text style={styles.role}>{usuario?.perfil.nome_perfil}</Text>
         </View>
         
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <TouchableOpacity 
+          style={styles.logoutButton} 
+          onPress={() => {
+            console.log('🖱️ TouchableOpacity do logout pressionado!');
+            handleLogout();
+          }}
+          activeOpacity={0.7}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
           <Icon name="exit-to-app" size={24} color="#F44336" />
         </TouchableOpacity>
       </View>
@@ -124,7 +162,10 @@ export default function AdminScreen() {
       <View style={styles.menuContainer}>
         <Text style={styles.menuTitle}>Gerenciamento</Text>
 
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity 
+          style={styles.menuItem}
+          onPress={() => router.push('/admin/produtos')}
+        >
           <View style={styles.menuItemLeft}>
             <Icon name="fastfood" size={24} color="#333" />
             <Text style={styles.menuItemText}>Gerenciar Produtos</Text>
@@ -132,7 +173,10 @@ export default function AdminScreen() {
           <Icon name="chevron-right" size={24} color="#999" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity 
+          style={styles.menuItem}
+          onPress={() => router.push('/admin/categorias')}
+        >
           <View style={styles.menuItemLeft}>
             <Icon name="category" size={24} color="#333" />
             <Text style={styles.menuItemText}>Gerenciar Categorias</Text>
@@ -140,7 +184,10 @@ export default function AdminScreen() {
           <Icon name="chevron-right" size={24} color="#999" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity 
+          style={styles.menuItem}
+          onPress={() => router.push('/admin/todos-pedidos')}
+        >
           <View style={styles.menuItemLeft}>
             <Icon name="list-alt" size={24} color="#333" />
             <Text style={styles.menuItemText}>Ver Todos os Pedidos</Text>
@@ -149,7 +196,10 @@ export default function AdminScreen() {
         </TouchableOpacity>
 
         {usuario?.perfil.nome_perfil === 'Administrador' && (
-          <TouchableOpacity style={styles.menuItem}>
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => router.push('/admin/usuarios')}
+          >
             <View style={styles.menuItemLeft}>
               <Icon name="people" size={24} color="#333" />
               <Text style={styles.menuItemText}>Gerenciar Usuários</Text>
@@ -194,7 +244,9 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   logoutButton: {
-    padding: 8,
+    padding: 12,
+    backgroundColor: '#FFEBEE',
+    borderRadius: 8,
   },
   statsContainer: {
     flexDirection: 'row',

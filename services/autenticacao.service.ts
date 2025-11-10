@@ -47,9 +47,14 @@ export const fazerRegistro = async (dados: DadosRegistro): Promise<RespostaAuten
  * Faz logout do usuário
  */
 export const fazerLogout = async (): Promise<void> => {
+  console.log('🔄 Service: Iniciando logout...');
+  console.log('🗑️ Removendo token do AsyncStorage...');
   await AsyncStorage.removeItem(CHAVE_TOKEN);
+  console.log('🗑️ Removendo usuário do AsyncStorage...');
   await AsyncStorage.removeItem(CHAVE_USUARIO);
+  console.log('🔐 Removendo token da memória...');
   definirToken(null);
+  console.log('✅ Service: Logout completo!');
 };
 
 /**

@@ -1,15 +1,15 @@
+import { MaterialIcons as Icon } from '@expo/vector-icons';
 import React from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
   Dimensions,
   Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { MaterialIcons as Icon } from '@expo/vector-icons';
 
-// 1. ATUALIZE O TIPO 'ItemData'
+
 type ItemData = {
   id: string;
   name: string;
@@ -19,7 +19,7 @@ type ItemData = {
     id: string;
     name: string;
   };
-  rating: string; // <-- Adicione esta linha de volta
+  rating: string; 
 };
 
 type ItemCardProps = {
@@ -60,9 +60,9 @@ const ItemCard = ({ item, onAddToCart }: ItemCardProps) => (
   </TouchableOpacity>
 );
 
-// 3. ADICIONE OS ESTILOS DE VOLTA
+
 const styles = StyleSheet.create({
-  // ... (outros estilos: itemCard, itemImage, itemInfo, etc.)
+  
   itemCard: {
     width: cardWidth,
     backgroundColor: '#FFFFFF',
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
     paddingTop: 5,
   },
 
-  // --- ADICIONE ESTES ESTILOS DE VOLTA ---
+  
   itemRatingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     color: '#555',
     marginLeft: 4,
   },
-  // --- FIM DOS ESTILOS ---
+  
 
   addButton: {
     backgroundColor: '#4CAF50',

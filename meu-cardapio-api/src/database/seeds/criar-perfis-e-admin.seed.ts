@@ -1,7 +1,7 @@
+import * as bcrypt from 'bcrypt';
 import { DataSource } from 'typeorm';
 import { Perfil } from '../../perfis/entities/perfil.entity';
 import { Usuario } from '../../usuarios/entities/usuario.entity';
-import * as bcrypt from 'bcrypt';
 
 /**
  * Seed para criar perfis padrão e usuário administrador

@@ -1,3 +1,18 @@
+/**
+ * ============================================================================
+ * CATEGORIES.CONTROLLER.TS - CONTROLLER DE CATEGORIAS
+ * ============================================================================
+ * 
+ * Gerencia CRUD de categorias de produtos.
+ * 
+ * PERMISSÕES:
+ * - GET: Público (qualquer pessoa)
+ * - POST/PUT/DELETE: Apenas Administrador e Dono
+ * 
+ * REGRA IMPORTANTE:
+ * - Não é possível deletar categoria se houver produtos associados
+ */
+
 import {
   Controller,
   Get,
@@ -18,9 +33,7 @@ import { Public } from '../auth/decorators/public.decorator';
 
 /**
  * Controller de Categorias
- * 
- * Gerencia CRUD de categorias
- * Leitura é pública, escrita apenas para Admin e Dono
+ * Gerencia CRUD de categorias de produtos
  */
 @Controller('categories')
 @UseGuards(JwtAuthGuard, PerfisGuard)
@@ -29,7 +42,12 @@ export class CategoriesController {
 
   /**
    * POST /categories
-   * Cria nova categoria (Admin e Dono)
+   * Cria nova categoria
+   * 
+   * PERMISSÕES: Admin e Dono
+   * 
+   * REQUEST: { "name": "Pizzas" }
+   * RESPONSE: { "id": "uuid", "name": "Pizzas", ... }
    */
   @Post()
   @Perfis('Administrador', 'Dono')
@@ -39,7 +57,10 @@ export class CategoriesController {
 
   /**
    * GET /categories
-   * Lista todas as categorias (público)
+   * Lista todas as categorias
+   * 
+   * PERMISSÕES: Público
+   * RESPONSE: [{ "id": "uuid", "name": "Pizzas" }, ...]
    */
   @Public()
   @Get()
@@ -49,7 +70,9 @@ export class CategoriesController {
 
   /**
    * GET /categories/:id
-   * Busca categoria por ID (público)
+   * Busca categoria por ID
+   * 
+   * PERMISSÕES: Público
    */
   @Public()
   @Get(':id')
@@ -59,7 +82,10 @@ export class CategoriesController {
 
   /**
    * PUT /categories/:id
-   * Atualiza categoria (Admin e Dono)
+   * Atualiza categoria
+   * 
+   * PERMISSÕES: Admin e Dono
+   * REQUEST: { "name": "Pizzas Artesanais" }
    */
   @Put(':id')
   @Perfis('Administrador', 'Dono')
@@ -69,7 +95,12 @@ export class CategoriesController {
 
   /**
    * DELETE /categories/:id
-   * Remove categoria (Admin e Dono)
+   * Remove categoria
+   * 
+   * PERMISSÕES: Admin e Dono
+   * 
+   * REGRA: Não pode deletar se houver produtos associados
+   * Erro 400: "Não é possível deletar categoria com produtos associados"
    */
   @Delete(':id')
   @Perfis('Administrador', 'Dono')

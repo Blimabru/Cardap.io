@@ -39,6 +39,9 @@ const configuracaoPadrao = (metodo: string, dados?: any): RequestInit => {
   // Adiciona token se existir
   if (tokenAtual) {
     (config.headers as Record<string, string>)['Authorization'] = `Bearer ${tokenAtual}`;
+    console.log('🔐 Token sendo enviado:', tokenAtual.substring(0, 20) + '...');
+  } else {
+    console.warn('⚠️ Requisição sem token!');
   }
 
   // Adiciona corpo se for POST/PUT

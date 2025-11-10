@@ -12,8 +12,14 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useCarrinho } from '../../contexts/CarrinhoContext';
 
 export default function TabLayout() {
-  const { podeGerenciar } = useAuth();
+  const { podeGerenciar, ehAdmin, ehDono, ehCliente } = useAuth();
   const { quantidadeTotal } = useCarrinho();
+
+  // Log de debug para verificar permissões
+  console.log('🔍 TabLayout - podeGerenciar:', podeGerenciar);
+  console.log('🔍 TabLayout - ehAdmin:', ehAdmin);
+  console.log('🔍 TabLayout - ehDono:', ehDono);
+  console.log('🔍 TabLayout - ehCliente:', ehCliente);
 
   return (
     <Tabs
@@ -38,6 +44,11 @@ export default function TabLayout() {
         },
       }}
     >
+      {/* ============================================================ */}
+      {/* TABS VISÍVEIS PARA TODOS OS USUÁRIOS                         */}
+      {/* ============================================================ */}
+
+      {/* Tab 1: Cardápio (todos podem ver) */}
       <Tabs.Screen
         name="index"
         options={{
@@ -49,6 +60,7 @@ export default function TabLayout() {
         }}
       />
       
+      {/* Tab 2: Carrinho (todos podem ver) */}
       <Tabs.Screen
         name="carrinho"
         options={{
@@ -67,6 +79,7 @@ export default function TabLayout() {
         }}
       />
 
+      {/* Tab 3: Pedidos (todos podem ver) */}
       <Tabs.Screen
         name="pedidos"
         options={{
@@ -78,19 +91,48 @@ export default function TabLayout() {
         }}
       />
 
-      {podeGerenciar && (
-        <Tabs.Screen
-          name="admin"
-          options={{
-            title: 'Admin',
-            headerTitle: 'Administração',
-            tabBarIcon: ({ color }) => (
-              <MaterialIcons name="admin-panel-settings" size={28} color={color} />
-            ),
-          }}
-        />
-      )}
+      {/* Tab 4: Perfil (todos podem ver) */}
+      <Tabs.Screen
+        name="perfil"
+        options={{
+          title: 'Perfil',
+          headerTitle: 'Meu Perfil',
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="person" size={28} color={color} />
+          ),
+        }}
+      />
 
+      {/* ============================================================ */}
+      {/* TAB ADMIN - CONDICIONAL COM HREF                             */}
+      {/* ============================================================ */}
+      {/* 
+        REGRA: Apenas Admin e Dono podem ver a tab Admin
+        
+        TÉCNICA: Usar href: null para OCULTAR completamente a tab
+        
+        SE podeGerenciar = true (Admin OU Dono):
+          → href = undefined → Tab Admin APARECE ✅
+        
+        SE podeGerenciar = false (Cliente):
+          → href = null → Tab Admin NÃO APARECE ❌
+      */}
+      <Tabs.Screen
+        name="admin"
+        options={{
+          title: 'Admin',
+          headerTitle: 'Administração',
+          // CHAVE: href: null REMOVE a tab completamente da navegação
+          // Se podeGerenciar = false → href: null → tab invisível
+          // Se podeGerenciar = true → href: undefined → tab visível
+          href: podeGerenciar ? undefined : null,
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="admin-panel-settings" size={28} color={color} />
+          ),
+        }}
+      />
+
+      {/* Tab explore (oculta - não implementada) */}
       <Tabs.Screen
         name="explore"
         options={{
