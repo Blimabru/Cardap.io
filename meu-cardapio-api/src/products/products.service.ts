@@ -63,11 +63,55 @@ export class ProductsService {
     return product;
   }
 
-  update(id: string, updateProductDto: UpdateProductDto) {
-    return `This action updates a #${id} product`;
+  /**
+   * Atualiza produto existente
+   * 
+   * @param id ID do produto
+   * @param updateProductDto Dados para atualizar
+   * @returns Produto atualizado
+   */
+  async update(id: string, updateProductDto: UpdateProductDto): Promise<Product> {
+    const product = await this.findOne(id);
+
+    if (!product) {
+      throw new NotFoundException(`Produto com ID ${id} não encontrado.`);
+    }
+
+    // Se está alterando a categoria
+    if (updateProductDto.categoryId) {
+      const category = await this.categoryRepository.findOneBy({ 
+        id: updateProductDto.categoryId 
+      });
+
+      if (!category) {
+        throw new NotFoundException(`Categoria com ID ${updateProductDto.categoryId} não encontrada.`);
+      }
+
+      product.category = category;
+    }
+
+    // Atualiza os campos do produto
+    if (updateProductDto.name) product.name = updateProductDto.name;
+    if (updateProductDto.description !== undefined) product.description = updateProductDto.description;
+    if (updateProductDto.price !== undefined) product.price = updateProductDto.price;
+    if (updateProductDto.imageUrl) product.imageUrl = updateProductDto.imageUrl;
+    if (updateProductDto.rating !== undefined) product.rating = updateProductDto.rating;
+
+    return this.productRepository.save(product);
   }
 
-  remove(id: string) {
-    return `This action removes a #${id} product`;
+  /**
+   * Remove produto
+   * 
+   * @param id ID do produto
+   */
+  async remove(id: string): Promise<void> {
+    const product = await this.findOne(id);
+    
+    if (!product) {
+      throw new NotFoundException(`Produto com ID ${id} não encontrado.`);
+    }
+    
+    await this.productRepository.remove(product);
   }
 }

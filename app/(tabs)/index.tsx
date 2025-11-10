@@ -6,59 +6,46 @@ import {
   SafeAreaView,
   StatusBar,
   StyleSheet,
-  Text, // Para mostrar "Carregando..."
+  Text,
   View,
+  TouchableOpacity,
+  Alert,
 } from 'react-native';
-
-// 1. Importe a URL da API
+import { MaterialIcons as Icon } from '@expo/vector-icons';
 import { API_URL } from '../../constants/api';
+import { useCarrinho } from '../../contexts/CarrinhoContext';
+import { Produto, Categoria } from '../../types';
 
-// 2. Importe os Componentes
+// Componentes
 import CategoryList from '../../components/CategoryList';
 import HomeHeader from '../../components/HomeHeader';
-import ItemCard from '../../components/ItemCard';
 import SearchBar from '../../components/SearchBar';
-
-// 3. Defina os Tipos de dados que vêm da API
-type Category = {
-  id: string;
-  name: string;
-};
-
-type Product = {
-  id: string;
-  name: string;
-  price: string; // Nosso backend definiu como 'decimal', mas o JSON o trata como string
-  imageUrl: string;
-  category: Category; // A API nos manda o objeto Categoria aninhado
-  rating: string;
-};
-
-// Componente para renderizar o cabeçalho completo da lista
-// Agora ele recebe as categorias do estado
-const renderListHeader = (categories: Category[]) => (
-  <>
-    <HomeHeader />
-    <SearchBar />
-    <CategoryList categories={categories} />
-    <Text style={styles.sectionTitle}>Itens</Text>
-  </>
-);
+import ItemCard from '../../components/ItemCard';
 
 const HomeScreen = () => {
-  // 4. Crie os Estados
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const { adicionarAoCarrinho } = useCarrinho();
+
+  const [products, setProducts] = useState<Produto[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Produto[]>([]);
+  const [categories, setCategories] = useState<Categoria[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  // 5. Crie a função para buscar os dados
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    filterProducts();
+  }, [searchQuery, selectedCategory, products]);
+
   const fetchData = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Busca produtos e categorias ao mesmo tempo
       const [productsResponse, categoriesResponse] = await Promise.all([
         fetch(`${API_URL}/products`),
         fetch(`${API_URL}/categories`),
@@ -73,6 +60,7 @@ const HomeScreen = () => {
 
       setProducts(productsData);
       setCategories(categoriesData);
+      setFilteredProducts(productsData);
     } catch (e) {
       if (e instanceof Error) {
         setError(e.message);
@@ -85,15 +73,69 @@ const HomeScreen = () => {
     }
   };
 
-  // 6. Use o useEffect para chamar a função quando a tela carregar
-  useEffect(() => {
-    fetchData();
-  }, []); // O array vazio [] faz isso rodar apenas uma vez
+  const filterProducts = () => {
+    let filtered = [...products];
 
-  // 7. Renderize o item da FlatList
-  const renderItem = ({ item }: { item: Product }) => <ItemCard item={item} />;
+    // Filtro por busca
+    if (searchQuery) {
+      filtered = filtered.filter((product) =>
+        product.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
 
-  // 8. Crie telas de "Loading" e "Erro"
+    // Filtro por categoria
+    if (selectedCategory) {
+      filtered = filtered.filter((product) => product.category.id === selectedCategory);
+    }
+
+    setFilteredProducts(filtered);
+  };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
+
+  const handleCategorySelect = (categoryId: string | null) => {
+    setSelectedCategory(categoryId);
+  };
+
+  const handleAddToCart = (product: Produto) => {
+    adicionarAoCarrinho(product, 1);
+    Alert.alert('Sucesso', `${product.name} adicionado ao carrinho!`);
+  };
+
+  const renderItem = ({ item }: { item: Produto }) => (
+    <ItemCard item={item} onAddToCart={() => handleAddToCart(item)} />
+  );
+
+  const renderListHeader = () => (
+    <>
+      <HomeHeader />
+      <SearchBar onSearch={handleSearch} />
+      <CategoryList 
+        categories={categories} 
+        selectedCategory={selectedCategory}
+        onSelectCategory={handleCategorySelect}
+      />
+      <View style={styles.titleContainer}>
+        <Text style={styles.sectionTitle}>
+          {selectedCategory ? 'Itens Filtrados' : 'Todos os Itens'}
+        </Text>
+        {(searchQuery || selectedCategory) && (
+          <TouchableOpacity
+            onPress={() => {
+              setSearchQuery('');
+              setSelectedCategory(null);
+            }}
+            style={styles.clearButton}
+          >
+            <Text style={styles.clearButtonText}>Limpar Filtros</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    </>
+  );
+
   if (loading) {
     return (
       <View style={styles.centerContainer}>
@@ -106,24 +148,32 @@ const HomeScreen = () => {
   if (error) {
     return (
       <View style={styles.centerContainer}>
-        <Text style={styles.errorText}>Erro ao carregar dados:</Text>
-        <Text style={styles.errorText}>{error}</Text>
+        <Icon name="error-outline" size={80} color="#F44336" />
+        <Text style={styles.errorText}>Erro ao carregar dados</Text>
+        <Text style={styles.errorSubtext}>{error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={fetchData}>
+          <Text style={styles.retryButtonText}>Tentar Novamente</Text>
+        </TouchableOpacity>
       </View>
     );
   }
 
-  // 9. Renderize o conteúdo principal
   return (
     <SafeAreaView style={styles.safeArea}>
       <FlatList
-        data={products} // Use o estado 'products'
+        data={filteredProducts}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         numColumns={2}
-        ListHeaderComponent={() => renderListHeader(categories)} // Passe o estado 'categories'
+        ListHeaderComponent={renderListHeader}
+        ListEmptyComponent={() => (
+          <View style={styles.emptyContainer}>
+            <Icon name="search-off" size={80} color="#DDD" />
+            <Text style={styles.emptyText}>Nenhum produto encontrado</Text>
+          </View>
+        )}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
-        // Adicione um "pull-to-refresh" (puxar para atualizar)
         onRefresh={fetchData}
         refreshing={loading}
       />
@@ -140,25 +190,69 @@ const styles = StyleSheet.create({
   listContainer: {
     paddingHorizontal: 10,
   },
+  titleContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    paddingBottom: 10,
+  },
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#333',
-    paddingHorizontal: 15,
-    paddingBottom: 10,
   },
-  // Estilos para Loading e Erro
+  clearButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: '#F0F0F0',
+    borderRadius: 6,
+  },
+  clearButtonText: {
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '600',
+  },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#fff',
+    padding: 32,
   },
   errorText: {
-    fontSize: 16,
-    color: 'red',
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
     textAlign: 'center',
-    padding: 10,
+    marginTop: 16,
+  },
+  errorSubtext: {
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  retryButton: {
+    marginTop: 24,
+    backgroundColor: '#333',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  emptyContainer: {
+    padding: 48,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#999',
+    marginTop: 16,
   },
 });
 

@@ -24,15 +24,14 @@ type ItemData = {
 
 type ItemCardProps = {
   item: ItemData;
+  onAddToCart?: () => void;
 };
 
-// ... (código da largura do card)
 const { width } = Dimensions.get('window');
 const cardWidth = (width - 20 - 10) / 2;
 
-const ItemCard = ({ item }: ItemCardProps) => (
+const ItemCard = ({ item, onAddToCart }: ItemCardProps) => (
   <TouchableOpacity style={styles.itemCard}>
-    {/* ... (Componente Image) ... */}
     <Image
       source={{ uri: item.imageUrl }}
       style={styles.itemImage}
@@ -44,17 +43,18 @@ const ItemCard = ({ item }: ItemCardProps) => (
       <Text style={styles.itemPrice}>R$ {item.price}</Text>
     </View>
 
-    {/* 2. REVERTA O 'itemFooter' PARA O ORIGINAL */}
     <View style={styles.itemFooter}>
       <View style={styles.itemRatingContainer}>
         <Icon name="star" size={14} color="#FFD700" />
-        {/* Usamos toFixed(1) para formatar (ex: 9.0) e trocamos . por , */}
         <Text style={styles.itemRating}>
           {parseFloat(item.rating).toFixed(1).replace('.', ',')}
         </Text>
       </View>
-      <TouchableOpacity style={styles.addButton}>
-        <Icon name="add" size={20} color="#333" />
+      <TouchableOpacity 
+        style={styles.addButton}
+        onPress={onAddToCart}
+      >
+        <Icon name="add" size={20} color="#FFF" />
       </TouchableOpacity>
     </View>
   </TouchableOpacity>
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
   // --- FIM DOS ESTILOS ---
 
   addButton: {
-    backgroundColor: '#E0E0E0',
+    backgroundColor: '#4CAF50',
     width: 28,
     height: 28,
     borderRadius: 14,

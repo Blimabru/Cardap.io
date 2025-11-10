@@ -30,13 +30,47 @@ export class CategoriesService {
     return this.categoryRepository.findOneBy({ id });
   }
 
-  update(id: string, updateCategoryDto: UpdateCategoryDto) {
-    // Implementação do Update (podemos fazer depois)
-    return `This action updates a #${id} category`;
+  /**
+   * Atualiza categoria existente
+   * 
+   * @param id ID da categoria
+   * @param updateCategoryDto Dados para atualizar
+   * @returns Categoria atualizada
+   */
+  async update(id: string, updateCategoryDto: UpdateCategoryDto): Promise<Category> {
+    const category = await this.findOne(id);
+    
+    if (!category) {
+      throw new Error(`Categoria com ID ${id} não encontrada`);
+    }
+
+    // Atualiza os campos
+    Object.assign(category, updateCategoryDto);
+    
+    return this.categoryRepository.save(category);
   }
 
-  remove(id: string) {
-    // Implementação do Remove (podemos fazer depois)
-    return `This action removes a #${id} category`;
+  /**
+   * Remove categoria
+   * Apenas se não tiver produtos associados
+   * 
+   * @param id ID da categoria
+   */
+  async remove(id: string): Promise<void> {
+    const category = await this.categoryRepository.findOne({
+      where: { id },
+      relations: ['products'],
+    });
+    
+    if (!category) {
+      throw new Error(`Categoria com ID ${id} não encontrada`);
+    }
+
+    // Verifica se tem produtos associados
+    if (category.products && category.products.length > 0) {
+      throw new Error(`Não é possível deletar categoria que possui produtos associados. Remova ou mova os produtos primeiro.`);
+    }
+
+    await this.categoryRepository.remove(category);
   }
 }

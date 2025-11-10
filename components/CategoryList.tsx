@@ -15,26 +15,44 @@ type Category = {
 
 type CategoryListProps = {
   categories: Category[];
+  selectedCategory?: string | null;
+  onSelectCategory?: (categoryId: string | null) => void;
 };
 
-const CategoryList = ({ categories }: CategoryListProps) => (
+const CategoryList = ({ categories, selectedCategory, onSelectCategory }: CategoryListProps) => (
   <View>
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
       style={styles.categoryScroll}
       contentContainerStyle={styles.categoryScrollContainer}>
-      {categories.map((category, index) => (
+      <TouchableOpacity
+        style={[
+          styles.categoryButton,
+          !selectedCategory ? styles.categoryButtonActive : null,
+        ]}
+        onPress={() => onSelectCategory && onSelectCategory(null)}>
+        <Text
+          style={[
+            styles.categoryText,
+            !selectedCategory ? styles.categoryTextActive : null,
+          ]}>
+          Todos
+        </Text>
+      </TouchableOpacity>
+
+      {categories.map((category) => (
         <TouchableOpacity
           key={category.id}
           style={[
             styles.categoryButton,
-            index === 0 ? styles.categoryButtonActive : null, // Destaca o primeiro
-          ]}>
+            selectedCategory === category.id ? styles.categoryButtonActive : null,
+          ]}
+          onPress={() => onSelectCategory && onSelectCategory(category.id)}>
           <Text
             style={[
               styles.categoryText,
-              index === 0 ? styles.categoryTextActive : null,
+              selectedCategory === category.id ? styles.categoryTextActive : null,
             ]}>
             {category.name}
           </Text>
