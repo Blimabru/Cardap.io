@@ -16,6 +16,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
@@ -77,7 +78,14 @@ export default function RegistroScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Text style={styles.logo}>Cardap.io</Text>
+          {/* Logo Cardap.io */}
+          <View style={styles.logoContainer}>
+            <Image
+              source={require('../../assets/images/Logo.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
+          </View>
           <Text style={styles.subtitle}>Crie sua conta gratuitamente</Text>
         </View>
 
@@ -183,12 +191,13 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: 32,
   },
-  logo: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
-    marginBottom: 8,
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  logoImage: {
+    width: 280,
+    height: 120,
   },
   subtitle: {
     fontSize: 16,

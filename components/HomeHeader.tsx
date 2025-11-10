@@ -11,11 +11,12 @@ const profileImageUrl = 'https://noticiasdatv.uol.com.br/media/_versions/everybo
 
 const HomeHeader = () => (
   <View style={styles.header}>
-    <View>
-      <Text style={styles.headerTitle}>Entregar em</Text>
-      <Text style={styles.headerSubtitle}>Rua Exemplo, 123</Text>
-    </View>
-    
+    {/* Logo Cardap.io no header */}
+    <Image
+      source={require('../assets/images/Logo.png')}
+      style={styles.logo}
+      resizeMode="contain"
+    />
     
     <Image
       source={{ uri: profileImageUrl }}
@@ -34,14 +35,9 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingBottom: 5,
   },
-  headerTitle: {
-    fontSize: 14,
-    color: '#888',
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+  logo: {
+    width: 180,
+    height: 60,
   },
   profileIcon: {
     width: 44,

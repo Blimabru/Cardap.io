@@ -15,6 +15,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
@@ -53,7 +54,14 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={styles.content}>
-        <Text style={styles.logo}>Cardap.io</Text>
+        {/* Logo Cardap.io */}
+        <View style={styles.logoContainer}>
+          <Image
+            source={require('../../assets/images/Logo.png')}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
+        </View>
         <Text style={styles.subtitle}>Faça login para continuar</Text>
 
         <View style={styles.form}>
@@ -124,12 +132,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     justifyContent: 'center',
   },
-  logo: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
-    marginBottom: 8,
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  logoImage: {
+    width: 280,
+    height: 120,
   },
   subtitle: {
     fontSize: 16,
