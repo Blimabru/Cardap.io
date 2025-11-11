@@ -60,40 +60,41 @@ const ItemCard = ({ item, onAddToCart }: ItemCardProps) => (
 
 const styles = StyleSheet.create({
   itemCard: {
-    // RESPONSIVO: Flex em vez de largura fixa
+    // MOBILE: Flex 1 para ocupar metade da tela (2 colunas)
+    // WEB: Largura fixa de 280px para cards consistentes
     flex: Platform.OS === 'web' ? 0 : 1,
-    // Na web: largura mínima de 250px e máxima de 300px
-    minWidth: Platform.OS === 'web' ? 250 : undefined,
-    maxWidth: Platform.OS === 'web' ? 300 : undefined,
-    // No mobile: flex 1 faz ocupar metade da tela (2 colunas)
+    width: Platform.OS === 'web' ? 280 : undefined,
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     marginBottom: 15,
-    marginHorizontal: Platform.OS === 'web' ? 10 : 5,
+    marginHorizontal: 5,
+    // Sombra mais suave
     elevation: 2,
     shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
   },
   itemImage: {
-    // Responsivo: altura proporcional à largura
-    height: Platform.OS === 'web' ? 180 : 110,
+    // Altura proporcional: Web maior, mobile menor
+    height: Platform.OS === 'web' ? 200 : 120,
     width: '100%',
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
     backgroundColor: '#E0E0E0',
   },
   itemInfo: {
-    padding: 10,
+    padding: Platform.OS === 'web' ? 15 : 10,
+    minHeight: Platform.OS === 'web' ? 80 : 60,
   },
   itemName: {
-    fontSize: 14,
+    fontSize: Platform.OS === 'web' ? 16 : 14,
     fontWeight: '600',
     color: '#333',
+    marginBottom: 4,
   },
   itemPrice: {
-    fontSize: 15,
+    fontSize: Platform.OS === 'web' ? 18 : 15,
     fontWeight: 'bold',
     color: '#333',
     marginTop: 4,
@@ -102,8 +103,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingBottom: 10,
+    paddingHorizontal: Platform.OS === 'web' ? 15 : 10,
+    paddingBottom: Platform.OS === 'web' ? 15 : 10,
     paddingTop: 5,
   },
 
@@ -122,11 +123,18 @@ const styles = StyleSheet.create({
 
   addButton: {
     backgroundColor: '#4CAF50',
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: Platform.OS === 'web' ? 36 : 28,
+    height: Platform.OS === 'web' ? 36 : 28,
+    borderRadius: Platform.OS === 'web' ? 18 : 14,
     justifyContent: 'center',
     alignItems: 'center',
+    // Web: hover effect (não funciona em mobile)
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+        transition: 'all 0.2s',
+      },
+    }),
   },
 });
 

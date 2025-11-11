@@ -105,14 +105,7 @@ const HomeScreen = () => {
   };
 
   const renderItem = ({ item }: { item: Produto }) => (
-    // Wrapper para controlar layout responsivo na web
-    Platform.OS === 'web' ? (
-      <View style={styles.webCardWrapper}>
-        <ItemCard item={item} onAddToCart={() => handleAddToCart(item)} />
-      </View>
-    ) : (
-      <ItemCard item={item} onAddToCart={() => handleAddToCart(item)} />
-    )
+    <ItemCard item={item} onAddToCart={() => handleAddToCart(item)} />
   );
 
   const renderListHeader = () => (
@@ -171,9 +164,9 @@ const HomeScreen = () => {
         data={filteredProducts}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
-        // RESPONSIVO: 2 colunas no mobile, layout flexível na web
-        numColumns={Platform.OS === 'web' ? undefined : 2}
-        key={Platform.OS === 'web' ? 'web' : 'mobile'}
+        // Mobile: 2 colunas fixas
+        numColumns={2}
+        key="two-columns"
         ListHeaderComponent={renderListHeader}
         ListEmptyComponent={() => (
           <View style={styles.emptyContainer}>
@@ -181,11 +174,8 @@ const HomeScreen = () => {
             <Text style={styles.emptyText}>Nenhum produto encontrado</Text>
           </View>
         )}
-        contentContainerStyle={[
-          styles.listContainer,
-          Platform.OS === 'web' && styles.webListContainer
-        ]}
-        columnWrapperStyle={Platform.OS === 'web' ? undefined : styles.columnWrapper}
+        contentContainerStyle={styles.listContainer}
+        columnWrapperStyle={styles.columnWrapper}
         showsVerticalScrollIndicator={false}
         onRefresh={fetchData}
         refreshing={loading}
@@ -199,27 +189,21 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    // Web: centraliza conteúdo
+    alignItems: Platform.OS === 'web' ? 'center' : 'stretch',
   },
   listContainer: {
-    paddingHorizontal: 10,
-  },
-  // Layout responsivo para WEB
-  webListContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    maxWidth: 1400,
-    alignSelf: 'center',
+    // Web: largura máxima e centralizado
+    maxWidth: Platform.OS === 'web' ? 1200 : undefined,
     width: '100%',
-    paddingHorizontal: 20,
+    paddingHorizontal: Platform.OS === 'web' ? 40 : 10,
+    alignSelf: 'center',
   },
-  // Espaçamento entre colunas no mobile
+  // Espaçamento entre colunas (para numColumns=2)
   columnWrapper: {
-    justifyContent: 'space-between',
-  },
-  // Wrapper para cada card na web
-  webCardWrapper: {
-    marginBottom: 20,
+    justifyContent: Platform.OS === 'web' ? 'center' : 'space-between',
+    // Web: espaçamento entre cards
+    gap: Platform.OS === 'web' ? 20 : 10,
   },
   titleContainer: {
     flexDirection: 'row',
