@@ -1,12 +1,12 @@
 import { MaterialIcons as Icon } from '@expo/vector-icons';
 import React from 'react';
 import {
-  Dimensions,
   Image,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
+  Platform,
 } from 'react-native';
 
 
@@ -26,9 +26,6 @@ type ItemCardProps = {
   item: ItemData;
   onAddToCart?: () => void;
 };
-
-const { width } = Dimensions.get('window');
-const cardWidth = (width - 20 - 10) / 2;
 
 const ItemCard = ({ item, onAddToCart }: ItemCardProps) => (
   <TouchableOpacity style={styles.itemCard}>
@@ -62,13 +59,17 @@ const ItemCard = ({ item, onAddToCart }: ItemCardProps) => (
 
 
 const styles = StyleSheet.create({
-  
   itemCard: {
-    width: cardWidth,
+    // RESPONSIVO: Flex em vez de largura fixa
+    flex: Platform.OS === 'web' ? 0 : 1,
+    // Na web: largura mínima de 250px e máxima de 300px
+    minWidth: Platform.OS === 'web' ? 250 : undefined,
+    maxWidth: Platform.OS === 'web' ? 300 : undefined,
+    // No mobile: flex 1 faz ocupar metade da tela (2 colunas)
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    marginBottom: 10,
-    marginHorizontal: 5, 
+    marginBottom: 15,
+    marginHorizontal: Platform.OS === 'web' ? 10 : 5,
     elevation: 2,
     shadowColor: '#000',
     shadowOpacity: 0.05,
@@ -76,7 +77,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
   },
   itemImage: {
-    height: 110,
+    // Responsivo: altura proporcional à largura
+    height: Platform.OS === 'web' ? 180 : 110,
     width: '100%',
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,

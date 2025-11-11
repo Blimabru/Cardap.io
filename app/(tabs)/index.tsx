@@ -105,7 +105,14 @@ const HomeScreen = () => {
   };
 
   const renderItem = ({ item }: { item: Produto }) => (
-    <ItemCard item={item} onAddToCart={() => handleAddToCart(item)} />
+    // Wrapper para controlar layout responsivo na web
+    Platform.OS === 'web' ? (
+      <View style={styles.webCardWrapper}>
+        <ItemCard item={item} onAddToCart={() => handleAddToCart(item)} />
+      </View>
+    ) : (
+      <ItemCard item={item} onAddToCart={() => handleAddToCart(item)} />
+    )
   );
 
   const renderListHeader = () => (
@@ -164,7 +171,9 @@ const HomeScreen = () => {
         data={filteredProducts}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
-        numColumns={2}
+        // RESPONSIVO: 2 colunas no mobile, layout flexível na web
+        numColumns={Platform.OS === 'web' ? undefined : 2}
+        key={Platform.OS === 'web' ? 'web' : 'mobile'}
         ListHeaderComponent={renderListHeader}
         ListEmptyComponent={() => (
           <View style={styles.emptyContainer}>
@@ -172,7 +181,11 @@ const HomeScreen = () => {
             <Text style={styles.emptyText}>Nenhum produto encontrado</Text>
           </View>
         )}
-        contentContainerStyle={styles.listContainer}
+        contentContainerStyle={[
+          styles.listContainer,
+          Platform.OS === 'web' && styles.webListContainer
+        ]}
+        columnWrapperStyle={Platform.OS === 'web' ? undefined : styles.columnWrapper}
         showsVerticalScrollIndicator={false}
         onRefresh={fetchData}
         refreshing={loading}
@@ -189,6 +202,24 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     paddingHorizontal: 10,
+  },
+  // Layout responsivo para WEB
+  webListContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    maxWidth: 1400,
+    alignSelf: 'center',
+    width: '100%',
+    paddingHorizontal: 20,
+  },
+  // Espaçamento entre colunas no mobile
+  columnWrapper: {
+    justifyContent: 'space-between',
+  },
+  // Wrapper para cada card na web
+  webCardWrapper: {
+    marginBottom: 20,
   },
   titleContainer: {
     flexDirection: 'row',
