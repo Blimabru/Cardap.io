@@ -92,6 +92,24 @@ export default function AdminScreen() {
     }
   };
 
+  const { autenticado } = useAuth();
+
+  if (!autenticado) {
+    return (
+      <View style={styles.errorContainer}>
+        <Icon name="lock" size={80} color="#DDD" />
+        <Text style={styles.errorText}>Login Necessário</Text>
+        <Text style={styles.errorSubtext}>Faça login para acessar a área administrativa</Text>
+        <TouchableOpacity
+          style={styles.loginButton}
+          onPress={() => router.push('/login')}
+        >
+          <Text style={styles.loginButtonText}>Fazer Login</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   if (!podeGerenciar) {
     return (
       <View style={styles.errorContainer}>
@@ -191,6 +209,17 @@ export default function AdminScreen() {
           <View style={styles.menuItemLeft}>
             <Icon name="list-alt" size={24} color="#333" />
             <Text style={styles.menuItemText}>Ver Todos os Pedidos</Text>
+          </View>
+          <Icon name="chevron-right" size={24} color="#999" />
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.menuItem}
+          onPress={() => router.push('/admin/mesas')}
+        >
+          <View style={styles.menuItemLeft}>
+            <Icon name="table-restaurant" size={24} color="#333" />
+            <Text style={styles.menuItemText}>Gerenciar Mesas</Text>
           </View>
           <Icon name="chevron-right" size={24} color="#999" />
         </TouchableOpacity>
@@ -340,6 +369,18 @@ const styles = StyleSheet.create({
     color: '#CCC',
     marginTop: 8,
     textAlign: 'center',
+  },
+  loginButton: {
+    marginTop: 24,
+    backgroundColor: '#333',
+    borderRadius: 8,
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+  },
+  loginButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

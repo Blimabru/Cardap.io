@@ -34,7 +34,7 @@
  */
 
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
-import { definirToken } from '../services/api';
+import { supabase } from '../lib/supabase';
 import * as autenticacaoService from '../services/autenticacao.service';
 import { DadosLogin, DadosRegistro, Usuario } from '../types';
 
@@ -198,38 +198,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
    */
   const carregarUsuarioArmazenado = async () => {
     try {
-      // Busca token do AsyncStorage
-      // autenticacaoService.obterTokenArmazenado() → AsyncStorage.getItem('@token')
-      const token = await autenticacaoService.obterTokenArmazenado();
+      // Verifica se há sessão ativa no Supabase
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      if (token) {
-        console.log('🔑 Token encontrado no AsyncStorage');
-        
-        // Define token para requisições futuras
-        // api.ts usará este token em todas as requisições
-        definirToken(token);
-        
-        // Valida token com o backend
-        // GET /auth/perfil
-        // Se token válido: retorna usuário
-        // Se inválido: lança erro 401
-        console.log('🔄 Validando token com backend...');
-        const usuarioValidado = await autenticacaoService.validarToken();
-        
-        console.log('✅ Token válido! Usuário logado automaticamente');
-        console.log('👤 Usuário:', usuarioValidado.nome_completo);
-        
-        // Atualiza estado (isso faz o app mostrar telas autenticadas)
-        setUsuario(usuarioValidado);
-      } else {
-        console.log('❌ Nenhum token encontrado. Usuário precisa fazer login');
+      if (sessionError || !session) {
+        console.log('ℹ️ Nenhuma sessão encontrada. Usuário navegando como visitante');
+        // Não forçar logout - permitir navegação pública
+        setCarregando(false);
+        return;
       }
+
+      console.log('🔑 Sessão encontrada no Supabase');
+      
+      // Valida sessão e busca dados do usuário
+      console.log('🔄 Validando sessão e buscando dados do usuário...');
+      const usuarioValidado = await autenticacaoService.validarToken();
+      
+      console.log('✅ Sessão válida! Usuário logado automaticamente');
+      console.log('👤 Usuário:', usuarioValidado.nome_completo);
+      
+      // Atualiza estado (isso faz o app mostrar telas autenticadas)
+      setUsuario(usuarioValidado);
     } catch (erro) {
       console.error('❌ Erro ao carregar usuário:', erro);
-      console.log('🔄 Token inválido ou expirado. Fazendo logout...');
+      console.log('ℹ️ Sessão inválida ou expirada. Permitindo navegação pública...');
       
-      // Se token inválido, faz logout (remove token)
-      await logout();
+      // Não forçar logout - apenas limpar estado local
+      // Permite que usuário navegue como visitante
+      setUsuario(null);
     } finally {
       // Sempre define carregando como false no final
       // Isso remove splash screen e mostra tela apropriada (login ou home)

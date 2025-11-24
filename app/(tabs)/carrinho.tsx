@@ -32,23 +32,38 @@ export default function CarrinhoScreen() {
   const [observacoes, setObservacoes] = useState('');
 
   const handleFinalizarPedido = async () => {
-    if (!autenticado) {
-      Alert.alert(
-        'Login Necessário',
-        'Faça login para finalizar seu pedido',
-        [
-          { text: 'Cancelar', style: 'cancel' },
-          { text: 'Fazer Login', onPress: () => router.push('/login') },
-        ]
-      );
-      return;
-    }
-
     if (itens.length === 0) {
       Alert.alert('Atenção', 'Seu carrinho está vazio');
       return;
     }
 
+    // Se não está autenticado, oferecer opções
+    if (!autenticado) {
+      Alert.alert(
+        'Finalizar Pedido',
+        'Você está navegando como visitante. Deseja fazer login para salvar seu histórico de pedidos?',
+        [
+          { 
+            text: 'Continuar como Visitante', 
+            style: 'cancel',
+            onPress: () => {
+              Alert.alert(
+                'Atenção',
+                'Para finalizar um pedido, você precisa estar em uma mesa (via QR code) ou fazer login.\n\nEscaneie o QR code de uma mesa para fazer pedidos.',
+                [{ text: 'OK' }]
+              );
+            }
+          },
+          { 
+            text: 'Fazer Login', 
+            onPress: () => router.push('/login')
+          },
+        ]
+      );
+      return;
+    }
+
+    // Se autenticado, criar pedido normalmente
     setCarregando(true);
     try {
       await criarPedido({
@@ -67,7 +82,7 @@ export default function CarrinhoScreen() {
         'Pedido Realizado!',
         'Seu pedido foi enviado com sucesso',
         [
-          { text: 'Ver Pedidos', onPress: () => router.push('/pedidos') },
+          { text: 'Ver Pedidos', onPress: () => router.push('/(tabs)/pedidos') },
           { text: 'OK' },
         ]
       );
@@ -78,15 +93,28 @@ export default function CarrinhoScreen() {
     }
   };
 
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+
   const renderItem = ({ item }: { item: ItemCarrinho }) => {
     const preco = typeof item.produto.price === 'string' 
       ? parseFloat(item.produto.price) 
       : item.produto.price;
     const subtotal = preco * item.quantidade;
+    const hasImageError = imageErrors[item.produto.id] || false;
 
     return (
       <View style={styles.itemCard}>
-        <Image source={{ uri: item.produto.imageUrl }} style={styles.itemImage} />
+        {hasImageError || !item.produto.imageUrl ? (
+          <View style={[styles.itemImage, styles.placeholderImage]}>
+            <Icon name="image" size={30} color="#999" />
+          </View>
+        ) : (
+          <Image 
+            source={{ uri: item.produto.imageUrl }} 
+            style={styles.itemImage}
+            onError={() => setImageErrors(prev => ({ ...prev, [item.produto.id]: true }))}
+          />
+        )}
         
         <View style={styles.itemInfo}>
           <Text style={styles.itemName} numberOfLines={1}>
@@ -163,6 +191,22 @@ export default function CarrinhoScreen() {
         contentContainerStyle={styles.list}
         ListFooterComponent={
           <View style={styles.footer}>
+            {!autenticado && (
+              <View style={styles.loginBanner}>
+                <Icon name="info" size={20} color="#2196F3" />
+                <View style={styles.loginBannerContent}>
+                  <Text style={styles.loginBannerText}>
+                    Faça login para salvar seu histórico de pedidos
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.loginBannerButton}
+                    onPress={() => router.push('/login')}
+                  >
+                    <Text style={styles.loginBannerButtonText}>Fazer Login</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
             <View style={styles.observacoesContainer}>
               <Text style={styles.observacoesLabel}>Observações do Pedido</Text>
               <TextInput
@@ -226,6 +270,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: '#E0E0E0',
   },
+  placeholderImage: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+  },
   itemInfo: {
     flex: 1,
     marginLeft: 12,
@@ -280,6 +329,36 @@ const styles = StyleSheet.create({
   },
   footer: {
     marginTop: 8,
+  },
+  loginBanner: {
+    flexDirection: 'row',
+    backgroundColor: '#E3F2FD',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  loginBannerContent: {
+    flex: 1,
+  },
+  loginBannerText: {
+    fontSize: 14,
+    color: '#1976D2',
+    marginBottom: 8,
+    lineHeight: 20,
+  },
+  loginBannerButton: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#2196F3',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  loginBannerButtonText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
   observacoesContainer: {
     backgroundColor: '#FFF',

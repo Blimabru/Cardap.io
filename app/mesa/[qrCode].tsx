@@ -1,3 +1,10 @@
+/**
+ * Tela de Cardápio Público via QR Code
+ * 
+ * Acesso público ao cardápio sem necessidade de login
+ * Vinculado a uma mesa específica
+ */
+
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -11,24 +18,26 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialIcons as Icon } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useCarrinho } from '../../contexts/CarrinhoContext';
-import { useAuth } from '../../contexts/AuthContext';
-import { Produto, Categoria } from '../../types';
+import { MesaCarrinhoProvider, useMesaCarrinho } from '../../contexts/MesaCarrinhoContext';
+import { Produto, Categoria, Mesa } from '../../types';
 import * as produtosService from '../../services/produtos.service';
 import * as categoriasService from '../../services/categorias.service';
+import * as qrcodeService from '../../services/qrcode.service';
+import * as pedidosService from '../../services/pedidos.service';
+import { TipoPedido } from '../../types';
 
 // Componentes
 import CategoryList from '../../components/CategoryList';
-import HomeHeader from '../../components/HomeHeader';
 import SearchBar from '../../components/SearchBar';
 import ItemCard from '../../components/ItemCard';
 
-const HomeScreen = () => {
+function MesaCardapioContent() {
   const router = useRouter();
-  const { adicionarAoCarrinho } = useCarrinho();
-  const { autenticado, usuario } = useAuth();
+  const params = useLocalSearchParams();
+  const qrCode = params.qrCode as string;
+  const { itens, mesa, idMesa, adicionarAoCarrinho, limparCarrinho, quantidadeTotal, definirMesa } = useMesaCarrinho();
 
   const [products, setProducts] = useState<Produto[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Produto[]>([]);
@@ -37,21 +46,55 @@ const HomeScreen = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [validandoQR, setValidandoQR] = useState(true);
+  const [mesaValidada, setMesaValidada] = useState<Mesa | null>(null);
+  const [enviandoPedido, setEnviandoPedido] = useState(false);
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (qrCode) {
+      validarEConfigurarMesa();
+    }
+  }, [qrCode]);
+
+  useEffect(() => {
+    if (mesaValidada) {
+      fetchData();
+    }
+  }, [mesaValidada]);
 
   useEffect(() => {
     filterProducts();
   }, [searchQuery, selectedCategory, products]);
+
+  const validarEConfigurarMesa = async () => {
+    try {
+      setValidandoQR(true);
+      const mesa = await qrcodeService.validarQRCode(qrCode);
+      setMesaValidada(mesa);
+      // Definir mesa no contexto
+      definirMesa(mesa);
+    } catch (erro: any) {
+      setError(erro.message || 'QR code inválido');
+      Alert.alert(
+        'QR Code Inválido',
+        'O QR code escaneado não é válido ou a mesa está inativa.',
+        [
+          {
+            text: 'OK',
+            onPress: () => router.replace('/(tabs)'),
+          },
+        ]
+      );
+    } finally {
+      setValidandoQR(false);
+    }
+  };
 
   const fetchData = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Buscar produtos e categorias usando services Supabase
       const [productsData, categoriesData] = await Promise.all([
         produtosService.listarProdutos(),
         categoriasService.listarCategorias(),
@@ -75,14 +118,12 @@ const HomeScreen = () => {
   const filterProducts = () => {
     let filtered = [...products];
 
-    // Filtro por busca
     if (searchQuery) {
       filtered = filtered.filter((product) =>
         product.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
-    // Filtro por categoria
     if (selectedCategory) {
       filtered = filtered.filter((product) => product.category.id === selectedCategory);
     }
@@ -103,24 +144,53 @@ const HomeScreen = () => {
     Alert.alert('Sucesso', `${product.name} adicionado ao carrinho!`);
   };
 
+  const handleFinalizarPedido = async () => {
+    if (!idMesa || itens.length === 0) {
+      Alert.alert('Atenção', 'Seu carrinho está vazio');
+      return;
+    }
+
+    setEnviandoPedido(true);
+    try {
+      await pedidosService.criarPedido({
+        itens: itens.map((item) => ({
+          id_produto: item.produto.id,
+          quantidade: item.quantidade,
+          observacoes: item.observacoes,
+        })),
+        tipo_pedido: TipoPedido.LOCAL,
+        id_mesa: idMesa,
+      });
+
+      limparCarrinho();
+
+      Alert.alert(
+        'Pedido Realizado!',
+        'Seu pedido foi enviado com sucesso. Aguarde o atendimento.',
+        [{ text: 'OK' }]
+      );
+    } catch (erro: any) {
+      Alert.alert('Erro', erro.message || 'Não foi possível finalizar o pedido');
+    } finally {
+      setEnviandoPedido(false);
+    }
+  };
+
   const renderItem = ({ item }: { item: Produto }) => (
     <ItemCard item={item} onAddToCart={() => handleAddToCart(item)} />
   );
 
   const renderListHeader = () => (
     <>
-      <HomeHeader />
-      {!autenticado && (
-        <View style={styles.visitorBanner}>
-          <Icon name="info" size={16} color="#2196F3" />
-          <Text style={styles.visitorBannerText}>
-            Você está navegando como visitante. Faça login para acessar mais funcionalidades.
-          </Text>
+      <View style={styles.mesaHeader}>
+        <View>
+          <Text style={styles.mesaTitle}>Mesa #{mesaValidada?.numero}</Text>
+          <Text style={styles.mesaSubtitle}>Escaneie o QR code para acessar o cardápio</Text>
         </View>
-      )}
+      </View>
       <SearchBar onSearch={handleSearch} />
-      <CategoryList 
-        categories={categories} 
+      <CategoryList
+        categories={categories}
         selectedCategory={selectedCategory}
         onSelectCategory={handleCategorySelect}
       />
@@ -143,24 +213,33 @@ const HomeScreen = () => {
     </>
   );
 
+  if (validandoQR) {
+    return (
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size="large" color="#333" />
+        <Text style={styles.loadingText}>Validando QR code...</Text>
+      </View>
+    );
+  }
+
+  if (error && !mesaValidada) {
+    return (
+      <View style={styles.centerContainer}>
+        <Icon name="error-outline" size={80} color="#F44336" />
+        <Text style={styles.errorText}>Erro ao validar QR code</Text>
+        <Text style={styles.errorSubtext}>{error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={() => router.replace('/(tabs)')}>
+          <Text style={styles.retryButtonText}>Voltar</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   if (loading) {
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color="#333" />
         <Text>Carregando cardápio...</Text>
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View style={styles.centerContainer}>
-        <Icon name="error-outline" size={80} color="#F44336" />
-        <Text style={styles.errorText}>Erro ao carregar dados</Text>
-        <Text style={styles.errorSubtext}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={fetchData}>
-          <Text style={styles.retryButtonText}>Tentar Novamente</Text>
-        </TouchableOpacity>
       </View>
     );
   }
@@ -171,7 +250,6 @@ const HomeScreen = () => {
         data={filteredProducts}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
-        // Mobile: 2 colunas fixas
         numColumns={2}
         key="two-columns"
         ListHeaderComponent={renderListHeader}
@@ -187,30 +265,73 @@ const HomeScreen = () => {
         onRefresh={fetchData}
         refreshing={loading}
       />
+
+      {quantidadeTotal > 0 && (
+        <View style={styles.cartFooter}>
+          <View style={styles.cartInfo}>
+            <Text style={styles.cartText}>{quantidadeTotal} item(s) no carrinho</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.cartButton}
+            onPress={handleFinalizarPedido}
+            disabled={enviandoPedido}
+          >
+            {enviandoPedido ? (
+              <ActivityIndicator size="small" color="#FFF" />
+            ) : (
+              <>
+                <Icon name="shopping-cart" size={20} color="#FFF" />
+                <Text style={styles.cartButtonText}>Finalizar Pedido</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
+      )}
     </SafeAreaView>
   );
-};
+}
+
+export default function MesaCardapioScreen() {
+  return (
+    <MesaCarrinhoProvider>
+      <MesaCardapioContent />
+    </MesaCarrinhoProvider>
+  );
+}
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#FFFFFF',
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
-    // Web: centraliza conteúdo
     alignItems: Platform.OS === 'web' ? 'center' : 'stretch',
   },
   listContainer: {
-    // Web: largura máxima e centralizado
     maxWidth: Platform.OS === 'web' ? 1200 : undefined,
     width: '100%',
     paddingHorizontal: Platform.OS === 'web' ? 40 : 10,
     alignSelf: 'center',
+    paddingBottom: 100,
   },
-  // Espaçamento entre colunas (para numColumns=2)
   columnWrapper: {
     justifyContent: Platform.OS === 'web' ? 'center' : 'space-between',
-    // Web: espaçamento entre cards
     gap: Platform.OS === 'web' ? 20 : 10,
+  },
+  mesaHeader: {
+    backgroundColor: '#333',
+    padding: 20,
+    marginBottom: 16,
+  },
+  mesaTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFF',
+  },
+  mesaSubtitle: {
+    fontSize: 14,
+    color: '#FFF',
+    opacity: 0.8,
+    marginTop: 4,
   },
   titleContainer: {
     flexDirection: 'row',
@@ -241,6 +362,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#fff',
     padding: 32,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
   },
   errorText: {
     fontSize: 18,
@@ -276,22 +402,45 @@ const styles = StyleSheet.create({
     color: '#999',
     marginTop: 16,
   },
-  visitorBanner: {
+  cartFooter: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#FFF',
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+    padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E3F2FD',
-    padding: 12,
-    marginHorizontal: 15,
-    marginBottom: 8,
+    justifyContent: 'space-between',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: -2 },
+  },
+  cartInfo: {
+    flex: 1,
+  },
+  cartText: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '600',
+  },
+  cartButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
     borderRadius: 8,
     gap: 8,
   },
-  visitorBannerText: {
-    flex: 1,
-    fontSize: 12,
-    color: '#1976D2',
-    lineHeight: 16,
+  cartButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 
-export default HomeScreen;

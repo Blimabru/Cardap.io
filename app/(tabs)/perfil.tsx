@@ -89,11 +89,20 @@ export default function PerfilScreen() {
     }
   };
 
-  // Se não há usuário, não deveria chegar aqui (proteção)
+  // Se não há usuário, mostrar mensagem e botão de login
   if (!usuario) {
     return (
       <View style={styles.container}>
-        <Text style={styles.errorText}>Nenhum usuário logado</Text>
+        <View style={styles.emptyContainer}>
+          <Icon name="person" size={80} color="#DDD" />
+          <Text style={styles.emptyText}>Faça login para acessar seu perfil</Text>
+          <TouchableOpacity
+            style={styles.loginButton}
+            onPress={() => router.push('/login')}
+          >
+            <Text style={styles.loginButtonText}>Fazer Login</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
@@ -355,6 +364,30 @@ const styles = StyleSheet.create({
     color: '#F44336',
     textAlign: 'center',
     marginTop: 40,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  emptyText: {
+    fontSize: 18,
+    color: '#999',
+    marginTop: 16,
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  loginButton: {
+    backgroundColor: '#333',
+    borderRadius: 8,
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+  },
+  loginButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

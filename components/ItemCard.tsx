@@ -1,5 +1,5 @@
 import { MaterialIcons as Icon } from '@expo/vector-icons';
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Image,
   StyleSheet,
@@ -27,13 +27,23 @@ type ItemCardProps = {
   onAddToCart?: () => void;
 };
 
-const ItemCard = ({ item, onAddToCart }: ItemCardProps) => (
-  <TouchableOpacity style={styles.itemCard}>
-    <Image
-      source={{ uri: item.imageUrl }}
-      style={styles.itemImage}
-      resizeMode="cover"
-    />
+const ItemCard = ({ item, onAddToCart }: ItemCardProps) => {
+  const [imageError, setImageError] = useState(false);
+
+  return (
+    <TouchableOpacity style={styles.itemCard}>
+      {imageError || !item.imageUrl ? (
+        <View style={[styles.itemImage, styles.placeholderImage]}>
+          <Icon name="image" size={40} color="#999" />
+        </View>
+      ) : (
+        <Image
+          source={{ uri: item.imageUrl }}
+          style={styles.itemImage}
+          resizeMode="cover"
+          onError={() => setImageError(true)}
+        />
+      )}
 
     <View style={styles.itemInfo}>
       <Text style={styles.itemName} numberOfLines={1}>{item.name}</Text>
@@ -55,7 +65,8 @@ const ItemCard = ({ item, onAddToCart }: ItemCardProps) => (
       </TouchableOpacity>
     </View>
   </TouchableOpacity>
-);
+  );
+};
 
 
 const styles = StyleSheet.create({
@@ -82,6 +93,11 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
     backgroundColor: '#E0E0E0',
+  },
+  placeholderImage: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
   },
   itemInfo: {
     padding: Platform.OS === 'web' ? 15 : 10,

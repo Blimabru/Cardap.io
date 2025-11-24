@@ -15,13 +15,11 @@ export default function IndexScreen() {
 
   useEffect(() => {
     if (!carregando) {
-      if (autenticado) {
-        router.replace('/(tabs)');
-      } else {
-        router.replace('/login');
-      }
+      // Sempre redireciona para home pública (cardápio)
+      // Login é opcional e pode ser feito depois
+      router.replace('/(tabs)');
     }
-  }, [autenticado, carregando]);
+  }, [carregando]);
 
   return (
     <View style={styles.container}>

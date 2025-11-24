@@ -1,111 +1,51 @@
 /**
- * Cliente API
+ * ============================================================================
+ * API.TS - CLIENTE API (DEPRECADO - MIGRADO PARA SUPABASE)
+ * ============================================================================
  * 
- * Configuração central para todas as chamadas à API
+ * Este arquivo foi mantido apenas para compatibilidade.
+ * 
+ * IMPORTANTE:
+ * - Todas as funcionalidades foram migradas para Supabase
+ * - Use os services diretamente (produtos.service.ts, etc.)
+ * - Este arquivo será removido em versões futuras
+ * 
+ * MIGRAÇÃO:
+ * - Antes: get('/products') → Agora: listarProdutos() do produtos.service.ts
+ * - Antes: post('/auth/login') → Agora: fazerLogin() do autenticacao.service.ts
+ * - etc.
  */
-
-import { API_URL } from '../constants/api';
 
 /**
- * Armazena o token JWT em memória
+ * Funções mantidas apenas para compatibilidade
+ * NÃO USE ESTAS FUNÇÕES - Use os services diretamente
  */
-let tokenAtual: string | null = null;
 
-/**
- * Define o token JWT para ser usado nas requisições
- */
 export const definirToken = (token: string | null) => {
-  tokenAtual = token;
+  console.warn('⚠️ definirToken() está deprecado. Use Supabase Auth diretamente.');
+  // Não faz nada - Supabase gerencia tokens automaticamente
 };
 
-/**
- * Obtém o token JWT atual
- */
 export const obterToken = (): string | null => {
-  return tokenAtual;
+  console.warn('⚠️ obterToken() está deprecado. Use supabase.auth.getSession() diretamente.');
+  return null;
 };
 
-/**
- * Configuração padrão para fetch
- */
-const configuracaoPadrao = (metodo: string, dados?: any): RequestInit => {
-  const config: RequestInit = {
-    method: metodo,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  };
-
-  // Adiciona token se existir
-  if (tokenAtual) {
-    (config.headers as Record<string, string>)['Authorization'] = `Bearer ${tokenAtual}`;
-    console.log('🔐 Token sendo enviado:', tokenAtual.substring(0, 20) + '...');
-  } else {
-    console.warn('⚠️ Requisição sem token!');
-  }
-
-  // Adiciona corpo se for POST/PUT
-  if (dados && (metodo === 'POST' || metodo === 'PUT' || metodo === 'PATCH')) {
-    config.body = JSON.stringify(dados);
-  }
-
-  return config;
-};
-
-/**
- * Faz requisição GET
- */
+// Funções HTTP removidas - use Supabase diretamente
 export const get = async <T = any>(endpoint: string): Promise<T> => {
-  const resposta = await fetch(`${API_URL}${endpoint}`, configuracaoPadrao('GET'));
-  
-  if (!resposta.ok) {
-    const erro = await resposta.json().catch(() => ({ mensagem: 'Erro desconhecido' }));
-    throw new Error(erro.mensagem || `Erro ${resposta.status}`);
-  }
-  
-  return resposta.json();
+  throw new Error(`get() está deprecado. Use Supabase diretamente. Endpoint: ${endpoint}`);
 };
 
-/**
- * Faz requisição POST
- */
-export const post = async <T = any>(endpoint: string, dados: any): Promise<T> => {
-  const resposta = await fetch(`${API_URL}${endpoint}`, configuracaoPadrao('POST', dados));
-  
-  if (!resposta.ok) {
-    const erro = await resposta.json().catch(() => ({ mensagem: 'Erro desconhecido' }));
-    throw new Error(erro.mensagem || `Erro ${resposta.status}`);
-  }
-  
-  return resposta.json();
+export const post = async <T = any>(endpoint: string, dados?: any): Promise<T> => {
+  throw new Error(`post() está deprecado. Use Supabase diretamente. Endpoint: ${endpoint}`);
 };
 
-/**
- * Faz requisição PUT
- */
-export const put = async <T = any>(endpoint: string, dados: any): Promise<T> => {
-  const resposta = await fetch(`${API_URL}${endpoint}`, configuracaoPadrao('PUT', dados));
-  
-  if (!resposta.ok) {
-    const erro = await resposta.json().catch(() => ({ mensagem: 'Erro desconhecido' }));
-    throw new Error(erro.mensagem || `Erro ${resposta.status}`);
-  }
-  
-  return resposta.json();
+export const put = async <T = any>(endpoint: string, dados?: any): Promise<T> => {
+  throw new Error(`put() está deprecado. Use Supabase diretamente. Endpoint: ${endpoint}`);
 };
 
-/**
- * Faz requisição DELETE
- */
 export const del = async <T = any>(endpoint: string): Promise<T> => {
-  const resposta = await fetch(`${API_URL}${endpoint}`, configuracaoPadrao('DELETE'));
-  
-  if (!resposta.ok) {
-    const erro = await resposta.json().catch(() => ({ mensagem: 'Erro desconhecido' }));
-    throw new Error(erro.mensagem || `Erro ${resposta.status}`);
-  }
-  
-  return resposta.json();
+  throw new Error(`del() está deprecado. Use Supabase diretamente. Endpoint: ${endpoint}`);
 };
 
 

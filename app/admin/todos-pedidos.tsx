@@ -86,7 +86,13 @@ export default function TodosPedidosScreen() {
         <View style={styles.pedidoHeader}>
           <View>
             <Text style={styles.pedidoNumero}>Pedido #{item.numero_pedido}</Text>
-            <Text style={styles.pedidoCliente}>{item.usuario.nome_completo}</Text>
+            {item.mesa ? (
+              <Text style={styles.pedidoCliente}>Mesa #{item.mesa.numero}</Text>
+            ) : (
+              <Text style={styles.pedidoCliente}>
+                {item.usuario?.nome_completo || 'Cliente não identificado'}
+              </Text>
+            )}
             <Text style={styles.pedidoData}>{data} às {hora}</Text>
           </View>
           

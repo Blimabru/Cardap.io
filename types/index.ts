@@ -115,7 +115,10 @@ export interface Pedido {
   total: number;
   observacoes?: string;
   endereco_entrega?: string;
-  usuario: Usuario;
+  id_mesa?: string;
+  status_pagamento?: StatusPagamento;
+  usuario?: Usuario;
+  mesa?: Mesa;
   itens: ItemPedido[];
   data_criacao: string;
   data_atualizacao: string;
@@ -131,6 +134,89 @@ export interface CriarPedidoDto {
   observacoes?: string;
   endereco_entrega?: string;
   taxa_entrega?: number;
+  id_mesa?: string;
+}
+
+// ============================================
+// MESAS
+// ============================================
+
+export enum StatusMesa {
+  LIVRE = 'livre',
+  OCUPADA = 'ocupada',
+  RESERVADA = 'reservada',
+  INATIVA = 'inativa'
+}
+
+export interface Mesa {
+  id: string;
+  numero: number;
+  qr_code: string;
+  status: StatusMesa;
+  capacidade: number;
+  observacoes?: string;
+  data_criacao: string;
+  data_atualizacao: string;
+}
+
+export interface CriarMesaDto {
+  numero: number;
+  capacidade?: number;
+  observacoes?: string;
+}
+
+export interface AtualizarMesaDto {
+  status?: StatusMesa;
+  capacidade?: number;
+  observacoes?: string;
+}
+
+// ============================================
+// CONTAS MESA
+// ============================================
+
+export enum StatusConta {
+  ABERTA = 'aberta',
+  FECHADA = 'fechada',
+  PAGA = 'paga',
+  CANCELADA = 'cancelada'
+}
+
+export enum StatusPagamento {
+  PENDENTE = 'pendente',
+  PAGO = 'pago',
+  CANCELADO = 'cancelado'
+}
+
+export enum FormaPagamento {
+  DINHEIRO = 'dinheiro',
+  CARTAO_DEBITO = 'cartao_debito',
+  CARTAO_CREDITO = 'cartao_credito',
+  PIX = 'pix'
+}
+
+export interface ContaMesa {
+  id: string;
+  id_mesa: string;
+  status: StatusConta;
+  total: number;
+  forma_pagamento?: FormaPagamento;
+  observacoes?: string;
+  mesa?: Mesa;
+  data_abertura: string;
+  data_fechamento?: string;
+  data_pagamento?: string;
+  data_criacao: string;
+  data_atualizacao: string;
+}
+
+export interface FecharContaDto {
+  id_mesa: string;
+}
+
+export interface FinalizarPagamentoDto {
+  conta_id: string;
+  forma_pagamento: FormaPagamento;
 }
 
 // ============================================

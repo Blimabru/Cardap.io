@@ -1,28 +1,72 @@
 /**
  * Service de Produtos
  * 
- * Gerencia operações CRUD de produtos
+ * Gerencia operações CRUD de produtos usando Supabase
  */
 
-import { get, post, put, del } from './api';
-import { Produto } from '../types';
+import { supabase } from '../lib/supabase';
+import { Produto, Categoria } from '../types';
 
 /**
- * Lista todos os produtos
+ * Converte dados do Supabase para o tipo Produto
+ */
+const formatarProduto = (data: any): Produto => {
+  return {
+    id: data.id,
+    name: data.name,
+    description: data.description || undefined,
+    price: typeof data.price === 'string' ? parseFloat(data.price) : data.price,
+    imageUrl: data.imageUrl,
+    rating: typeof data.rating === 'string' ? parseFloat(data.rating) : data.rating,
+    category: data.category ? {
+      id: data.category.id,
+      name: data.category.name,
+    } : data.categoryId ? { id: data.categoryId, name: '' } : { id: '', name: '' },
+  };
+};
+
+/**
+ * Lista todos os produtos com suas categorias
  */
 export const listarProdutos = async (): Promise<Produto[]> => {
-  return await get<Produto[]>('/products');
+  const { data, error } = await supabase
+    .from('products')
+    .select(`
+      *,
+      category:categories(*)
+    `)
+    .order('name', { ascending: true });
+
+  if (error) {
+    throw new Error(error.message || 'Erro ao buscar produtos');
+  }
+
+  return (data || []).map(formatarProduto);
 };
 
 /**
  * Busca produto por ID
  */
 export const buscarProdutoPorId = async (id: string): Promise<Produto> => {
-  return await get<Produto>(`/products/${id}`);
+  const { data, error } = await supabase
+    .from('products')
+    .select(`
+      *,
+      category:categories(*)
+    `)
+    .eq('id', id)
+    .single();
+
+  if (error || !data) {
+    throw new Error(error?.message || 'Produto não encontrado');
+  }
+
+  return formatarProduto(data);
 };
 
 /**
  * Cria novo produto (Admin e Dono)
+ * NOTA: Verificação de perfil deve ser feita no código que chama esta função
  */
 export const criarProduto = async (dados: {
   name: string;
@@ -32,7 +76,31 @@ export const criarProduto = async (dados: {
   categoryId: string;
   rating?: number;
 }): Promise<Produto> => {
-  return await post<Produto>('/products', dados);
+  // Primeiro, inserir o produto sem o relacionamento
+  // Tentar com categoryId primeiro, se falhar, tentar category_id
+  const insertData: any = {
+    name: dados.name,
+    description: dados.description || null,
+    price: dados.price,
+    imageUrl: dados.imageUrl,
+    rating: dados.rating !== undefined ? dados.rating : 0.0,
+  };
+  
+  // Tentar com categoryId (camelCase)
+  insertData.categoryId = dados.categoryId;
+  
+  const { data: produtoInserido, error: insertError } = await supabase
+    .from('products')
+    .insert(insertData)
+    .select()
+    .single();
+
+  if (insertError || !produtoInserido) {
+    throw new Error(insertError?.message || 'Erro ao criar produto');
+  }
+
+  // Depois, buscar o produto completo com o relacionamento
+  return await buscarProdutoPorId(produtoInserido.id);
 };
 
 /**
@@ -46,29 +114,64 @@ export const atualizarProduto = async (id: string, dados: Partial<{
   categoryId: string;
   rating: number;
 }>): Promise<Produto> => {
-  return await put<Produto>(`/products/${id}`, dados);
+  const updateData: any = {};
+  if (dados.name !== undefined) updateData.name = dados.name;
+  if (dados.description !== undefined) updateData.description = dados.description || null;
+  if (dados.price !== undefined) updateData.price = dados.price;
+  if (dados.imageUrl !== undefined) updateData.imageUrl = dados.imageUrl;
+  if (dados.categoryId !== undefined) updateData.categoryId = dados.categoryId;
+  if (dados.rating !== undefined) updateData.rating = dados.rating;
+
+  // Primeiro, atualizar o produto sem o relacionamento
+  const { error: updateError } = await supabase
+    .from('products')
+    .update(updateData)
+    .eq('id', id);
+
+  if (updateError) {
+    throw new Error(updateError.message || 'Erro ao atualizar produto');
+  }
+
+  // Depois, buscar o produto completo com o relacionamento
+  return await buscarProdutoPorId(id);
 };
 
 /**
  * Deleta produto (Admin e Dono)
  */
 export const deletarProduto = async (id: string): Promise<void> => {
-  console.log('📡 Chamando API para deletar produto ID:', id);
-  try {
-    const resultado = await del(`/products/${id}`);
-    console.log('✅ API retornou sucesso:', resultado);
-    return resultado;
-  } catch (erro) {
-    console.error('❌ Erro na API ao deletar:', erro);
-    throw erro;
+  console.log('📡 Deletando produto ID:', id);
+  
+  const { error } = await supabase
+    .from('products')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('❌ Erro ao deletar produto:', error);
+    throw new Error(error.message || 'Erro ao deletar produto');
   }
+
+  console.log('✅ Produto deletado com sucesso');
 };
 
 /**
  * Busca produtos por categoria
  */
 export const buscarProdutosPorCategoria = async (categoryId: string): Promise<Produto[]> => {
-  const produtos = await listarProdutos();
-  return produtos.filter(p => p.category.id === categoryId);
+  const { data, error } = await supabase
+    .from('products')
+    .select(`
+      *,
+      category:categories(*)
+    `)
+    .eq('categoryId', categoryId)
+    .order('name', { ascending: true });
+
+  if (error) {
+    throw new Error(error.message || 'Erro ao buscar produtos por categoria');
+  }
+
+  return (data || []).map(formatarProduto);
 };
 

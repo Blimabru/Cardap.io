@@ -14,18 +14,48 @@ function RootLayoutNav() {
   const segments = useSegments();
   const router = useRouter();
 
+  /**
+   * Verifica se uma rota é pública (não requer autenticação)
+   */
+  const ehRotaPublica = (segmento: string): boolean => {
+    const rotasPublicas = [
+      'mesa', // Cardápio via QR code
+      '(tabs)', // Tabs (cardápio, carrinho)
+      '(auth)', // Login e registro
+    ];
+    return rotasPublicas.some(rota => segmento.startsWith(rota));
+  };
+
+  /**
+   * Verifica se uma rota é protegida (requer autenticação)
+   */
+  const ehRotaProtegida = (segmento: string): boolean => {
+    const rotasProtegidas = [
+      'admin', // Todas as rotas administrativas
+    ];
+    return rotasProtegidas.some(rota => segmento.startsWith(rota));
+  };
+
   useEffect(() => {
     if (carregando) return;
 
-    const inAuthGroup = segments[0] === '(auth)';
+    const primeiroSegmento = segments[0] || '';
+    const inAuthGroup = primeiroSegmento === '(auth)';
 
-    if (!autenticado && !inAuthGroup) {
-      // Se não está autenticado e não está na área de auth, redireciona para login
-      router.replace('/login');
-    } else if (autenticado && inAuthGroup) {
-      // Se está autenticado e está na área de auth, redireciona para home
+    // Se está na área de auth e está autenticado, redireciona para home
+    if (autenticado && inAuthGroup) {
       router.replace('/(tabs)');
+      return;
     }
+
+    // Se não está autenticado e está tentando acessar rota protegida
+    if (!autenticado && ehRotaProtegida(primeiroSegmento)) {
+      router.replace('/login');
+      return;
+    }
+
+    // Rotas públicas são permitidas sem autenticação
+    // Não fazer redirecionamento automático para login
   }, [autenticado, segments, carregando]);
 
   return (
@@ -67,6 +97,37 @@ function RootLayoutNav() {
         options={{
           headerShown: true,
           title: 'Gerenciar Usuários',
+        }}
+      />
+      <Stack.Screen 
+        name="admin/mesas"
+        options={{
+          headerShown: true,
+          title: 'Gerenciar Mesas',
+        }}
+      />
+      <Stack.Screen 
+        name="admin/mesas/[id]/qrcode"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen 
+        name="admin/mesas/[id]/fechar-conta"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen 
+        name="admin/mesas/[id]/pagamento"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen 
+        name="mesa/[qrCode]"
+        options={{
+          headerShown: false,
         }}
       />
     </Stack>

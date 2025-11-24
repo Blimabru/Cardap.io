@@ -12,7 +12,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useCarrinho } from '../../contexts/CarrinhoContext';
 
 export default function TabLayout() {
-  const { podeGerenciar, ehAdmin, ehDono, ehCliente } = useAuth();
+  const { autenticado, podeGerenciar, ehAdmin, ehDono, ehCliente } = useAuth();
   const { quantidadeTotal } = useCarrinho();
 
   // Log de debug para verificar permissões
@@ -79,7 +79,7 @@ export default function TabLayout() {
         }}
       />
 
-      {/* Tab 3: Pedidos (todos podem ver) */}
+      {/* Tab 3: Pedidos (requer login) */}
       <Tabs.Screen
         name="pedidos"
         options={{
@@ -88,10 +88,11 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => (
             <MaterialIcons name="receipt-long" size={28} color={color} />
           ),
+          // Tab sempre visível, mas conteúdo mostra mensagem se não logado
         }}
       />
 
-      {/* Tab 4: Perfil (todos podem ver) */}
+      {/* Tab 4: Perfil (requer login) */}
       <Tabs.Screen
         name="perfil"
         options={{
@@ -100,6 +101,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => (
             <MaterialIcons name="person" size={28} color={color} />
           ),
+          // Tab sempre visível, mas conteúdo mostra mensagem se não logado
         }}
       />
 
