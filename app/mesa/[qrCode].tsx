@@ -5,39 +5,54 @@
  * Vinculado a uma mesa específica
  */
 
+import { MaterialIcons as Icon } from '@expo/vector-icons';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  FlatList,
-  Platform,
-  SafeAreaView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  View,
-  TouchableOpacity,
-  Alert,
+    ActivityIndicator,
+    Alert,
+    FlatList,
+    Image,
+    Modal,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { MaterialIcons as Icon } from '@expo/vector-icons';
 import { MesaCarrinhoProvider, useMesaCarrinho } from '../../contexts/MesaCarrinhoContext';
-import { Produto, Categoria, Mesa } from '../../types';
-import * as produtosService from '../../services/produtos.service';
 import * as categoriasService from '../../services/categorias.service';
-import * as qrcodeService from '../../services/qrcode.service';
 import * as pedidosService from '../../services/pedidos.service';
-import { TipoPedido } from '../../types';
+import * as produtosService from '../../services/produtos.service';
+import * as qrcodeService from '../../services/qrcode.service';
+import { Categoria, Mesa, Produto, TipoPedido } from '../../types';
 
 // Componentes
 import CategoryList from '../../components/CategoryList';
-import SearchBar from '../../components/SearchBar';
 import ItemCard from '../../components/ItemCard';
+import SearchBar from '../../components/SearchBar';
 
 function MesaCardapioContent() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const qrCode = params.qrCode as string;
-  const { itens, mesa, idMesa, adicionarAoCarrinho, limparCarrinho, quantidadeTotal, definirMesa } = useMesaCarrinho();
+  const { 
+    itens, 
+    mesa, 
+    idMesa, 
+    adicionarAoCarrinho, 
+    limparCarrinho, 
+    quantidadeTotal, 
+    valorSubtotal,
+    definirMesa,
+    removerDoCarrinho,
+    atualizarQuantidade,
+    atualizarObservacoes,
+  } = useMesaCarrinho();
 
   const [products, setProducts] = useState<Produto[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Produto[]>([]);
@@ -49,6 +64,8 @@ function MesaCardapioContent() {
   const [validandoQR, setValidandoQR] = useState(true);
   const [mesaValidada, setMesaValidada] = useState<Mesa | null>(null);
   const [enviandoPedido, setEnviandoPedido] = useState(false);
+  const [modalCarrinhoAberto, setModalCarrinhoAberto] = useState(false);
+  const [observacoesPedido, setObservacoesPedido] = useState('');
 
   useEffect(() => {
     if (qrCode) {
@@ -160,9 +177,12 @@ function MesaCardapioContent() {
         })),
         tipo_pedido: TipoPedido.LOCAL,
         id_mesa: idMesa,
+        observacoes: observacoesPedido || undefined,
       });
 
       limparCarrinho();
+      setObservacoesPedido('');
+      setModalCarrinhoAberto(false);
 
       Alert.alert(
         'Pedido Realizado!',
@@ -268,9 +288,16 @@ function MesaCardapioContent() {
 
       {quantidadeTotal > 0 && (
         <View style={styles.cartFooter}>
-          <View style={styles.cartInfo}>
-            <Text style={styles.cartText}>{quantidadeTotal} item(s) no carrinho</Text>
-          </View>
+          <TouchableOpacity
+            style={styles.cartInfoButton}
+            onPress={() => setModalCarrinhoAberto(true)}
+          >
+            <View style={styles.cartInfo}>
+              <Icon name="shopping-cart" size={20} color="#4CAF50" />
+              <Text style={styles.cartText}>{quantidadeTotal} item(s)</Text>
+              <Text style={styles.cartTotal}>R$ {valorSubtotal.toFixed(2)}</Text>
+            </View>
+          </TouchableOpacity>
           <TouchableOpacity
             style={styles.cartButton}
             onPress={handleFinalizarPedido}
@@ -279,14 +306,136 @@ function MesaCardapioContent() {
             {enviandoPedido ? (
               <ActivityIndicator size="small" color="#FFF" />
             ) : (
-              <>
-                <Icon name="shopping-cart" size={20} color="#FFF" />
-                <Text style={styles.cartButtonText}>Finalizar Pedido</Text>
-              </>
+              <Text style={styles.cartButtonText}>Finalizar</Text>
             )}
           </TouchableOpacity>
         </View>
       )}
+
+      {/* Modal de Carrinho */}
+      <Modal
+        visible={modalCarrinhoAberto}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setModalCarrinhoAberto(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Carrinho - Mesa #{mesaValidada?.numero}</Text>
+              <TouchableOpacity
+                onPress={() => setModalCarrinhoAberto(false)}
+                style={styles.modalCloseButton}
+              >
+                <Icon name="close" size={24} color="#333" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalBody}>
+              {itens.length === 0 ? (
+                <View style={styles.emptyCartContainer}>
+                  <Icon name="shopping-cart" size={60} color="#DDD" />
+                  <Text style={styles.emptyCartText}>Carrinho vazio</Text>
+                </View>
+              ) : (
+                <>
+                  {itens.map((item) => {
+                    const preco = typeof item.produto.price === 'string' 
+                      ? parseFloat(item.produto.price) 
+                      : item.produto.price;
+                    const subtotal = preco * item.quantidade;
+
+                    return (
+                      <View key={item.produto.id} style={styles.cartItemModal}>
+                        {item.produto.imageUrl ? (
+                          <Image 
+                            source={{ uri: item.produto.imageUrl }} 
+                            style={styles.cartItemImage}
+                            resizeMode="cover"
+                          />
+                        ) : (
+                          <View style={[styles.cartItemImage, styles.cartItemImagePlaceholder]}>
+                            <Icon name="image" size={24} color="#999" />
+                          </View>
+                        )}
+                        <View style={styles.cartItemInfo}>
+                          <Text style={styles.cartItemName}>{item.produto.name}</Text>
+                          <Text style={styles.cartItemPrice}>R$ {preco.toFixed(2)}</Text>
+                          
+                          <View style={styles.cartItemQuantity}>
+                            <TouchableOpacity
+                              onPress={() => atualizarQuantidade(item.produto.id, item.quantidade - 1)}
+                              style={styles.quantityButtonModal}
+                            >
+                              <Icon name="remove" size={18} color="#333" />
+                            </TouchableOpacity>
+                            <Text style={styles.quantityTextModal}>{item.quantidade}</Text>
+                            <TouchableOpacity
+                              onPress={() => atualizarQuantidade(item.produto.id, item.quantidade + 1)}
+                              style={styles.quantityButtonModal}
+                            >
+                              <Icon name="add" size={18} color="#333" />
+                            </TouchableOpacity>
+                          </View>
+
+                          <TextInput
+                            style={styles.cartItemObservacoes}
+                            placeholder="Observações (opcional)"
+                            value={item.observacoes || ''}
+                            onChangeText={(text) => atualizarObservacoes(item.produto.id, text)}
+                            multiline
+                          />
+                        </View>
+                        <View style={styles.cartItemActions}>
+                          <Text style={styles.cartItemSubtotal}>R$ {subtotal.toFixed(2)}</Text>
+                          <TouchableOpacity
+                            onPress={() => removerDoCarrinho(item.produto.id)}
+                            style={styles.removeButtonModal}
+                          >
+                            <Icon name="delete" size={20} color="#F44336" />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    );
+                  })}
+
+                  <View style={styles.observacoesContainer}>
+                    <Text style={styles.observacoesLabel}>Observações Gerais do Pedido</Text>
+                    <TextInput
+                      style={styles.observacoesInput}
+                      placeholder="Ex: Sem cebola, ponto da carne..."
+                      value={observacoesPedido}
+                      onChangeText={setObservacoesPedido}
+                      multiline
+                      numberOfLines={3}
+                    />
+                  </View>
+                </>
+              )}
+            </ScrollView>
+
+            {itens.length > 0 && (
+              <View style={styles.modalFooter}>
+                <View style={styles.modalTotal}>
+                  <Text style={styles.modalTotalLabel}>Total ({quantidadeTotal} itens)</Text>
+                  <Text style={styles.modalTotalValue}>R$ {valorSubtotal.toFixed(2)}</Text>
+                </View>
+                <TouchableOpacity
+                  style={[styles.modalFinalizarButton, enviandoPedido && styles.buttonDisabled]}
+                  onPress={handleFinalizarPedido}
+                  disabled={enviandoPedido}
+                >
+                  {enviandoPedido ? (
+                    <ActivityIndicator color="#FFF" />
+                  ) : (
+                    <Text style={styles.modalFinalizarButtonText}>Finalizar Pedido</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -420,27 +569,213 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     shadowOffset: { width: 0, height: -2 },
   },
-  cartInfo: {
+  cartInfoButton: {
     flex: 1,
+    marginRight: 12,
+  },
+  cartInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   cartText: {
     fontSize: 14,
     color: '#666',
     fontWeight: '600',
   },
+  cartTotal: {
+    fontSize: 16,
+    color: '#4CAF50',
+    fontWeight: 'bold',
+    marginLeft: 'auto',
+  },
   cartButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: '#4CAF50',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
-    gap: 8,
   },
   cartButtonText: {
     color: '#FFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#FFF',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '90%',
+    paddingBottom: Platform.OS === 'ios' ? 34 : 16,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  modalCloseButton: {
+    padding: 4,
+  },
+  modalBody: {
+    maxHeight: '70%',
+    padding: 16,
+  },
+  emptyCartContainer: {
+    padding: 48,
+    alignItems: 'center',
+  },
+  emptyCartText: {
+    fontSize: 16,
+    color: '#999',
+    marginTop: 16,
+  },
+  cartItemModal: {
+    flexDirection: 'row',
+    backgroundColor: '#F9F9F9',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+  },
+  cartItemImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    backgroundColor: '#E0E0E0',
+  },
+  cartItemImagePlaceholder: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cartItemInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  cartItemName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  cartItemPrice: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 8,
+  },
+  cartItemQuantity: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    gap: 12,
+  },
+  quantityButtonModal: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  quantityTextModal: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    minWidth: 30,
+    textAlign: 'center',
+  },
+  cartItemObservacoes: {
+    backgroundColor: '#FFF',
+    borderRadius: 6,
+    padding: 8,
+    fontSize: 12,
+    color: '#666',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    minHeight: 40,
+  },
+  cartItemActions: {
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+  },
+  cartItemSubtotal: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#4CAF50',
+    marginBottom: 8,
+  },
+  removeButtonModal: {
+    padding: 4,
+  },
+  observacoesContainer: {
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  observacoesLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
+  observacoesInput: {
+    backgroundColor: '#F9F9F9',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 14,
+    color: '#333',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  modalFooter: {
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+    backgroundColor: '#FFF',
+  },
+  modalTotal: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  modalTotalLabel: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+  },
+  modalTotalValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#4CAF50',
+  },
+  modalFinalizarButton: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  modalFinalizarButtonText: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
 });
 

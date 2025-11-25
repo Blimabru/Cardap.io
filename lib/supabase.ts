@@ -37,6 +37,29 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 });
 
 /**
+ * Cliente Supabase para requisições anônimas (sem sessão)
+ * 
+ * Use este cliente quando precisar fazer requisições sem autenticação,
+ * como criar pedidos de mesa via QR code.
+ * 
+ * IMPORTANTE: Este client não persiste sessão e não tenta usar tokens existentes.
+ */
+export const supabaseAnon = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false,
+    detectSessionInUrl: false,
+    storage: undefined, // Não usar storage para evitar sessões persistentes
+  },
+  // Garantir que não há headers de autenticação
+  global: {
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+    },
+  },
+});
+
+/**
  * Tipos do banco de dados (gerados automaticamente pelo Supabase CLI)
  * Por enquanto, usamos tipos genéricos
  */

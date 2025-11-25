@@ -93,28 +93,15 @@ export default function CarrinhoScreen() {
     }
   };
 
-  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
-
   const renderItem = ({ item }: { item: ItemCarrinho }) => {
     const preco = typeof item.produto.price === 'string' 
       ? parseFloat(item.produto.price) 
       : item.produto.price;
     const subtotal = preco * item.quantidade;
-    const hasImageError = imageErrors[item.produto.id] || false;
 
     return (
       <View style={styles.itemCard}>
-        {hasImageError || !item.produto.imageUrl ? (
-          <View style={[styles.itemImage, styles.placeholderImage]}>
-            <Icon name="image" size={30} color="#999" />
-          </View>
-        ) : (
-          <Image 
-            source={{ uri: item.produto.imageUrl }} 
-            style={styles.itemImage}
-            onError={() => setImageErrors(prev => ({ ...prev, [item.produto.id]: true }))}
-          />
-        )}
+        <Image source={{ uri: item.produto.imageUrl }} style={styles.itemImage} />
         
         <View style={styles.itemInfo}>
           <Text style={styles.itemName} numberOfLines={1}>
@@ -269,11 +256,6 @@ const styles = StyleSheet.create({
     height: 70,
     borderRadius: 8,
     backgroundColor: '#E0E0E0',
-  },
-  placeholderImage: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5F5F5',
   },
   itemInfo: {
     flex: 1,

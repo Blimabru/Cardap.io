@@ -8,13 +8,18 @@ import { MaterialIcons as Icon } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
+  FlatList,
   Image,
+  Modal,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { listarCategorias } from '../../services/categorias.service';
@@ -31,7 +36,6 @@ export default function GerenciarProdutosScreen() {
   const [modalVisivel, setModalVisivel] = useState(false);
   const [produtoEditando, setProdutoEditando] = useState<Produto | null>(null);
   const [salvando, setSalvando] = useState(false);
-  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
   // Form state
   const [nome, setNome] = useState('');
@@ -132,7 +136,7 @@ export default function GerenciarProdutosScreen() {
     
     // Confirmação via window.confirm na web ou Alert no mobile
     const confirmar = Platform.OS === 'web' 
-      ? (typeof window !== 'undefined' ? (window as any).confirm(`Deseja realmente deletar "${produto.name}"?`) : false)
+      ? window.confirm(`Deseja realmente deletar "${produto.name}"?`)
       : await new Promise<boolean>((resolve) => {
           Alert.alert(
             'Confirmar Exclusão',
@@ -186,22 +190,9 @@ export default function GerenciarProdutosScreen() {
     }
   };
 
-  const renderProduto = ({ item }: { item: Produto }) => {
-    const hasImageError = imageErrors[item.id] || false;
-
-    return (
-      <View style={styles.produtoCard}>
-        {hasImageError || !item.imageUrl ? (
-          <View style={[styles.produtoImagem, styles.placeholderImage]}>
-            <Icon name="image" size={40} color="#999" />
-          </View>
-        ) : (
-          <Image 
-            source={{ uri: item.imageUrl }} 
-            style={styles.produtoImagem}
-            onError={() => setImageErrors(prev => ({ ...prev, [item.id]: true }))}
-          />
-        )}
+  const renderProduto = ({ item }: { item: Produto }) => (
+    <View style={styles.produtoCard}>
+      <Image source={{ uri: item.imageUrl }} style={styles.produtoImagem} />
       
       <View style={styles.produtoInfo}>
         <Text style={styles.produtoNome}>{item.name}</Text>
@@ -234,6 +225,171 @@ export default function GerenciarProdutosScreen() {
     </View>
   );
 
+  if (!podeGerenciar) {
+    return (
+      <View style={styles.errorContainer}>
+        <Icon name="block" size={80} color="#DDD" />
+        <Text style={styles.errorText}>Acesso Negado</Text>
+        <TouchableOpacity onPress={() => router.back()}>
+          <Text style={styles.linkText}>Voltar</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()}>
+          <Icon name="arrow-back" size={24} color="#333" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Gerenciar Produtos</Text>
+        <TouchableOpacity onPress={() => abrirModal()}>
+          <Icon name="add-circle" size={28} color="#4CAF50" />
+        </TouchableOpacity>
+      </View>
+
+      {carregando ? (
+        <ActivityIndicator size="large" color="#333" style={{ marginTop: 32 }} />
+      ) : (
+        <FlatList
+          data={produtos}
+          renderItem={renderProduto}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.lista}
+          ListEmptyComponent={() => (
+            <View style={styles.emptyContainer}>
+              <Icon name="inventory" size={80} color="#DDD" />
+              <Text style={styles.emptyText}>Nenhum produto cadastrado</Text>
+              <TouchableOpacity
+                style={styles.botaoAdicionar}
+                onPress={() => abrirModal()}
+              >
+                <Text style={styles.botaoAdicionarText}>Adicionar Primeiro Produto</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        />
+      )}
+
+      <Modal
+        visible={modalVisivel}
+        animationType="slide"
+        transparent={false}
+        onRequestClose={fecharModal}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={fecharModal}>
+              <Icon name="close" size={24} color="#333" />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>
+              {produtoEditando ? 'Editar Produto' : 'Novo Produto'}
+            </Text>
+            <View style={{ width: 24 }} />
+          </View>
+
+          <ScrollView style={styles.modalContent}>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Nome *</Text>
+              <TextInput
+                style={styles.input}
+                value={nome}
+                onChangeText={setNome}
+                placeholder="Nome do produto"
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Descrição</Text>
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                value={descricao}
+                onChangeText={setDescricao}
+                placeholder="Descrição do produto"
+                multiline
+                numberOfLines={3}
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Preço (R$) *</Text>
+              <TextInput
+                style={styles.input}
+                value={preco}
+                onChangeText={setPreco}
+                placeholder="0.00"
+                keyboardType="decimal-pad"
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>URL da Imagem *</Text>
+              <TextInput
+                style={styles.input}
+                value={imagemUrl}
+                onChangeText={setImagemUrl}
+                placeholder="https://..."
+                autoCapitalize="none"
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Categoria *</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {categorias.map((cat) => (
+                  <TouchableOpacity
+                    key={cat.id}
+                    style={[
+                      styles.categoriaChip,
+                      categoriaId === cat.id && styles.categoriaChipSelecionada,
+                    ]}
+                    onPress={() => setCategoriaId(cat.id)}
+                  >
+                    <Text
+                      style={[
+                        styles.categoriaChipText,
+                        categoriaId === cat.id && styles.categoriaChipTextSelecionada,
+                      ]}
+                    >
+                      {cat.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Avaliação (0-10)</Text>
+              <TextInput
+                style={styles.input}
+                value={avaliacao}
+                onChangeText={setAvaliacao}
+                placeholder="0.0"
+                keyboardType="decimal-pad"
+              />
+            </View>
+          </ScrollView>
+
+          <View style={styles.modalFooter}>
+            <TouchableOpacity
+              style={[styles.botaoSalvar, salvando && styles.botaoDesabilitado]}
+              onPress={handleSalvar}
+              disabled={salvando}
+            >
+              {salvando ? (
+                <ActivityIndicator color="#FFF" />
+              ) : (
+                <Text style={styles.botaoSalvarText}>
+                  {produtoEditando ? 'Atualizar' : 'Criar'} Produto
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -275,11 +431,6 @@ const styles = StyleSheet.create({
     height: 70,
     borderRadius: 8,
     backgroundColor: '#E0E0E0',
-  },
-  placeholderImage: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5F5F5',
   },
   produtoInfo: {
     flex: 1,
@@ -436,4 +587,4 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
 });
-};
+

@@ -77,18 +77,27 @@ export const buscarMesaPorNumero = async (numero: number): Promise<Mesa> => {
  * Busca mesa por QR code
  */
 export const buscarMesaPorQR = async (qrCode: string): Promise<Mesa> => {
+  // Buscar mesa por QR code, permitindo status 'livre' ou 'ocupada' (não 'inativa')
+  console.log('🔍 Buscando mesa por QR code:', qrCode);
+  
   const { data, error } = await supabase
     .from('mesas')
     .select('*')
     .eq('qr_code', qrCode)
-    .eq('status', StatusMesa.LIVRE)
-    .or(`status.eq.${StatusMesa.OCUPADA}`)
+    .in('status', [StatusMesa.LIVRE, StatusMesa.OCUPADA])
     .single();
 
-  if (error || !data) {
-    throw new Error(error?.message || 'QR code inválido ou mesa inativa');
+  if (error) {
+    console.error('❌ Erro ao buscar mesa:', error);
+    throw new Error(error.message || 'QR code inválido ou mesa inativa');
   }
 
+  if (!data) {
+    console.error('❌ Mesa não encontrada para QR code:', qrCode);
+    throw new Error('QR code inválido ou mesa inativa');
+  }
+
+  console.log('✅ Mesa encontrada:', data);
   return formatarMesa(data);
 };
 

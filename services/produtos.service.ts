@@ -11,12 +11,45 @@ import { Produto, Categoria } from '../types';
  * Converte dados do Supabase para o tipo Produto
  */
 const formatarProduto = (data: any): Produto => {
+  // Tratar imageUrl (pode vir como imageUrl ou imageurl do banco)
+  // Após a migration, deve vir como imageUrl, mas mantemos fallback para imageurl
+  // Verificar todas as possíveis variações do nome da coluna (case-insensitive)
+  let imageUrl = '';
+  
+  // Tentar todas as variações possíveis
+  const possiveisChaves = ['imageUrl', 'imageurl', 'ImageUrl', 'IMAGEURL'];
+  for (const chave of possiveisChaves) {
+    if (data[chave] && typeof data[chave] === 'string' && data[chave].trim() !== '') {
+      imageUrl = data[chave];
+      break;
+    }
+  }
+  
+  // Se ainda não encontrou, tentar buscar por todas as chaves do objeto
+  if (!imageUrl) {
+    const todasChaves = Object.keys(data);
+    const chaveImage = todasChaves.find(k => k.toLowerCase() === 'imageurl');
+    if (chaveImage && data[chaveImage]) {
+      imageUrl = data[chaveImage];
+    }
+  }
+  
+  // Debug: logar apenas produtos sem imagem (para não poluir o console)
+  if (data.id && !imageUrl) {
+    console.warn('⚠️ Produto sem imageUrl:', {
+      id: data.id,
+      name: data.name,
+      todasChaves: Object.keys(data),
+      chavesComImage: Object.keys(data).filter(k => k.toLowerCase().includes('image')),
+    });
+  }
+  
   return {
     id: data.id,
     name: data.name,
     description: data.description || undefined,
     price: typeof data.price === 'string' ? parseFloat(data.price) : data.price,
-    imageUrl: data.imageUrl,
+    imageUrl: imageUrl,
     rating: typeof data.rating === 'string' ? parseFloat(data.rating) : data.rating,
     category: data.category ? {
       id: data.category.id,
@@ -41,7 +74,32 @@ export const listarProdutos = async (): Promise<Produto[]> => {
     throw new Error(error.message || 'Erro ao buscar produtos');
   }
 
-  return (data || []).map(formatarProduto);
+  // Debug: verificar estrutura do primeiro produto
+  if (data && data.length > 0) {
+    console.log('📦 Primeiro produto (estrutura bruta do Supabase):', {
+      id: data[0].id,
+      name: data[0].name,
+      todasChaves: Object.keys(data[0]),
+      imageUrl: data[0].imageUrl,
+      imageurl: data[0].imageurl,
+      'imageUrl': data[0]['imageUrl'],
+      'imageurl': data[0]['imageurl'],
+    });
+  }
+
+  const produtosFormatados = (data || []).map(formatarProduto);
+  
+  // Debug: verificar produto formatado
+  if (produtosFormatados.length > 0) {
+    console.log('📦 Primeiro produto (após formatação):', {
+      id: produtosFormatados[0].id,
+      name: produtosFormatados[0].name,
+      imageUrl: produtosFormatados[0].imageUrl,
+      temImageUrl: !!produtosFormatados[0].imageUrl,
+    });
+  }
+
+  return produtosFormatados;
 };
 
 /**

@@ -4,7 +4,7 @@
  * Gerencia pedidos do sistema usando Supabase
  */
 
-import { supabase } from '../lib/supabase';
+import { supabase, supabaseAnon } from '../lib/supabase';
 import { Pedido, CriarPedidoDto, StatusPedido, EstatisticasPedidos, ItemPedido, Usuario, Produto } from '../types';
 
 /**
@@ -92,8 +92,19 @@ export const criarPedido = async (dados: CriarPedidoDto): Promise<Pedido> => {
       throw new Error('Usuário não autenticado. Para fazer pedidos sem login, você precisa estar em uma mesa (via QR code).');
     }
     userId = user.id;
+  } else {
+    // Para pedidos de mesa, garantir que não há sessão inválida
+    // Se houver sessão inválida, pode causar erro 401
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      // Se há sessão, usar o usuário da sessão (opcional para pedidos de mesa)
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        userId = user.id; // Opcional: pode associar pedido de mesa ao usuário se estiver logado
+      }
+    }
+    // Se não há sessão, userId fica null (pedido anônimo permitido)
   }
-  // Se for pedido por mesa (id_mesa presente), userId pode ser null (pedido anônimo permitido)
   
   // Validação: Pedido deve ter id_usuario OU id_mesa
   if (!userId && !dados.id_mesa) {
@@ -101,8 +112,10 @@ export const criarPedido = async (dados: CriarPedidoDto): Promise<Pedido> => {
   }
 
   // 2. Buscar produtos para calcular preços
+  // Para pedidos de mesa anônimos, usar client anon também para buscar produtos
+  const clientParaProdutos = (dados.id_mesa && !userId) ? supabaseAnon : supabase;
   const produtosIds = dados.itens.map(item => item.id_produto);
-  const { data: produtos, error: produtosError } = await supabase
+  const { data: produtos, error: produtosError } = await clientParaProdutos
     .from('products')
     .select('id, price')
     .in('id', produtosIds);
@@ -133,10 +146,29 @@ export const criarPedido = async (dados: CriarPedidoDto): Promise<Pedido> => {
   const total = subtotal + taxaEntrega + taxaServico;
 
   // 4. Criar pedido
-  const { data: pedido, error: pedidoError } = await supabase
+  // Log para debug: verificar se está tentando criar pedido de mesa sem autenticação
+  if (dados.id_mesa && !userId) {
+    console.log('📝 Criando pedido de mesa (anon):', {
+      id_mesa: dados.id_mesa,
+      quantidade_itens: dados.itens.length,
+    });
+    
+    // Para pedidos anônimos, garantir que não há sessão interferindo
+    // Limpar qualquer sessão existente no client anon
+    try {
+      await supabaseAnon.auth.signOut();
+    } catch (e) {
+      // Ignorar erros ao limpar sessão
+    }
+  }
+
+  // Usar client anon para pedidos de mesa sem usuário, client normal caso contrário
+  const client = (dados.id_mesa && !userId) ? supabaseAnon : supabase;
+
+  const { data: pedido, error: pedidoError } = await client
     .from('pedidos')
     .insert({
-      id_usuario: userId,
+      id_usuario: userId, // null para pedidos de mesa anônimos
       id_mesa: dados.id_mesa || null,
       status: StatusPedido.PENDENTE,
       status_pagamento: 'pendente',
@@ -152,8 +184,23 @@ export const criarPedido = async (dados: CriarPedidoDto): Promise<Pedido> => {
     .single();
 
   if (pedidoError || !pedido) {
+    console.error('❌ Erro ao criar pedido:', {
+      error: pedidoError,
+      id_mesa: dados.id_mesa,
+      id_usuario: userId,
+      message: pedidoError?.message,
+      code: pedidoError?.code,
+      details: pedidoError?.details,
+      hint: pedidoError?.hint,
+    });
     throw new Error(pedidoError?.message || 'Erro ao criar pedido');
   }
+
+  console.log('✅ Pedido criado com sucesso:', {
+    id: pedido.id,
+    id_mesa: pedido.id_mesa,
+    id_usuario: pedido.id_usuario,
+  });
 
   // 5. Criar itens do pedido
   const itensParaInserir = itensComPreco.map(item => ({
@@ -165,7 +212,8 @@ export const criarPedido = async (dados: CriarPedidoDto): Promise<Pedido> => {
     observacoes: item.observacoes || null,
   }));
 
-  const { error: itensError } = await supabase
+  // Usar o mesmo client (anon ou normal) para criar itens
+  const { error: itensError } = await client
     .from('itens_pedido')
     .insert(itensParaInserir);
 
