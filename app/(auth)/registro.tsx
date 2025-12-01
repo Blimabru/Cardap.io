@@ -17,6 +17,7 @@ import {
   Platform,
   ScrollView,
   Image,
+  useWindowDimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
@@ -24,6 +25,13 @@ import { useAuth } from '../../contexts/AuthContext';
 export default function RegistroScreen() {
   const router = useRouter();
   const { registro } = useAuth();
+  const { width: screenWidth } = useWindowDimensions();
+
+  // Variáveis responsivas baseadas na largura da tela
+  const isSmallScreen = screenWidth < 375;
+  const isMediumScreen = screenWidth >= 375 && screenWidth < 412;
+  const isLargeScreen = screenWidth >= 412;
+  const isWeb = Platform.OS === 'web';
 
   const [nomeCompleto, setNomeCompleto] = useState('');
   const [email, setEmail] = useState('');
@@ -31,6 +39,123 @@ export default function RegistroScreen() {
   const [senha, setSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
   const [carregando, setCarregando] = useState(false);
+
+  // Função para criar estilos dinâmicos baseados no tamanho da tela
+  const createDynamicStyles = (
+    screenWidth: number,
+    isSmallScreen: boolean,
+    isMediumScreen: boolean,
+    isLargeScreen: boolean,
+    isWeb: boolean
+  ) => {
+    // Padding horizontal responsivo
+    const horizontalPadding = isSmallScreen 
+      ? 16 
+      : isMediumScreen 
+      ? 20 
+      : isLargeScreen
+      ? 24
+      : Math.min(24, screenWidth * 0.058);
+
+    // Tamanhos de fonte responsivos
+    const subtitleFontSize = isSmallScreen ? 14 : isMediumScreen ? 15 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039);
+    const labelFontSize = isSmallScreen ? 13 : isMediumScreen ? 14 : isLargeScreen ? 14 : Math.min(14, screenWidth * 0.034);
+    const inputFontSize = isSmallScreen ? 14 : isMediumScreen ? 15 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039);
+    const buttonFontSize = isSmallScreen ? 14 : isMediumScreen ? 15 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039);
+    const linkFontSize = isSmallScreen ? 12 : isMediumScreen ? 13 : isLargeScreen ? 14 : Math.min(14, screenWidth * 0.034);
+
+    // Tamanhos de logo responsivos
+    const logoWidth = isSmallScreen 
+      ? Math.min(200, screenWidth * 0.6)
+      : isMediumScreen 
+      ? Math.min(240, screenWidth * 0.58)
+      : isLargeScreen
+      ? Math.min(280, screenWidth * 0.68)
+      : Math.min(280, screenWidth * 0.68);
+    const logoHeight = logoWidth * 0.43; // Proporção aproximada
+
+    // Padding de inputs responsivo
+    const inputPaddingH = isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039);
+    const inputPaddingV = isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029);
+
+    // Padding de botão responsivo
+    const buttonPaddingV = isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039);
+
+    return StyleSheet.create({
+      scrollContent: {
+        flexGrow: 1,
+        paddingHorizontal: horizontalPadding,
+        paddingTop: isSmallScreen ? 40 : isMediumScreen ? 50 : isLargeScreen ? 60 : Math.min(60, screenWidth * 0.146),
+        paddingBottom: isSmallScreen ? 32 : isMediumScreen ? 36 : isLargeScreen ? 40 : Math.min(40, screenWidth * 0.098),
+        width: '100%',
+        maxWidth: '100%',
+      },
+      header: {
+        marginBottom: isSmallScreen ? 24 : isMediumScreen ? 28 : isLargeScreen ? 32 : Math.min(32, screenWidth * 0.078),
+      },
+      logoContainer: {
+        alignItems: 'center',
+        marginBottom: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+      },
+      logoImage: {
+        width: logoWidth,
+        height: logoHeight,
+        maxWidth: '100%',
+      },
+      subtitle: {
+        fontSize: subtitleFontSize,
+        color: '#666',
+        textAlign: 'center',
+      },
+      form: {
+        width: '100%',
+        maxWidth: '100%',
+      },
+      inputContainer: {
+        marginBottom: isSmallScreen ? 16 : isMediumScreen ? 18 : isLargeScreen ? 20 : Math.min(20, screenWidth * 0.049),
+      },
+      label: {
+        fontSize: labelFontSize,
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: isSmallScreen ? 6 : isMediumScreen ? 7 : isLargeScreen ? 8 : Math.min(8, screenWidth * 0.019),
+      },
+      input: {
+        borderWidth: 1,
+        borderColor: '#DDD',
+        borderRadius: 8,
+        paddingHorizontal: inputPaddingH,
+        paddingVertical: inputPaddingV,
+        fontSize: inputFontSize,
+        color: '#333',
+        width: '100%',
+        maxWidth: '100%',
+      },
+      button: {
+        backgroundColor: '#333',
+        borderRadius: 8,
+        paddingVertical: buttonPaddingV,
+        alignItems: 'center',
+        marginTop: isSmallScreen ? 6 : isMediumScreen ? 7 : isLargeScreen ? 8 : Math.min(8, screenWidth * 0.019),
+        width: '100%',
+      },
+      buttonText: {
+        color: '#FFF',
+        fontSize: buttonFontSize,
+        fontWeight: '600',
+      },
+      linkButton: {
+        marginTop: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        alignItems: 'center',
+      },
+      linkText: {
+        fontSize: linkFontSize,
+        color: '#666',
+      },
+    });
+  };
+
+  const dynamicStyles = createDynamicStyles(screenWidth, isSmallScreen, isMediumScreen, isLargeScreen, isWeb);
 
   const handleRegistro = async () => {
     // Validações
@@ -74,26 +199,26 @@ export default function RegistroScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView 
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={dynamicStyles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.header}>
+        <View style={dynamicStyles.header}>
           {/* Logo Cardap.io */}
-          <View style={styles.logoContainer}>
+          <View style={dynamicStyles.logoContainer}>
             <Image
               source={require('../../assets/images/Logo.png')}
-              style={styles.logoImage}
+              style={dynamicStyles.logoImage}
               resizeMode="contain"
             />
           </View>
-          <Text style={styles.subtitle}>Crie sua conta gratuitamente</Text>
+          <Text style={dynamicStyles.subtitle}>Crie sua conta gratuitamente</Text>
         </View>
 
-        <View style={styles.form}>
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Nome Completo *</Text>
+        <View style={dynamicStyles.form}>
+          <View style={dynamicStyles.inputContainer}>
+            <Text style={dynamicStyles.label}>Nome Completo *</Text>
             <TextInput
-              style={styles.input}
+              style={dynamicStyles.input}
               placeholder="João Silva"
               value={nomeCompleto}
               onChangeText={setNomeCompleto}
@@ -101,10 +226,10 @@ export default function RegistroScreen() {
             />
           </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Email *</Text>
+          <View style={dynamicStyles.inputContainer}>
+            <Text style={dynamicStyles.label}>Email *</Text>
             <TextInput
-              style={styles.input}
+              style={dynamicStyles.input}
               placeholder="seu@email.com"
               value={email}
               onChangeText={setEmail}
@@ -114,10 +239,10 @@ export default function RegistroScreen() {
             />
           </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Telefone</Text>
+          <View style={dynamicStyles.inputContainer}>
+            <Text style={dynamicStyles.label}>Telefone</Text>
             <TextInput
-              style={styles.input}
+              style={dynamicStyles.input}
               placeholder="(11) 99999-9999"
               value={telefone}
               onChangeText={setTelefone}
@@ -126,10 +251,10 @@ export default function RegistroScreen() {
             />
           </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Senha *</Text>
+          <View style={dynamicStyles.inputContainer}>
+            <Text style={dynamicStyles.label}>Senha *</Text>
             <TextInput
-              style={styles.input}
+              style={dynamicStyles.input}
               placeholder="Mínimo 6 caracteres"
               value={senha}
               onChangeText={setSenha}
@@ -138,10 +263,10 @@ export default function RegistroScreen() {
             />
           </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Confirmar Senha *</Text>
+          <View style={dynamicStyles.inputContainer}>
+            <Text style={dynamicStyles.label}>Confirmar Senha *</Text>
             <TextInput
-              style={styles.input}
+              style={dynamicStyles.input}
               placeholder="Digite a senha novamente"
               value={confirmarSenha}
               onChangeText={setConfirmarSenha}
@@ -151,23 +276,23 @@ export default function RegistroScreen() {
           </View>
 
           <TouchableOpacity
-            style={[styles.button, carregando && styles.buttonDisabled]}
+            style={[dynamicStyles.button, carregando && styles.buttonDisabled]}
             onPress={handleRegistro}
             disabled={carregando}
           >
             {carregando ? (
               <ActivityIndicator color="#FFF" />
             ) : (
-              <Text style={styles.buttonText}>Criar Conta</Text>
+              <Text style={dynamicStyles.buttonText}>Criar Conta</Text>
             )}
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.linkButton}
+            style={dynamicStyles.linkButton}
             onPress={() => router.back()}
             disabled={carregando}
           >
-            <Text style={styles.linkText}>
+            <Text style={dynamicStyles.linkText}>
               Já tem conta? <Text style={styles.linkTextBold}>Faça login</Text>
             </Text>
           </TouchableOpacity>
@@ -181,72 +306,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 60,
-    paddingBottom: 40,
-  },
-  header: {
-    marginBottom: 32,
-  },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  logoImage: {
-    width: 280,
-    height: 120,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-  },
-  form: {
     width: '100%',
-  },
-  inputContainer: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#DDD',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: '#333',
-  },
-  button: {
-    backgroundColor: '#333',
-    borderRadius: 8,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 8,
+    maxWidth: '100%',
+    overflow: 'hidden',
   },
   buttonDisabled: {
     opacity: 0.6,
-  },
-  buttonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  linkButton: {
-    marginTop: 16,
-    alignItems: 'center',
-  },
-  linkText: {
-    fontSize: 14,
-    color: '#666',
   },
   linkTextBold: {
     fontWeight: '600',

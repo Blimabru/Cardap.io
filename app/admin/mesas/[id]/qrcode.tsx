@@ -14,6 +14,7 @@ import {
   Alert,
   Share,
   ScrollView,
+  useWindowDimensions,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialIcons as Icon } from '@expo/vector-icons';
@@ -26,8 +27,14 @@ import { gerarURLCompletaQRCode } from '../../../../services/qrcode.service';
 export default function QRCodeScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const { width: screenWidth } = useWindowDimensions();
   const { podeGerenciar } = useAuth();
   const mesaId = params.id as string;
+
+  // Variáveis responsivas baseadas na largura da tela
+  const isSmallScreen = screenWidth < 375;
+  const isMediumScreen = screenWidth >= 375 && screenWidth < 412;
+  const isLargeScreen = screenWidth >= 412;
 
   const [mesa, setMesa] = useState<Mesa | null>(null);
   const [carregando, setCarregando] = useState(true);
@@ -94,101 +101,325 @@ export default function QRCodeScreen() {
     }
   };
 
+  // Função para criar estilos dinâmicos baseados no tamanho da tela
+  const createDynamicStyles = (
+    screenWidth: number,
+    isSmallScreen: boolean,
+    isMediumScreen: boolean,
+    isLargeScreen: boolean
+  ) => {
+    // Padding horizontal responsivo
+    const horizontalPadding = isSmallScreen 
+      ? 12 
+      : isMediumScreen 
+      ? 14 
+      : isLargeScreen
+      ? 16
+      : Math.min(16, screenWidth * 0.039);
+
+    // Tamanhos de fonte responsivos
+    const titleFontSize = isSmallScreen ? 18 : isMediumScreen ? 19 : isLargeScreen ? 18 : Math.min(18, screenWidth * 0.044);
+    const bodyFontSize = isSmallScreen ? 14 : isMediumScreen ? 15 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039);
+    const labelFontSize = isSmallScreen ? 13 : isMediumScreen ? 14 : isLargeScreen ? 14 : Math.min(14, screenWidth * 0.034);
+    const smallFontSize = isSmallScreen ? 9 : isMediumScreen ? 10 : isLargeScreen ? 10 : Math.min(10, screenWidth * 0.024);
+    const largeFontSize = isSmallScreen ? 16 : isMediumScreen ? 17 : isLargeScreen ? 18 : Math.min(18, screenWidth * 0.044);
+    const qrTitleFontSize = isSmallScreen ? 18 : isMediumScreen ? 20 : isLargeScreen ? 24 : Math.min(24, screenWidth * 0.058);
+
+    // Tamanho do QR code responsivo
+    const qrCodeSize = isSmallScreen 
+      ? Math.min(200, screenWidth * 0.55)
+      : isMediumScreen 
+      ? Math.min(220, screenWidth * 0.55)
+      : isLargeScreen
+      ? Math.min(250, screenWidth * 0.55)
+      : Math.min(250, screenWidth * 0.55);
+
+    // Tamanhos de ícones responsivos
+    const headerIconSize = isSmallScreen ? 20 : isMediumScreen ? 22 : isLargeScreen ? 24 : Math.min(24, screenWidth * 0.058);
+    const actionIconSize = isSmallScreen ? 20 : isMediumScreen ? 22 : isLargeScreen ? 24 : Math.min(24, screenWidth * 0.058);
+    const emptyIconSize = isSmallScreen ? 60 : isMediumScreen ? 70 : isLargeScreen ? 80 : Math.min(80, screenWidth * 0.195);
+
+    return StyleSheet.create({
+      header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: horizontalPadding,
+        backgroundColor: '#FFF',
+        borderBottomWidth: 1,
+        borderBottomColor: '#E0E0E0',
+        width: '100%',
+        maxWidth: '100%',
+      },
+      headerTitle: {
+        fontSize: titleFontSize,
+        fontWeight: 'bold',
+        color: '#333',
+        flex: 1,
+        marginHorizontal: isSmallScreen ? 8 : isMediumScreen ? 10 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+      },
+      qrContainer: {
+        padding: horizontalPadding,
+        alignItems: 'center',
+        width: '100%',
+        maxWidth: '100%',
+      },
+      qrCard: {
+        backgroundColor: '#FFF',
+        borderRadius: 16,
+        padding: isSmallScreen ? 20 : isMediumScreen ? 24 : isLargeScreen ? 32 : Math.min(32, screenWidth * 0.078),
+        alignItems: 'center',
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 4 },
+        width: '100%',
+        maxWidth: isSmallScreen ? screenWidth * 0.95 : isMediumScreen ? screenWidth * 0.90 : isLargeScreen ? 400 : Math.min(400, screenWidth * 0.975),
+      },
+      qrTitle: {
+        fontSize: qrTitleFontSize,
+        fontWeight: 'bold',
+        color: '#333',
+        marginBottom: isSmallScreen ? 6 : isMediumScreen ? 7 : isLargeScreen ? 8 : Math.min(8, screenWidth * 0.019),
+      },
+      qrSubtitle: {
+        fontSize: bodyFontSize,
+        color: '#666',
+        marginBottom: isSmallScreen ? 18 : isMediumScreen ? 20 : isLargeScreen ? 24 : Math.min(24, screenWidth * 0.058),
+        textAlign: 'center',
+      },
+      qrCodeWrapper: {
+        backgroundColor: '#FFF',
+        padding: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        borderRadius: 12,
+        marginBottom: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+      },
+      qrCodeText: {
+        fontSize: smallFontSize,
+        color: '#999',
+        marginTop: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        fontFamily: 'monospace',
+        textAlign: 'center',
+      },
+      qrURLText: {
+        fontSize: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+        color: '#666',
+        marginTop: isSmallScreen ? 6 : isMediumScreen ? 7 : isLargeScreen ? 8 : Math.min(8, screenWidth * 0.019),
+        textAlign: 'center',
+        paddingHorizontal: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+      },
+      actions: {
+        paddingHorizontal: horizontalPadding,
+        gap: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+        width: '100%',
+        maxWidth: '100%',
+      },
+      actionButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#FFF',
+        paddingVertical: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#2196F3',
+        gap: isSmallScreen ? 6 : isMediumScreen ? 7 : isLargeScreen ? 8 : Math.min(8, screenWidth * 0.019),
+        width: '100%',
+      },
+      actionButtonDanger: {
+        borderColor: '#F44336',
+      },
+      actionButtonText: {
+        fontSize: isSmallScreen ? 14 : isMediumScreen ? 15 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        fontWeight: '600',
+        color: '#2196F3',
+      },
+      actionButtonTextDanger: {
+        color: '#F44336',
+      },
+      infoContainer: {
+        marginTop: isSmallScreen ? 18 : isMediumScreen ? 20 : isLargeScreen ? 24 : Math.min(24, screenWidth * 0.058),
+        marginHorizontal: horizontalPadding,
+        backgroundColor: '#FFF',
+        borderRadius: 12,
+        padding: horizontalPadding,
+        width: '100%',
+        maxWidth: '100%',
+      },
+      infoTitle: {
+        fontSize: largeFontSize,
+        fontWeight: 'bold',
+        color: '#333',
+        marginBottom: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+      },
+      infoRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingVertical: isSmallScreen ? 6 : isMediumScreen ? 7 : isLargeScreen ? 8 : Math.min(8, screenWidth * 0.019),
+        borderBottomWidth: 1,
+        borderBottomColor: '#F0F0F0',
+        width: '100%',
+        maxWidth: '100%',
+      },
+      infoLabel: {
+        fontSize: bodyFontSize,
+        color: '#666',
+      },
+      infoValue: {
+        fontSize: bodyFontSize,
+        fontWeight: '600',
+        color: '#333',
+      },
+      errorContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: isSmallScreen ? 24 : isMediumScreen ? 28 : isLargeScreen ? 32 : Math.min(32, screenWidth * 0.078),
+      },
+      errorText: {
+        fontSize: isSmallScreen ? 18 : isMediumScreen ? 19 : isLargeScreen ? 20 : Math.min(20, screenWidth * 0.049),
+        fontWeight: 'bold',
+        color: '#999',
+        marginTop: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        textAlign: 'center',
+      },
+      linkText: {
+        fontSize: isSmallScreen ? 14 : isMediumScreen ? 15 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        color: '#2196F3',
+        marginTop: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+      },
+      centerContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#F5F5F5',
+      },
+      loadingText: {
+        marginTop: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        fontSize: isSmallScreen ? 14 : isMediumScreen ? 15 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        color: '#666',
+      },
+    });
+  };
+
+  const dynamicStyles = createDynamicStyles(screenWidth, isSmallScreen, isMediumScreen, isLargeScreen);
+
+  // Tamanhos de ícones dinâmicos
+  const headerIconSize = isSmallScreen ? 20 : isMediumScreen ? 22 : isLargeScreen ? 24 : Math.min(24, screenWidth * 0.058);
+  const actionIconSize = isSmallScreen ? 20 : isMediumScreen ? 22 : isLargeScreen ? 24 : Math.min(24, screenWidth * 0.058);
+  const emptyIconSize = isSmallScreen ? 60 : isMediumScreen ? 70 : isLargeScreen ? 80 : Math.min(80, screenWidth * 0.195);
+  
+  // Tamanho do QR code dinâmico
+  const qrCodeSize = isSmallScreen 
+    ? Math.min(200, screenWidth * 0.55)
+    : isMediumScreen 
+    ? Math.min(220, screenWidth * 0.55)
+    : isLargeScreen
+    ? Math.min(250, screenWidth * 0.55)
+    : Math.min(250, screenWidth * 0.55);
+
   if (!podeGerenciar) {
     return (
-      <View style={styles.errorContainer}>
-        <Icon name="block" size={80} color="#DDD" />
-        <Text style={styles.errorText}>Acesso Negado</Text>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.linkText}>Voltar</Text>
-        </TouchableOpacity>
+      <View style={styles.container}>
+        <View style={dynamicStyles.errorContainer}>
+          <Icon name="block" size={emptyIconSize} color="#DDD" />
+          <Text style={dynamicStyles.errorText}>Acesso Negado</Text>
+          <TouchableOpacity onPress={() => router.back()}>
+            <Text style={dynamicStyles.linkText}>Voltar</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
 
   if (carregando) {
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#333" />
-        <Text style={styles.loadingText}>Carregando QR code...</Text>
+      <View style={styles.container}>
+        <View style={dynamicStyles.centerContainer}>
+          <ActivityIndicator size="large" color="#333" />
+          <Text style={dynamicStyles.loadingText}>Carregando QR code...</Text>
+        </View>
       </View>
     );
   }
 
   if (!mesa) {
     return (
-      <View style={styles.errorContainer}>
-        <Icon name="error-outline" size={80} color="#DDD" />
-        <Text style={styles.errorText}>Mesa não encontrada</Text>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.linkText}>Voltar</Text>
-        </TouchableOpacity>
+      <View style={styles.container}>
+        <View style={dynamicStyles.errorContainer}>
+          <Icon name="error-outline" size={emptyIconSize} color="#DDD" />
+          <Text style={dynamicStyles.errorText}>Mesa não encontrada</Text>
+          <TouchableOpacity onPress={() => router.back()}>
+            <Text style={dynamicStyles.linkText}>Voltar</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
+      <View style={dynamicStyles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Icon name="arrow-back" size={24} color="#333" />
+          <Icon name="arrow-back" size={headerIconSize} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>QR Code - Mesa #{mesa.numero}</Text>
-        <View style={{ width: 24 }} />
+        <Text style={dynamicStyles.headerTitle} numberOfLines={2}>QR Code - Mesa #{mesa.numero}</Text>
+        <View style={{ width: headerIconSize }} />
       </View>
 
-      <View style={styles.qrContainer}>
-        <View style={styles.qrCard}>
-          <Text style={styles.qrTitle}>Mesa #{mesa.numero}</Text>
-          <Text style={styles.qrSubtitle}>Escaneie para acessar o cardápio</Text>
+      <View style={dynamicStyles.qrContainer}>
+        <View style={dynamicStyles.qrCard}>
+          <Text style={dynamicStyles.qrTitle}>Mesa #{mesa.numero}</Text>
+          <Text style={dynamicStyles.qrSubtitle}>Escaneie para acessar o cardápio</Text>
           
-          <View style={styles.qrCodeWrapper}>
+          <View style={dynamicStyles.qrCodeWrapper}>
             <QRCode
               value={qrURL}
-              size={250}
+              size={qrCodeSize}
               color="#000000"
               backgroundColor="#FFFFFF"
             />
           </View>
 
-          <Text style={styles.qrCodeText}>{mesa.qr_code}</Text>
-          <Text style={styles.qrURLText}>{qrURL}</Text>
+          <Text style={dynamicStyles.qrCodeText}>{mesa.qr_code}</Text>
+          <Text style={dynamicStyles.qrURLText} numberOfLines={2}>{qrURL}</Text>
         </View>
       </View>
 
-      <View style={styles.actions}>
+      <View style={dynamicStyles.actions}>
         <TouchableOpacity
-          style={styles.actionButton}
+          style={dynamicStyles.actionButton}
           onPress={handleCompartilhar}
         >
-          <Icon name="share" size={24} color="#2196F3" />
-          <Text style={styles.actionButtonText}>Compartilhar</Text>
+          <Icon name="share" size={actionIconSize} color="#2196F3" />
+          <Text style={dynamicStyles.actionButtonText}>Compartilhar</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.actionButton, styles.actionButtonDanger]}
+          style={[dynamicStyles.actionButton, dynamicStyles.actionButtonDanger]}
           onPress={handleRegenerarQR}
         >
-          <Icon name="refresh" size={24} color="#F44336" />
-          <Text style={[styles.actionButtonText, styles.actionButtonTextDanger]}>
+          <Icon name="refresh" size={actionIconSize} color="#F44336" />
+          <Text style={[dynamicStyles.actionButtonText, dynamicStyles.actionButtonTextDanger]}>
             Regenerar QR Code
           </Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.infoContainer}>
-        <Text style={styles.infoTitle}>Informações da Mesa</Text>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Número:</Text>
-          <Text style={styles.infoValue}>{mesa.numero}</Text>
+      <View style={dynamicStyles.infoContainer}>
+        <Text style={dynamicStyles.infoTitle}>Informações da Mesa</Text>
+        <View style={dynamicStyles.infoRow}>
+          <Text style={dynamicStyles.infoLabel}>Número:</Text>
+          <Text style={dynamicStyles.infoValue}>{mesa.numero}</Text>
         </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Capacidade:</Text>
-          <Text style={styles.infoValue}>{mesa.capacidade} pessoas</Text>
+        <View style={dynamicStyles.infoRow}>
+          <Text style={dynamicStyles.infoLabel}>Capacidade:</Text>
+          <Text style={dynamicStyles.infoValue}>{mesa.capacidade} pessoas</Text>
         </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Status:</Text>
-          <Text style={styles.infoValue}>{mesa.status}</Text>
+        <View style={dynamicStyles.infoRow}>
+          <Text style={dynamicStyles.infoLabel}>Status:</Text>
+          <Text style={dynamicStyles.infoValue}>{mesa.status}</Text>
         </View>
       </View>
     </ScrollView>
@@ -199,153 +430,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5F5F5',
+    width: '100%',
+    maxWidth: '100%',
+    overflow: 'hidden',
   },
   content: {
     paddingBottom: 32,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#666',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#FFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  qrContainer: {
-    padding: 24,
-    alignItems: 'center',
-  },
-  qrCard: {
-    backgroundColor: '#FFF',
-    borderRadius: 16,
-    padding: 32,
-    alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
     width: '100%',
-    maxWidth: 400,
-  },
-  qrTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
-  },
-  qrSubtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 24,
-  },
-  qrCodeWrapper: {
-    backgroundColor: '#FFF',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 16,
-  },
-  qrCodeText: {
-    fontSize: 10,
-    color: '#999',
-    marginTop: 16,
-    fontFamily: 'monospace',
-  },
-  qrURLText: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 8,
-    textAlign: 'center',
-    paddingHorizontal: 16,
-  },
-  actions: {
-    paddingHorizontal: 16,
-    gap: 12,
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFF',
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#2196F3',
-    gap: 8,
-  },
-  actionButtonDanger: {
-    borderColor: '#F44336',
-  },
-  actionButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#2196F3',
-  },
-  actionButtonTextDanger: {
-    color: '#F44336',
-  },
-  infoContainer: {
-    marginTop: 24,
-    marginHorizontal: 16,
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    padding: 16,
-  },
-  infoTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 16,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  infoLabel: {
-    fontSize: 14,
-    color: '#666',
-  },
-  infoValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-  },
-  errorText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#999',
-    marginTop: 16,
-  },
-  linkText: {
-    fontSize: 16,
-    color: '#2196F3',
-    marginTop: 16,
+    maxWidth: '100%',
   },
 });
 

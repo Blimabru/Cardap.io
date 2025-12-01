@@ -68,11 +68,11 @@ const CategoryList = ({ categories, selectedCategory, onSelectCategory }: Catego
     : Math.min(10, screenWidth * 0.024); // Responsivo para telas maiores
   
   return (
-    <View style={{ width: '100%', maxWidth: '100%' }}>
+    <View style={{ width: '100%', maxWidth: '100%', overflow: 'hidden' }}>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        style={styles.categoryScroll}
+        style={[styles.categoryScroll, { width: '100%', maxWidth: '100%' }]}
         contentContainerStyle={[styles.categoryScrollContainer, { paddingHorizontal: containerPadding }]}>
         <TouchableOpacity
           style={[
@@ -128,6 +128,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     width: '100%',
     maxWidth: '100%',
+    backgroundColor: '#E95322',
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    boxShadow: '5px 5px 10px rgba(0, 0, 0, 0.5)',
+    marginBottom: 20
   },
   categoryScrollContainer: {
     alignItems: 'center',

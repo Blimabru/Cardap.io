@@ -16,6 +16,7 @@ import {
   RefreshControl,
   Modal,
   TextInput,
+  useWindowDimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons as Icon } from '@expo/vector-icons';
@@ -26,7 +27,13 @@ import { listarPedidosPendentesPorMesa } from '../../services/pedidos.service';
 
 export default function MesasScreen() {
   const router = useRouter();
+  const { width: screenWidth } = useWindowDimensions();
   const { podeGerenciar } = useAuth();
+
+  // Variáveis responsivas baseadas na largura da tela
+  const isSmallScreen = screenWidth < 375;
+  const isMediumScreen = screenWidth >= 375 && screenWidth < 412;
+  const isLargeScreen = screenWidth >= 412;
 
   const [mesas, setMesas] = useState<Mesa[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -140,40 +147,294 @@ export default function MesasScreen() {
     return coresMap[status] || '#757575';
   };
 
+  // Função para criar estilos dinâmicos baseados no tamanho da tela
+  const createDynamicStyles = (
+    screenWidth: number,
+    isSmallScreen: boolean,
+    isMediumScreen: boolean,
+    isLargeScreen: boolean
+  ) => {
+    // Padding horizontal responsivo
+    const horizontalPadding = isSmallScreen 
+      ? 12 
+      : isMediumScreen 
+      ? 14 
+      : isLargeScreen
+      ? 16
+      : Math.min(16, screenWidth * 0.039);
+
+    // Tamanhos de fonte responsivos
+    const titleFontSize = isSmallScreen ? 18 : isMediumScreen ? 19 : isLargeScreen ? 18 : Math.min(18, screenWidth * 0.044);
+    const bodyFontSize = isSmallScreen ? 14 : isMediumScreen ? 15 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039);
+    const labelFontSize = isSmallScreen ? 13 : isMediumScreen ? 14 : isLargeScreen ? 14 : Math.min(14, screenWidth * 0.034);
+    const smallFontSize = isSmallScreen ? 11 : isMediumScreen ? 12 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029);
+
+    // Tamanhos de ícones responsivos
+    const headerIconSize = isSmallScreen ? 20 : isMediumScreen ? 22 : isLargeScreen ? 24 : Math.min(24, screenWidth * 0.058);
+    const actionIconSize = isSmallScreen ? 18 : isMediumScreen ? 19 : isLargeScreen ? 20 : Math.min(20, screenWidth * 0.049);
+    const modalIconSize = isSmallScreen ? 20 : isMediumScreen ? 22 : isLargeScreen ? 24 : Math.min(24, screenWidth * 0.058);
+    const emptyIconSize = isSmallScreen ? 60 : isMediumScreen ? 70 : isLargeScreen ? 80 : Math.min(80, screenWidth * 0.195);
+    const statusIconSize = isSmallScreen ? 14 : isMediumScreen ? 15 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039);
+
+    return StyleSheet.create({
+      header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: horizontalPadding,
+        backgroundColor: '#FFF',
+        borderBottomWidth: 1,
+        borderBottomColor: '#E0E0E0',
+        width: '100%',
+        maxWidth: '100%',
+      },
+      headerTitle: {
+        fontSize: titleFontSize,
+        fontWeight: 'bold',
+        color: '#333',
+      },
+      lista: {
+        padding: horizontalPadding,
+        width: '100%',
+        maxWidth: '100%',
+      },
+      mesaCard: {
+        backgroundColor: '#FFF',
+        borderRadius: 12,
+        padding: horizontalPadding,
+        marginBottom: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 2 },
+        width: '100%',
+        maxWidth: '100%',
+        overflow: 'hidden',
+      },
+      mesaHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+      },
+      mesaNumero: {
+        fontSize: isSmallScreen ? 15 : isMediumScreen ? 16 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        fontWeight: 'bold',
+        color: '#333',
+      },
+      mesaInfo: {
+        fontSize: isSmallScreen ? 13 : isMediumScreen ? 14 : isLargeScreen ? 14 : Math.min(14, screenWidth * 0.034),
+        color: '#666',
+        marginTop: isSmallScreen ? 2 : isMediumScreen ? 2 : isLargeScreen ? 2 : Math.min(2, screenWidth * 0.005),
+      },
+      statusBadge: {
+        flexDirection: 'row',
+        paddingHorizontal: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+        paddingVertical: isSmallScreen ? 5 : isMediumScreen ? 5.5 : isLargeScreen ? 6 : Math.min(6, screenWidth * 0.015),
+        borderRadius: 16,
+        alignItems: 'center',
+      },
+      statusText: {
+        fontSize: smallFontSize,
+        fontWeight: '600',
+        color: '#FFF',
+      },
+      mesaActions: {
+        flexDirection: 'row',
+        marginTop: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+        borderTopWidth: 1,
+        borderTopColor: '#F0F0F0',
+        paddingTop: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+        gap: isSmallScreen ? 8 : isMediumScreen ? 10 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+      },
+      actionButton: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+        backgroundColor: '#F5F5F5',
+        borderRadius: 8,
+        gap: isSmallScreen ? 6 : isMediumScreen ? 7 : isLargeScreen ? 8 : Math.min(8, screenWidth * 0.019),
+      },
+      actionButtonPrimary: {
+        backgroundColor: '#E8F5E9',
+      },
+      actionText: {
+        fontSize: isSmallScreen ? 12 : isMediumScreen ? 13 : isLargeScreen ? 14 : Math.min(14, screenWidth * 0.034),
+        color: '#666',
+        fontWeight: '600',
+      },
+      actionTextPrimary: {
+        color: '#4CAF50',
+      },
+      emptyContainer: {
+        padding: isSmallScreen ? 36 : isMediumScreen ? 42 : isLargeScreen ? 48 : Math.min(48, screenWidth * 0.117),
+        alignItems: 'center',
+      },
+      emptyText: {
+        fontSize: isSmallScreen ? 14 : isMediumScreen ? 15 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        color: '#999',
+        marginTop: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        textAlign: 'center',
+      },
+      modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'flex-end',
+      },
+      modalContainer: {
+        backgroundColor: '#FFF',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        maxHeight: '70%',
+        width: '100%',
+        maxWidth: '100%',
+      },
+      modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: horizontalPadding,
+        borderBottomWidth: 1,
+        borderBottomColor: '#E0E0E0',
+        width: '100%',
+        maxWidth: '100%',
+      },
+      modalTitle: {
+        fontSize: titleFontSize,
+        fontWeight: 'bold',
+        color: '#333',
+      },
+      modalContent: {
+        padding: horizontalPadding,
+        width: '100%',
+        maxWidth: '100%',
+      },
+      modalSubtitle: {
+        fontSize: isSmallScreen ? 13 : isMediumScreen ? 14 : isLargeScreen ? 14 : Math.min(14, screenWidth * 0.034),
+        color: '#666',
+        marginBottom: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+      },
+      label: {
+        fontSize: labelFontSize,
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: isSmallScreen ? 6 : isMediumScreen ? 7 : isLargeScreen ? 8 : Math.min(8, screenWidth * 0.019),
+        marginTop: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+      },
+      input: {
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+        borderRadius: 8,
+        paddingHorizontal: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        paddingVertical: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+        fontSize: bodyFontSize,
+        backgroundColor: '#FFF',
+        width: '100%',
+        maxWidth: '100%',
+      },
+      buttonPrimary: {
+        backgroundColor: '#333',
+        paddingVertical: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        borderRadius: 8,
+        alignItems: 'center',
+        marginTop: isSmallScreen ? 20 : isMediumScreen ? 22 : isLargeScreen ? 24 : Math.min(24, screenWidth * 0.058),
+        width: '100%',
+      },
+      buttonPrimaryText: {
+        color: '#FFF',
+        fontSize: isSmallScreen ? 14 : isMediumScreen ? 15 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        fontWeight: '600',
+      },
+      statusOption: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        borderBottomWidth: 1,
+        borderBottomColor: '#F0F0F0',
+        width: '100%',
+        maxWidth: '100%',
+      },
+      statusOptionAtual: {
+        backgroundColor: '#F9F9F9',
+      },
+      statusIndicator: {
+        width: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+        height: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+        borderRadius: isSmallScreen ? 5 : isMediumScreen ? 5.5 : isLargeScreen ? 6 : Math.min(6, screenWidth * 0.015),
+        marginRight: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+      },
+      statusOptionText: {
+        flex: 1,
+        fontSize: bodyFontSize,
+        color: '#333',
+      },
+      errorContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: isSmallScreen ? 24 : isMediumScreen ? 28 : isLargeScreen ? 32 : Math.min(32, screenWidth * 0.078),
+      },
+      errorText: {
+        fontSize: isSmallScreen ? 18 : isMediumScreen ? 19 : isLargeScreen ? 20 : Math.min(20, screenWidth * 0.049),
+        fontWeight: 'bold',
+        color: '#999',
+        marginTop: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        textAlign: 'center',
+      },
+      linkText: {
+        fontSize: isSmallScreen ? 14 : isMediumScreen ? 15 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        color: '#2196F3',
+        marginTop: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+      },
+    });
+  };
+
+  const dynamicStyles = createDynamicStyles(screenWidth, isSmallScreen, isMediumScreen, isLargeScreen);
+
+  // Tamanhos de ícones dinâmicos
+  const headerIconSize = isSmallScreen ? 20 : isMediumScreen ? 22 : isLargeScreen ? 24 : Math.min(24, screenWidth * 0.058);
+  const actionIconSize = isSmallScreen ? 18 : isMediumScreen ? 19 : isLargeScreen ? 20 : Math.min(20, screenWidth * 0.049);
+  const modalIconSize = isSmallScreen ? 20 : isMediumScreen ? 22 : isLargeScreen ? 24 : Math.min(24, screenWidth * 0.058);
+  const emptyIconSize = isSmallScreen ? 60 : isMediumScreen ? 70 : isLargeScreen ? 80 : Math.min(80, screenWidth * 0.195);
+  const statusIconSize = isSmallScreen ? 14 : isMediumScreen ? 15 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039);
+
   const renderMesa = ({ item }: { item: Mesa }) => {
     return (
-      <View style={styles.mesaCard}>
-        <View style={styles.mesaHeader}>
-          <View>
-            <Text style={styles.mesaNumero}>Mesa #{item.numero}</Text>
-            <Text style={styles.mesaInfo}>Capacidade: {item.capacidade} pessoas</Text>
+      <View style={dynamicStyles.mesaCard}>
+        <View style={dynamicStyles.mesaHeader}>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={dynamicStyles.mesaNumero}>Mesa #{item.numero}</Text>
+            <Text style={dynamicStyles.mesaInfo}>Capacidade: {item.capacidade} pessoas</Text>
           </View>
           
           <TouchableOpacity
-            style={[styles.statusBadge, { backgroundColor: corDoStatus(item.status) }]}
+            style={[dynamicStyles.statusBadge, { backgroundColor: corDoStatus(item.status) }]}
             onPress={() => abrirModalStatus(item)}
           >
-            <Text style={styles.statusText}>{formatarStatus(item.status)}</Text>
-            <Icon name="expand-more" size={16} color="#FFF" style={{ marginLeft: 4 }} />
+            <Text style={dynamicStyles.statusText}>{formatarStatus(item.status)}</Text>
+            <Icon name="expand-more" size={statusIconSize} color="#FFF" style={{ marginLeft: isSmallScreen ? 3 : isMediumScreen ? 3.5 : isLargeScreen ? 4 : Math.min(4, screenWidth * 0.010) }} />
           </TouchableOpacity>
         </View>
 
-        <View style={styles.mesaActions}>
+        <View style={dynamicStyles.mesaActions}>
           <TouchableOpacity
-            style={styles.actionButton}
+            style={dynamicStyles.actionButton}
             onPress={() => handleVerQRCode(item)}
           >
-            <Icon name="qr-code-2" size={20} color="#2196F3" />
-            <Text style={styles.actionText}>Ver QR Code</Text>
+            <Icon name="qr-code-2" size={actionIconSize} color="#2196F3" />
+            <Text style={dynamicStyles.actionText}>Ver QR Code</Text>
           </TouchableOpacity>
 
           {item.status === StatusMesa.OCUPADA && (
             <TouchableOpacity
-              style={[styles.actionButton, styles.actionButtonPrimary]}
+              style={[dynamicStyles.actionButton, dynamicStyles.actionButtonPrimary]}
               onPress={() => handleFecharConta(item)}
             >
-              <Icon name="receipt" size={20} color="#4CAF50" />
-              <Text style={[styles.actionText, styles.actionTextPrimary]}>Fechar Conta</Text>
+              <Icon name="receipt" size={actionIconSize} color="#4CAF50" />
+              <Text style={[dynamicStyles.actionText, dynamicStyles.actionTextPrimary]}>Fechar Conta</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -189,28 +450,28 @@ export default function MesasScreen() {
         transparent={true}
         onRequestClose={() => setModalCriarVisivel(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Nova Mesa</Text>
+        <View style={dynamicStyles.modalOverlay}>
+          <View style={dynamicStyles.modalContainer}>
+            <View style={dynamicStyles.modalHeader}>
+              <Text style={dynamicStyles.modalTitle}>Nova Mesa</Text>
               <TouchableOpacity onPress={() => setModalCriarVisivel(false)}>
-                <Icon name="close" size={24} color="#333" />
+                <Icon name="close" size={modalIconSize} color="#333" />
               </TouchableOpacity>
             </View>
 
-            <View style={styles.modalContent}>
-              <Text style={styles.label}>Número da Mesa *</Text>
+            <View style={dynamicStyles.modalContent}>
+              <Text style={dynamicStyles.label}>Número da Mesa *</Text>
               <TextInput
-                style={styles.input}
+                style={dynamicStyles.input}
                 value={numeroNovaMesa}
                 onChangeText={setNumeroNovaMesa}
                 placeholder="Ex: 1, 2, 3..."
                 keyboardType="number-pad"
               />
 
-              <Text style={styles.label}>Capacidade</Text>
+              <Text style={dynamicStyles.label}>Capacidade</Text>
               <TextInput
-                style={styles.input}
+                style={dynamicStyles.input}
                 value={capacidadeNovaMesa}
                 onChangeText={setCapacidadeNovaMesa}
                 placeholder="4"
@@ -218,10 +479,10 @@ export default function MesasScreen() {
               />
 
               <TouchableOpacity
-                style={styles.buttonPrimary}
+                style={dynamicStyles.buttonPrimary}
                 onPress={handleCriarMesa}
               >
-                <Text style={styles.buttonPrimaryText}>Criar Mesa</Text>
+                <Text style={dynamicStyles.buttonPrimaryText}>Criar Mesa</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -247,17 +508,17 @@ export default function MesasScreen() {
         transparent={true}
         onRequestClose={() => setModalStatusVisivel(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Atualizar Status</Text>
+        <View style={dynamicStyles.modalOverlay}>
+          <View style={dynamicStyles.modalContainer}>
+            <View style={dynamicStyles.modalHeader}>
+              <Text style={dynamicStyles.modalTitle}>Atualizar Status</Text>
               <TouchableOpacity onPress={() => setModalStatusVisivel(false)}>
-                <Icon name="close" size={24} color="#333" />
+                <Icon name="close" size={modalIconSize} color="#333" />
               </TouchableOpacity>
             </View>
 
-            <View style={styles.modalContent}>
-              <Text style={styles.modalSubtitle}>
+            <View style={dynamicStyles.modalContent}>
+              <Text style={dynamicStyles.modalSubtitle}>
                 Mesa #{mesaSelecionada.numero}
               </Text>
               
@@ -265,20 +526,20 @@ export default function MesasScreen() {
                 <TouchableOpacity
                   key={status}
                   style={[
-                    styles.statusOption,
-                    mesaSelecionada.status === status && styles.statusOptionAtual,
+                    dynamicStyles.statusOption,
+                    mesaSelecionada.status === status && dynamicStyles.statusOptionAtual,
                   ]}
                   onPress={() => handleAtualizarStatus(status)}
                 >
                   <View
                     style={[
-                      styles.statusIndicator,
+                      dynamicStyles.statusIndicator,
                       { backgroundColor: corDoStatus(status) },
                     ]}
                   />
-                  <Text style={styles.statusOptionText}>{formatarStatus(status)}</Text>
+                  <Text style={dynamicStyles.statusOptionText}>{formatarStatus(status)}</Text>
                   {mesaSelecionada.status === status && (
-                    <Icon name="check" size={20} color="#4CAF50" />
+                    <Icon name="check" size={actionIconSize} color="#4CAF50" />
                   )}
                 </TouchableOpacity>
               ))}
@@ -291,40 +552,42 @@ export default function MesasScreen() {
 
   if (!podeGerenciar) {
     return (
-      <View style={styles.errorContainer}>
-        <Icon name="block" size={80} color="#DDD" />
-        <Text style={styles.errorText}>Acesso Negado</Text>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.linkText}>Voltar</Text>
-        </TouchableOpacity>
+      <View style={styles.container}>
+        <View style={dynamicStyles.errorContainer}>
+          <Icon name="block" size={emptyIconSize} color="#DDD" />
+          <Text style={dynamicStyles.errorText}>Acesso Negado</Text>
+          <TouchableOpacity onPress={() => router.back()}>
+            <Text style={dynamicStyles.linkText}>Voltar</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <View style={dynamicStyles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Icon name="arrow-back" size={24} color="#333" />
+          <Icon name="arrow-back" size={headerIconSize} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Gerenciar Mesas</Text>
+        <Text style={dynamicStyles.headerTitle}>Gerenciar Mesas</Text>
         <TouchableOpacity onPress={() => setModalCriarVisivel(true)}>
-          <Icon name="add" size={24} color="#333" />
+          <Icon name="add" size={headerIconSize} color="#333" />
         </TouchableOpacity>
       </View>
 
       {carregando ? (
-        <ActivityIndicator size="large" color="#333" style={{ marginTop: 32 }} />
+        <ActivityIndicator size="large" color="#333" style={{ marginTop: isSmallScreen ? 24 : isMediumScreen ? 28 : isLargeScreen ? 32 : Math.min(32, screenWidth * 0.078) }} />
       ) : (
         <FlatList
           data={mesas}
           renderItem={renderMesa}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.lista}
+          contentContainerStyle={dynamicStyles.lista}
           ListEmptyComponent={() => (
-            <View style={styles.emptyContainer}>
-              <Icon name="table-restaurant" size={80} color="#DDD" />
-              <Text style={styles.emptyText}>Nenhuma mesa cadastrada</Text>
+            <View style={dynamicStyles.emptyContainer}>
+              <Icon name="table-restaurant" size={emptyIconSize} color="#DDD" />
+              <Text style={dynamicStyles.emptyText}>Nenhuma mesa cadastrada</Text>
             </View>
           )}
           refreshControl={
@@ -349,196 +612,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5F5F5',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#FFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  lista: {
-    padding: 16,
-  },
-  mesaCard: {
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  mesaHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  mesaNumero: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  mesaInfo: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 2,
-  },
-  statusBadge: {
-    flexDirection: 'row',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    alignItems: 'center',
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#FFF',
-  },
-  mesaActions: {
-    flexDirection: 'row',
-    gap: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-    paddingTop: 12,
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 12,
-    backgroundColor: '#F5F5F5',
-    borderRadius: 8,
-    gap: 8,
-  },
-  actionButtonPrimary: {
-    backgroundColor: '#E8F5E9',
-  },
-  actionText: {
-    fontSize: 14,
-    color: '#666',
-    fontWeight: '600',
-  },
-  actionTextPrimary: {
-    color: '#4CAF50',
-  },
-  emptyContainer: {
-    padding: 48,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#999',
-    marginTop: 16,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContainer: {
-    backgroundColor: '#FFF',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '70%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  modalContent: {
-    padding: 20,
-  },
-  modalSubtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-    marginTop: 12,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    backgroundColor: '#FFF',
-  },
-  buttonPrimary: {
-    backgroundColor: '#333',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 24,
-  },
-  buttonPrimaryText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  statusOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  statusOptionAtual: {
-    backgroundColor: '#F9F9F9',
-  },
-  statusIndicator: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 12,
-  },
-  statusOptionText: {
-    flex: 1,
-    fontSize: 16,
-    color: '#333',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-  },
-  errorText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#999',
-    marginTop: 16,
-  },
-  linkText: {
-    fontSize: 16,
-    color: '#2196F3',
-    marginTop: 16,
+    width: '100%',
+    maxWidth: '100%',
+    overflow: 'hidden',
   },
 });
 
