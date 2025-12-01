@@ -89,14 +89,16 @@ const HomeScreen = () => {
   const cardSpacing = isWeb 
     ? (isSmallScreen ? 12 : isMediumScreen ? 16 : isLargeScreen ? 10 : Math.min(10, screenWidth * 0.024))
     : (isSmallScreen ? 6 : isMediumScreen ? 8 : isLargeScreen ? 10 : Math.min(10, screenWidth * 0.024));
-  // Largura máxima do container no web (para centralizar conteúdo)
-  const maxContainerWidth = isWeb 
-    ? Math.min(1200, screenWidth)
-    : screenWidth;
+  
+  // Largura disponível para os cards (garantir que não ultrapasse a tela)
+  const availableWidth = screenWidth; // Sempre usar a largura real da tela
   // Largura de cada card (2 colunas com espaçamento) - totalmente responsivo
   const cardWidth = numColumns === 1 
-    ? maxContainerWidth - (horizontalPadding * 2)
-    : (maxContainerWidth - (horizontalPadding * 2) - cardSpacing) / numColumns;
+    ? availableWidth - (horizontalPadding * 2)
+    : (availableWidth - (horizontalPadding * 2) - cardSpacing) / numColumns;
+  
+  // Garantir que o cardWidth nunca seja negativo ou muito pequeno
+  const finalCardWidth = Math.max(100, cardWidth);
   
   // Tamanhos de fonte responsivos - totalmente responsivo
   const titleFontSize = isSmallScreen 
@@ -257,11 +259,12 @@ const HomeScreen = () => {
     const isFirstInRow = index % 2 === 0;
     return (
       <View style={{ 
-        width: cardWidth,
-        maxWidth: cardWidth, // Garantir que não ultrapasse a largura calculada
-        marginRight: isFirstInRow ? cardSpacing : 0,
+        width: finalCardWidth,
+        maxWidth: finalCardWidth, // Garantir que não ultrapasse a largura calculada
+        marginRight: isFirstInRow && numColumns === 2 ? cardSpacing : 0,
         marginBottom: 15, // Espaçamento vertical consistente
         flexShrink: 0, // Não encolher
+        overflow: 'hidden', // Prevenir overflow
       }}>
         <ItemCard item={item} onAddToCart={() => handleAddToCart(item)} />
       </View>
@@ -345,9 +348,9 @@ const HomeScreen = () => {
         data={filteredProducts} // Produtos filtrados por busca/categoria
         renderItem={renderItem} // Function que renderiza cada produto
         keyExtractor={(item) => item.id} // Chave única para otimização
-        // Layout em 2 colunas para mobile
-        numColumns={2}
-        key="two-columns" // Key forçada para rebuild quando numColumns muda
+        // Layout responsivo: 1 coluna em telas pequenas, 2 em outras
+        numColumns={numColumns}
+        key={`columns-${numColumns}`} // Key forçada para rebuild quando numColumns muda
         ListHeaderComponent={renderListHeader} // Header com busca e filtros
         // Componente mostrado quando lista está vazia
         ListEmptyComponent={() => (
@@ -356,8 +359,21 @@ const HomeScreen = () => {
             <Text style={styles.emptyText}>Nenhum produto encontrado</Text>
           </View>
         )}
-        contentContainerStyle={styles.listContainer} // Style do container da lista
-        columnWrapperStyle={styles.columnWrapper} // Style para espaçamento entre colunas
+        contentContainerStyle={[
+          dynamicStyles.listContainer,
+          { 
+            paddingHorizontal: horizontalPadding,
+            width: '100%',
+            maxWidth: '100%',
+          }
+        ]} // Style do container da lista
+        columnWrapperStyle={numColumns === 2 ? [
+          dynamicStyles.columnWrapper,
+          {
+            width: '100%',
+            maxWidth: '100%',
+          }
+        ] : undefined} // Style para espaçamento entre colunas
         showsVerticalScrollIndicator={false} // Esconde scroll indicator
         // Pull-to-refresh functionality
         onRefresh={fetchData} // Function executada no pull-to-refresh
@@ -395,11 +411,10 @@ const createDynamicStyles = (
     listContainer: {
       // Web: largura máxima para evitar layout muito largo
       // Totalmente responsivo
-      maxWidth: isWeb ? 1200 : undefined,
+      maxWidth: '100%',
       width: '100%', // Sempre responsivo
-      // Padding horizontal responsivo
-      paddingHorizontal: 0, // Remover padding do container - cada componente terá seu próprio padding
-      alignSelf: 'center',
+      // Padding será aplicado inline
+      alignSelf: 'stretch',
     },
     // Espaçamento entre colunas da FlatList (quando numColumns=2)
     columnWrapper: {
@@ -461,18 +476,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     // Adiciona padding no Android para evitar sobreposição da status bar
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
-    // Web: centraliza conteúdo horizontalmente
-    // Mobile: centraliza se >= 412px
-    alignItems: Platform.OS === 'web' ? 'center' : 'stretch',
+    // Sempre stretch para garantir que não ultrapasse a tela
+    alignItems: 'stretch',
+    width: '100%',
+    maxWidth: '100%',
+    overflow: 'hidden', // Prevenir overflow
   },
   // Container da lista de produtos
   listContainer: {
-    // Web: largura máxima para evitar layout muito largo
-    maxWidth: Platform.OS === 'web' ? 1200 : undefined,
+    // Sempre usar 100% da largura disponível
+    maxWidth: '100%',
     width: '100%',
-    // Padding horizontal diferente por plataforma
-    paddingHorizontal: Platform.OS === 'web' ? 40 : 10,
-    alignSelf: 'center',
+    alignSelf: 'stretch',
   },
   // Espaçamento entre colunas da FlatList (quando numColumns=2)
   columnWrapper: {
