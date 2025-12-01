@@ -41,9 +41,9 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         // Cor dos ícones/texto quando tab está ativa
-        tabBarActiveTintColor: '#333',
+        tabBarActiveTintColor: '#ffffffff',
         // Cor dos ícones/texto quando tab está inativa
-        tabBarInactiveTintColor: '#999',
+        tabBarInactiveTintColor: '#000000ff',
         // Estilo da barra de tabs - totalmente responsivo
         tabBarStyle: {
           height: 85, // Altura maior da barra de tabs para evitar cortes
@@ -53,6 +53,7 @@ export default function TabLayout() {
           width: '100%', // Sempre responsivo
           maxWidth: '100%', // Sempre responsivo
           overflow: 'hidden', // Prevenir cortes
+          backgroundColor: '#E95322',
         },
         // Estilo do texto dos labels das tabs
         tabBarLabelStyle: {

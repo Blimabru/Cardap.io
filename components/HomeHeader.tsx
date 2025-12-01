@@ -177,6 +177,7 @@ const styles = StyleSheet.create({
     minHeight: 50, // Altura mínima para evitar cortes
     overflow: 'hidden', // Evitar overflow
     alignItems: 'center', // Centralizar conteúdo interno
+    backgroundColor: '#F5CB58',
   },
   headerContent: {
     flexDirection: 'row',

@@ -4,21 +4,21 @@
  * Permite que usuários façam login no sistema
  */
 
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  View,
+  ActivityIndicator,
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Image,
   useWindowDimensions,
+  View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function LoginScreen() {
@@ -268,8 +268,31 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
     width: '100%',
-    maxWidth: '100%',
-    overflow: 'hidden',
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#DDD',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: '#363636ff',
+  },
+  button: {
+    backgroundColor: '#E95322',
+    borderRadius: 8,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginTop: 8,
   },
   buttonDisabled: {
     opacity: 0.6,

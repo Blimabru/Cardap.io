@@ -308,7 +308,7 @@ export default function PerfilScreen() {
 
   // Define cor do badge de perfil
   const getBadgeColor = () => {
-    if (ehAdmin) return '#F44336'; // Vermelho para Admin
+    if (ehAdmin) return '#FF9800'; // Vermelho para Admin
     if (ehDono) return '#FF9800';  // Laranja para Dono
     return '#2196F3';              // Azul para Cliente
   };
