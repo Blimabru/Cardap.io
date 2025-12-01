@@ -26,6 +26,275 @@ import * as pedidosService from '../../../services/pedidos.service';
 import * as rendimentosService from '../../../services/rendimentos.service';
 import { ContaMesa, FormaPagamento, Pedido } from '../../../types';
 
+// Função para criar estilos dinâmicos baseados no tamanho da tela
+const createDynamicStyles = (screenWidth: number, isSmallScreen: boolean, horizontalPadding: number) => {
+  const isMediumScreen = screenWidth >= 375 && screenWidth < 768;
+  
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: '#F5F5F5',
+    },
+    centerContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: '#F5F5F5',
+      padding: isSmallScreen ? 24 : 32,
+    },
+    loadingText: {
+      marginTop: 16,
+      fontSize: isSmallScreen ? 14 : 16,
+      color: '#666',
+    },
+    emptyText: {
+      fontSize: isSmallScreen ? 16 : 18,
+      fontWeight: 'bold',
+      color: '#999',
+      marginTop: 16,
+      textAlign: 'center',
+    },
+    backButton: {
+      marginTop: 24,
+      backgroundColor: '#333',
+      paddingHorizontal: isSmallScreen ? 20 : 24,
+      paddingVertical: isSmallScreen ? 10 : 12,
+      borderRadius: 8,
+    },
+    backButtonText: {
+      color: '#FFF',
+      fontSize: isSmallScreen ? 14 : 16,
+      fontWeight: '600',
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: horizontalPadding,
+      backgroundColor: '#FFF',
+      borderBottomWidth: 1,
+      borderBottomColor: '#E0E0E0',
+    },
+    headerTitle: {
+      fontSize: isSmallScreen ? 16 : isMediumScreen ? 18 : 20,
+      fontWeight: 'bold',
+      color: '#333',
+      flex: 1,
+      textAlign: 'center',
+    },
+    content: {
+      flex: 1,
+    },
+    contentContainer: {
+      padding: horizontalPadding,
+      paddingBottom: 100,
+    },
+    resumoCard: {
+      backgroundColor: '#FFF',
+      borderRadius: 12,
+      padding: isSmallScreen ? 16 : 20,
+      marginBottom: 16,
+      elevation: 2,
+      shadowColor: '#000',
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+      shadowOffset: { width: 0, height: 2 },
+    },
+    resumoTitle: {
+      fontSize: isSmallScreen ? 18 : 20,
+      fontWeight: 'bold',
+      color: '#333',
+      marginBottom: 8,
+    },
+    resumoText: {
+      fontSize: isSmallScreen ? 13 : 14,
+      color: '#666',
+      marginBottom: 8,
+    },
+    resumoTotal: {
+      fontSize: isSmallScreen ? 28 : isMediumScreen ? 32 : 36,
+      fontWeight: 'bold',
+      color: '#4CAF50',
+    },
+    pedidosCard: {
+      backgroundColor: '#FFF',
+      borderRadius: 12,
+      padding: isSmallScreen ? 12 : 16,
+      marginBottom: 16,
+      elevation: 2,
+      shadowColor: '#000',
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+      shadowOffset: { width: 0, height: 2 },
+    },
+    pedidosTitle: {
+      fontSize: isSmallScreen ? 16 : 18,
+      fontWeight: 'bold',
+      color: '#333',
+      marginBottom: 12,
+    },
+    pedidoItem: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: isSmallScreen ? 6 : 8,
+      borderBottomWidth: 1,
+      borderBottomColor: '#F0F0F0',
+    },
+    pedidoNumero: {
+      fontSize: isSmallScreen ? 13 : 14,
+      color: '#666',
+      flex: 1,
+    },
+    pedidoMesa: {
+      fontSize: isSmallScreen ? 11 : 12,
+      color: '#666',
+      marginTop: 2,
+      fontWeight: '600',
+    },
+    pedidoTotal: {
+      fontSize: isSmallScreen ? 14 : 16,
+      fontWeight: '600',
+      color: '#333',
+    },
+    formaPagamentoCard: {
+      backgroundColor: '#FFF',
+      borderRadius: 12,
+      padding: isSmallScreen ? 12 : 16,
+      elevation: 2,
+      shadowColor: '#000',
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+      shadowOffset: { width: 0, height: 2 },
+    },
+    formaPagamentoTitle: {
+      fontSize: isSmallScreen ? 16 : 18,
+      fontWeight: 'bold',
+      color: '#333',
+      marginBottom: 16,
+    },
+    formaPagamentoButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: isSmallScreen ? 12 : 16,
+      borderRadius: 8,
+      marginBottom: isSmallScreen ? 10 : 12,
+      backgroundColor: '#F5F5F5',
+      borderWidth: 2,
+      borderColor: '#E0E0E0',
+    },
+    formaPagamentoButtonSelected: {
+      backgroundColor: '#4CAF50',
+      borderColor: '#4CAF50',
+    },
+    formaPagamentoButtonText: {
+      fontSize: isSmallScreen ? 14 : 16,
+      fontWeight: '600',
+      color: '#333',
+      marginLeft: isSmallScreen ? 10 : 12,
+      flex: 1,
+    },
+    formaPagamentoButtonTextSelected: {
+      color: '#FFF',
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: horizontalPadding,
+    },
+    modalContent: {
+      backgroundColor: '#FFF',
+      borderRadius: 12,
+      width: '100%',
+      maxWidth: screenWidth > 768 ? 500 : screenWidth - (horizontalPadding * 2),
+      maxHeight: '90%',
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: isSmallScreen ? 16 : 20,
+      borderBottomWidth: 1,
+      borderBottomColor: '#E0E0E0',
+    },
+    modalTitle: {
+      fontSize: isSmallScreen ? 18 : 20,
+      fontWeight: 'bold',
+      color: '#333',
+      flex: 1,
+    },
+    modalBody: {
+      padding: isSmallScreen ? 16 : 20,
+      maxHeight: screenWidth < 400 ? 350 : 400,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: '#E0E0E0',
+      borderRadius: 8,
+      padding: isSmallScreen ? 10 : 12,
+      fontSize: isSmallScreen ? 14 : 16,
+      marginBottom: isSmallScreen ? 12 : 16,
+      backgroundColor: '#FFF',
+    },
+    inputRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    },
+    inputHalf: {
+      width: '48%',
+    },
+    pixIcon: {
+      alignSelf: 'center',
+      marginBottom: isSmallScreen ? 12 : 16,
+    },
+    pixText: {
+      fontSize: isSmallScreen ? 14 : 16,
+      color: '#666',
+      textAlign: 'center',
+      marginBottom: isSmallScreen ? 12 : 16,
+      paddingHorizontal: horizontalPadding,
+    },
+    pixValue: {
+      fontSize: isSmallScreen ? 28 : isMediumScreen ? 32 : 36,
+      fontWeight: 'bold',
+      color: '#4CAF50',
+      textAlign: 'center',
+      marginBottom: isSmallScreen ? 12 : 16,
+    },
+    pixCode: {
+      fontSize: isSmallScreen ? 10 : 12,
+      color: '#999',
+      textAlign: 'center',
+      fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+      padding: isSmallScreen ? 10 : 12,
+      backgroundColor: '#F5F5F5',
+      borderRadius: 8,
+      overflow: 'hidden',
+    },
+    modalFooter: {
+      padding: isSmallScreen ? 16 : 20,
+      borderTopWidth: 1,
+      borderTopColor: '#E0E0E0',
+    },
+    modalButton: {
+      backgroundColor: '#4CAF50',
+      padding: isSmallScreen ? 14 : 16,
+      borderRadius: 8,
+      alignItems: 'center',
+    },
+    modalButtonDisabled: {
+      backgroundColor: '#CCC',
+    },
+    modalButtonText: {
+      color: '#FFF',
+      fontSize: isSmallScreen ? 14 : 16,
+      fontWeight: '600',
+    },
+  });
+};
+
 export default function PagamentoScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -33,7 +302,8 @@ export default function PagamentoScreen() {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   
   const isSmallScreen = screenWidth < 375;
-  const horizontalPadding = isSmallScreen ? 12 : 16;
+  const isMediumScreen = screenWidth >= 375 && screenWidth < 768;
+  const horizontalPadding = isSmallScreen ? 12 : isMediumScreen ? 16 : 20;
 
   const [conta, setConta] = useState<ContaMesa | null>(null);
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
@@ -199,25 +469,28 @@ export default function PagamentoScreen() {
     }
   };
 
+  // Criar estilos dinâmicos baseados no tamanho da tela
+  const dynamicStyles = createDynamicStyles(screenWidth, isSmallScreen, horizontalPadding);
+
   if (carregando) {
     return (
-      <View style={styles.centerContainer}>
+      <View style={dynamicStyles.centerContainer}>
         <ActivityIndicator size="large" color="#333" />
-        <Text style={styles.loadingText}>Carregando...</Text>
+        <Text style={dynamicStyles.loadingText}>Carregando...</Text>
       </View>
     );
   }
 
   if (!conta || pedidos.length === 0) {
     return (
-      <View style={styles.centerContainer}>
-        <Icon name="receipt-long" size={80} color="#DDD" />
-        <Text style={styles.emptyText}>Não há pedidos para pagar</Text>
+      <View style={dynamicStyles.centerContainer}>
+        <Icon name="receipt-long" size={isSmallScreen ? 60 : 80} color="#DDD" />
+        <Text style={dynamicStyles.emptyText}>Não há pedidos para pagar</Text>
         <TouchableOpacity
-          style={styles.backButton}
+          style={dynamicStyles.backButton}
           onPress={() => router.back()}
         >
-          <Text style={styles.backButtonText}>Voltar</Text>
+          <Text style={dynamicStyles.backButtonText}>Voltar</Text>
         </TouchableOpacity>
       </View>
     );
@@ -226,51 +499,51 @@ export default function PagamentoScreen() {
   const total = pedidos.reduce((acc, pedido) => acc + pedido.total, 0);
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
+    <View style={dynamicStyles.container}>
+      <View style={dynamicStyles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Icon name="arrow-back" size={24} color="#333" />
+          <Icon name="arrow-back" size={isSmallScreen ? 22 : 24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Pagamento - Mesa #{conta.mesa?.numero}</Text>
-        <View style={{ width: 24 }} />
+        <Text style={dynamicStyles.headerTitle}>Pagamento - Mesa #{conta.mesa?.numero}</Text>
+        <View style={{ width: isSmallScreen ? 22 : 24 }} />
       </View>
 
-      <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
-        <View style={styles.resumoCard}>
-          <Text style={styles.resumoTitle}>Resumo da Conta</Text>
-          <Text style={styles.resumoText}>{pedidos.length} pedido(s)</Text>
-          <Text style={styles.resumoTotal}>Total: R$ {total.toFixed(2)}</Text>
+      <ScrollView style={dynamicStyles.content} contentContainerStyle={dynamicStyles.contentContainer}>
+        <View style={dynamicStyles.resumoCard}>
+          <Text style={dynamicStyles.resumoTitle}>Resumo da Conta</Text>
+          <Text style={dynamicStyles.resumoText}>{pedidos.length} pedido(s)</Text>
+          <Text style={dynamicStyles.resumoTotal}>Total: R$ {total.toFixed(2)}</Text>
         </View>
 
-        <View style={styles.pedidosCard}>
-          <Text style={styles.pedidosTitle}>Pedidos</Text>
+        <View style={dynamicStyles.pedidosCard}>
+          <Text style={dynamicStyles.pedidosTitle}>Pedidos</Text>
           {pedidos.map((pedido) => (
-            <View key={pedido.id} style={styles.pedidoItem}>
+            <View key={pedido.id} style={dynamicStyles.pedidoItem}>
               <View>
-                <Text style={styles.pedidoNumero}>Pedido #{pedido.numero_pedido}</Text>
+                <Text style={dynamicStyles.pedidoNumero}>Pedido #{pedido.numero_pedido}</Text>
                 {pedido.mesa && (
-                  <Text style={styles.pedidoMesa}>Mesa #{pedido.mesa.numero}</Text>
+                  <Text style={dynamicStyles.pedidoMesa}>Mesa #{pedido.mesa.numero}</Text>
                 )}
               </View>
-              <Text style={styles.pedidoTotal}>R$ {pedido.total.toFixed(2)}</Text>
+              <Text style={dynamicStyles.pedidoTotal}>R$ {pedido.total.toFixed(2)}</Text>
             </View>
           ))}
         </View>
 
-        <View style={styles.formaPagamentoCard}>
-          <Text style={styles.formaPagamentoTitle}>Forma de Pagamento</Text>
+        <View style={dynamicStyles.formaPagamentoCard}>
+          <Text style={dynamicStyles.formaPagamentoTitle}>Forma de Pagamento</Text>
           
           <TouchableOpacity
             style={[
-              styles.formaPagamentoButton,
-              formaPagamento === FormaPagamento.CARTAO_CREDITO && styles.formaPagamentoButtonSelected,
+              dynamicStyles.formaPagamentoButton,
+              formaPagamento === FormaPagamento.CARTAO_CREDITO && dynamicStyles.formaPagamentoButtonSelected,
             ]}
             onPress={() => handleSelecionarFormaPagamento(FormaPagamento.CARTAO_CREDITO)}
           >
-            <Icon name="credit-card" size={24} color={formaPagamento === FormaPagamento.CARTAO_CREDITO ? '#FFF' : '#333'} />
+            <Icon name="credit-card" size={isSmallScreen ? 20 : 24} color={formaPagamento === FormaPagamento.CARTAO_CREDITO ? '#FFF' : '#333'} />
             <Text style={[
-              styles.formaPagamentoButtonText,
-              formaPagamento === FormaPagamento.CARTAO_CREDITO && styles.formaPagamentoButtonTextSelected,
+              dynamicStyles.formaPagamentoButtonText,
+              formaPagamento === FormaPagamento.CARTAO_CREDITO && dynamicStyles.formaPagamentoButtonTextSelected,
             ]}>
               Cartão de Crédito
             </Text>
@@ -278,15 +551,15 @@ export default function PagamentoScreen() {
 
           <TouchableOpacity
             style={[
-              styles.formaPagamentoButton,
-              formaPagamento === FormaPagamento.CARTAO_DEBITO && styles.formaPagamentoButtonSelected,
+              dynamicStyles.formaPagamentoButton,
+              formaPagamento === FormaPagamento.CARTAO_DEBITO && dynamicStyles.formaPagamentoButtonSelected,
             ]}
             onPress={() => handleSelecionarFormaPagamento(FormaPagamento.CARTAO_DEBITO)}
           >
-            <Icon name="credit-card" size={24} color={formaPagamento === FormaPagamento.CARTAO_DEBITO ? '#FFF' : '#333'} />
+            <Icon name="credit-card" size={isSmallScreen ? 20 : 24} color={formaPagamento === FormaPagamento.CARTAO_DEBITO ? '#FFF' : '#333'} />
             <Text style={[
-              styles.formaPagamentoButtonText,
-              formaPagamento === FormaPagamento.CARTAO_DEBITO && styles.formaPagamentoButtonTextSelected,
+              dynamicStyles.formaPagamentoButtonText,
+              formaPagamento === FormaPagamento.CARTAO_DEBITO && dynamicStyles.formaPagamentoButtonTextSelected,
             ]}>
               Cartão de Débito
             </Text>
@@ -294,15 +567,15 @@ export default function PagamentoScreen() {
 
           <TouchableOpacity
             style={[
-              styles.formaPagamentoButton,
-              formaPagamento === FormaPagamento.PIX && styles.formaPagamentoButtonSelected,
+              dynamicStyles.formaPagamentoButton,
+              formaPagamento === FormaPagamento.PIX && dynamicStyles.formaPagamentoButtonSelected,
             ]}
             onPress={() => handleSelecionarFormaPagamento(FormaPagamento.PIX)}
           >
-            <Icon name="qr-code" size={24} color={formaPagamento === FormaPagamento.PIX ? '#FFF' : '#333'} />
+            <Icon name="qr-code" size={isSmallScreen ? 20 : 24} color={formaPagamento === FormaPagamento.PIX ? '#FFF' : '#333'} />
             <Text style={[
-              styles.formaPagamentoButtonText,
-              formaPagamento === FormaPagamento.PIX && styles.formaPagamentoButtonTextSelected,
+              dynamicStyles.formaPagamentoButtonText,
+              formaPagamento === FormaPagamento.PIX && dynamicStyles.formaPagamentoButtonTextSelected,
             ]}>
               PIX
             </Text>
@@ -310,15 +583,15 @@ export default function PagamentoScreen() {
 
           <TouchableOpacity
             style={[
-              styles.formaPagamentoButton,
-              formaPagamento === FormaPagamento.DINHEIRO && styles.formaPagamentoButtonSelected,
+              dynamicStyles.formaPagamentoButton,
+              formaPagamento === FormaPagamento.DINHEIRO && dynamicStyles.formaPagamentoButtonSelected,
             ]}
             onPress={() => handleSelecionarFormaPagamento(FormaPagamento.DINHEIRO)}
           >
-            <Icon name="money" size={24} color={formaPagamento === FormaPagamento.DINHEIRO ? '#FFF' : '#333'} />
+            <Icon name="money" size={isSmallScreen ? 20 : 24} color={formaPagamento === FormaPagamento.DINHEIRO ? '#FFF' : '#333'} />
             <Text style={[
-              styles.formaPagamentoButtonText,
-              formaPagamento === FormaPagamento.DINHEIRO && styles.formaPagamentoButtonTextSelected,
+              dynamicStyles.formaPagamentoButtonText,
+              formaPagamento === FormaPagamento.DINHEIRO && dynamicStyles.formaPagamentoButtonTextSelected,
             ]}>
               Dinheiro (Chamar Garçom)
             </Text>
@@ -336,23 +609,23 @@ export default function PagamentoScreen() {
           setFormaPagamento(null);
         }}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Dados do Cartão</Text>
+        <View style={dynamicStyles.modalOverlay}>
+          <View style={dynamicStyles.modalContent}>
+            <View style={dynamicStyles.modalHeader}>
+              <Text style={dynamicStyles.modalTitle}>Dados do Cartão</Text>
               <TouchableOpacity
                 onPress={() => {
                   setModalDadosCartao(false);
                   setFormaPagamento(null);
                 }}
               >
-                <Icon name="close" size={24} color="#333" />
+                <Icon name="close" size={isSmallScreen ? 22 : 24} color="#333" />
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.modalBody}>
+            <ScrollView style={dynamicStyles.modalBody}>
               <TextInput
-                style={styles.input}
+                style={dynamicStyles.input}
                 placeholder="Número do Cartão"
                 value={numeroCartao}
                 onChangeText={setNumeroCartao}
@@ -360,21 +633,21 @@ export default function PagamentoScreen() {
                 maxLength={19}
               />
               <TextInput
-                style={styles.input}
+                style={dynamicStyles.input}
                 placeholder="Nome no Cartão"
                 value={nomeCartao}
                 onChangeText={setNomeCartao}
               />
-              <View style={styles.inputRow}>
+              <View style={dynamicStyles.inputRow}>
                 <TextInput
-                  style={[styles.input, styles.inputHalf]}
+                  style={[dynamicStyles.input, dynamicStyles.inputHalf]}
                   placeholder="Validade (MM/AA)"
                   value={validade}
                   onChangeText={setValidade}
                   maxLength={5}
                 />
                 <TextInput
-                  style={[styles.input, styles.inputHalf]}
+                  style={[dynamicStyles.input, dynamicStyles.inputHalf]}
                   placeholder="CVV"
                   value={cvv}
                   onChangeText={setCvv}
@@ -385,16 +658,16 @@ export default function PagamentoScreen() {
               </View>
             </ScrollView>
 
-            <View style={styles.modalFooter}>
+            <View style={dynamicStyles.modalFooter}>
               <TouchableOpacity
-                style={[styles.modalButton, processando && styles.modalButtonDisabled]}
+                style={[dynamicStyles.modalButton, processando && dynamicStyles.modalButtonDisabled]}
                 onPress={handleProcessarPagamentoCartao}
                 disabled={processando}
               >
                 {processando ? (
                   <ActivityIndicator color="#FFF" />
                 ) : (
-                  <Text style={styles.modalButtonText}>Pagar</Text>
+                  <Text style={dynamicStyles.modalButtonText}>Pagar</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -412,41 +685,41 @@ export default function PagamentoScreen() {
           setFormaPagamento(null);
         }}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Pagamento PIX</Text>
+        <View style={dynamicStyles.modalOverlay}>
+          <View style={dynamicStyles.modalContent}>
+            <View style={dynamicStyles.modalHeader}>
+              <Text style={dynamicStyles.modalTitle}>Pagamento PIX</Text>
               <TouchableOpacity
                 onPress={() => {
                   setModalDadosPix(false);
                   setFormaPagamento(null);
                 }}
               >
-                <Icon name="close" size={24} color="#333" />
+                <Icon name="close" size={isSmallScreen ? 22 : 24} color="#333" />
               </TouchableOpacity>
             </View>
 
-            <View style={styles.modalBody}>
-              <Icon name="qr-code" size={120} color="#4CAF50" style={styles.pixIcon} />
-              <Text style={styles.pixText}>
+            <View style={dynamicStyles.modalBody}>
+              <Icon name="qr-code" size={isSmallScreen ? 100 : 120} color="#4CAF50" style={dynamicStyles.pixIcon} />
+              <Text style={dynamicStyles.pixText}>
                 Escaneie o QR Code ou copie o código PIX para pagar
               </Text>
-              <Text style={styles.pixValue}>R$ {total.toFixed(2)}</Text>
-              <Text style={styles.pixCode}>
+              <Text style={dynamicStyles.pixValue}>R$ {total.toFixed(2)}</Text>
+              <Text style={dynamicStyles.pixCode}>
                 00020126580014BR.GOV.BCB.PIX0136123e4567-e89b-12d3-a456-4266141740005204000053039865405{total.toFixed(2)}5802BR5925RESTAURANTE EXEMPLO6009SAO PAULO62070503***6304
               </Text>
             </View>
 
-            <View style={styles.modalFooter}>
+            <View style={dynamicStyles.modalFooter}>
               <TouchableOpacity
-                style={[styles.modalButton, processando && styles.modalButtonDisabled]}
+                style={[dynamicStyles.modalButton, processando && dynamicStyles.modalButtonDisabled]}
                 onPress={handleProcessarPagamentoPix}
                 disabled={processando}
               >
                 {processando ? (
                   <ActivityIndicator color="#FFF" />
                 ) : (
-                  <Text style={styles.modalButtonText}>Confirmar Pagamento</Text>
+                  <Text style={dynamicStyles.modalButtonText}>Confirmar Pagamento</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -457,253 +730,4 @@ export default function PagamentoScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F5F5',
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    padding: 32,
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#666',
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#999',
-    marginTop: 16,
-  },
-  backButton: {
-    marginTop: 24,
-    backgroundColor: '#333',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  backButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#FFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  content: {
-    flex: 1,
-  },
-  contentContainer: {
-    padding: 16,
-    paddingBottom: 100,
-  },
-  resumoCard: {
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  resumoTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
-  },
-  resumoText: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 8,
-  },
-  resumoTotal: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#4CAF50',
-  },
-  pedidosCard: {
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  pedidosTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 12,
-  },
-  pedidoItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  pedidoNumero: {
-    fontSize: 14,
-    color: '#666',
-  },
-  pedidoMesa: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 2,
-    fontWeight: '600',
-  },
-  pedidoTotal: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-  },
-  formaPagamentoCard: {
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    padding: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  formaPagamentoTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 16,
-  },
-  formaPagamentoButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: '#E0E0E0',
-    marginBottom: 12,
-    gap: 12,
-  },
-  formaPagamentoButtonSelected: {
-    backgroundColor: '#4CAF50',
-    borderColor: '#4CAF50',
-  },
-  formaPagamentoButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-  },
-  formaPagamentoButtonTextSelected: {
-    color: '#FFF',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: '#FFF',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '90%',
-    paddingBottom: Platform.OS === 'ios' ? 34 : 16,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  modalBody: {
-    padding: 20,
-    maxHeight: 400,
-  },
-  input: {
-    backgroundColor: '#F5F5F5',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-  },
-  inputRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  inputHalf: {
-    flex: 1,
-  },
-  modalFooter: {
-    padding: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
-  },
-  modalButton: {
-    backgroundColor: '#4CAF50',
-    paddingVertical: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  modalButtonDisabled: {
-    opacity: 0.6,
-  },
-  modalButtonText: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  pixIcon: {
-    alignSelf: 'center',
-    marginBottom: 16,
-  },
-  pixText: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  pixValue: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#4CAF50',
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  pixCode: {
-    fontSize: 12,
-    color: '#999',
-    textAlign: 'center',
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-  },
-});
 

@@ -1,9 +1,11 @@
 import React from 'react';
 import {
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from 'react-native';
 
@@ -19,48 +21,107 @@ type CategoryListProps = {
   onSelectCategory?: (categoryId: string | null) => void;
 };
 
-const CategoryList = ({ categories, selectedCategory, onSelectCategory }: CategoryListProps) => (
-  <View>
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      style={styles.categoryScroll}
-      contentContainerStyle={styles.categoryScrollContainer}>
-      <TouchableOpacity
-        style={[
-          styles.categoryButton,
-          !selectedCategory ? styles.categoryButtonActive : null,
-        ]}
-        onPress={() => onSelectCategory && onSelectCategory(null)}>
-        <Text
-          style={[
-            styles.categoryText,
-            !selectedCategory ? styles.categoryTextActive : null,
-          ]}>
-          Todos
-        </Text>
-      </TouchableOpacity>
-
-      {categories.map((category) => (
+const CategoryList = ({ categories, selectedCategory, onSelectCategory }: CategoryListProps) => {
+  // Dimensões da tela para responsividade
+  const { width: screenWidth } = useWindowDimensions();
+  
+  // Variáveis responsivas - totalmente responsivo
+  const isSmallScreen = screenWidth < 375;
+  const isMediumScreen = screenWidth >= 375 && screenWidth < 412;
+  const isLargeScreen = screenWidth >= 412;
+  
+  // Tamanhos responsivos - totalmente responsivo
+  const containerPadding = isSmallScreen 
+    ? 12 
+    : isMediumScreen 
+    ? 15 
+    : isLargeScreen
+    ? 15
+    : Math.min(15, screenWidth * 0.036); // Responsivo para telas maiores
+  const buttonPaddingV = isSmallScreen 
+    ? 6 
+    : isMediumScreen 
+    ? 7 
+    : isLargeScreen
+    ? 8
+    : Math.min(8, screenWidth * 0.019); // Responsivo para telas maiores
+  const buttonPaddingH = isSmallScreen 
+    ? 12 
+    : isMediumScreen 
+    ? 14 
+    : isLargeScreen
+    ? 16
+    : Math.min(16, screenWidth * 0.039); // Responsivo para telas maiores
+  const fontSize = isSmallScreen 
+    ? 12 
+    : isMediumScreen 
+    ? 13 
+    : isLargeScreen
+    ? 14
+    : Math.min(14, screenWidth * 0.034); // Responsivo para telas maiores
+  const marginRight = isSmallScreen 
+    ? 8 
+    : isMediumScreen 
+    ? 9 
+    : isLargeScreen
+    ? 10
+    : Math.min(10, screenWidth * 0.024); // Responsivo para telas maiores
+  
+  return (
+    <View style={{ width: '100%', maxWidth: '100%' }}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.categoryScroll}
+        contentContainerStyle={[styles.categoryScrollContainer, { paddingHorizontal: containerPadding }]}>
         <TouchableOpacity
-          key={category.id}
           style={[
             styles.categoryButton,
-            selectedCategory === category.id ? styles.categoryButtonActive : null,
+            !selectedCategory ? styles.categoryButtonActive : null,
+            {
+              paddingVertical: buttonPaddingV,
+              paddingHorizontal: buttonPaddingH,
+              marginRight,
+            },
           ]}
-          onPress={() => onSelectCategory && onSelectCategory(category.id)}>
+          onPress={() => onSelectCategory && onSelectCategory(null)}>
           <Text
             style={[
               styles.categoryText,
-              selectedCategory === category.id ? styles.categoryTextActive : null,
+              !selectedCategory ? styles.categoryTextActive : null,
+              { fontSize },
             ]}>
-            {category.name}
+            Todos
           </Text>
         </TouchableOpacity>
-      ))}
-    </ScrollView>
-  </View>
-);
+
+        {categories.map((category) => (
+          <TouchableOpacity
+            key={category.id}
+            style={[
+              styles.categoryButton,
+              selectedCategory === category.id ? styles.categoryButtonActive : null,
+              {
+                paddingVertical: buttonPaddingV,
+                paddingHorizontal: buttonPaddingH,
+                marginRight,
+              },
+            ]}
+            onPress={() => onSelectCategory && onSelectCategory(category.id)}>
+            <Text
+              style={[
+                styles.categoryText,
+                selectedCategory === category.id ? styles.categoryTextActive : null,
+                { fontSize },
+              ]}>
+              {category.name}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   categoryScroll: {
@@ -69,27 +130,22 @@ const styles = StyleSheet.create({
     maxWidth: '100%',
   },
   categoryScrollContainer: {
-    paddingHorizontal: 15,
     alignItems: 'center',
   },
   categoryButton: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#F3E9B5',
     borderRadius: 20,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    marginRight: 10,
     minWidth: 60,
   },
   categoryButtonActive: {
-    backgroundColor: '#333333',
+    backgroundColor: '#efb20dff',
   },
   categoryText: {
-    fontSize: 14,
     fontWeight: '600',
-    color: '#555',
+    color: '#000000ff',
   },
   categoryTextActive: {
-    color: '#FFFFFF',
+    color: '#000000ff',
   },
 });
 
