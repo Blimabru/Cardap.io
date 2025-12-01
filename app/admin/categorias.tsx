@@ -16,6 +16,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
@@ -24,7 +25,13 @@ import { Categoria } from '../../types';
 
 export default function GerenciarCategoriasScreen() {
   const router = useRouter();
+  const { width: screenWidth } = useWindowDimensions();
   const { podeGerenciar } = useAuth();
+
+  // Variáveis responsivas baseadas na largura da tela
+  const isSmallScreen = screenWidth < 375;
+  const isMediumScreen = screenWidth >= 375 && screenWidth < 412;
+  const isLargeScreen = screenWidth >= 412;
 
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -95,6 +102,222 @@ export default function GerenciarCategoriasScreen() {
     }
   };
 
+  // Função para criar estilos dinâmicos baseados no tamanho da tela
+  const createDynamicStyles = (
+    screenWidth: number,
+    isSmallScreen: boolean,
+    isMediumScreen: boolean,
+    isLargeScreen: boolean
+  ) => {
+    // Padding horizontal responsivo
+    const horizontalPadding = isSmallScreen 
+      ? 12 
+      : isMediumScreen 
+      ? 14 
+      : isLargeScreen
+      ? 16
+      : Math.min(16, screenWidth * 0.039);
+
+    // Tamanhos de fonte responsivos
+    const titleFontSize = isSmallScreen ? 18 : isMediumScreen ? 19 : isLargeScreen ? 18 : Math.min(18, screenWidth * 0.044);
+    const bodyFontSize = isSmallScreen ? 14 : isMediumScreen ? 15 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039);
+    const labelFontSize = isSmallScreen ? 13 : isMediumScreen ? 14 : isLargeScreen ? 14 : Math.min(14, screenWidth * 0.034);
+
+    // Tamanhos de ícones responsivos
+    const headerIconSize = isSmallScreen ? 20 : isMediumScreen ? 22 : isLargeScreen ? 24 : Math.min(24, screenWidth * 0.058);
+    const addIconSize = isSmallScreen ? 24 : isMediumScreen ? 26 : isLargeScreen ? 28 : Math.min(28, screenWidth * 0.068);
+    const categoryIconSize = isSmallScreen ? 28 : isMediumScreen ? 30 : isLargeScreen ? 32 : Math.min(32, screenWidth * 0.078);
+    const actionIconSize = isSmallScreen ? 18 : isMediumScreen ? 19 : isLargeScreen ? 20 : Math.min(20, screenWidth * 0.049);
+    const modalIconSize = isSmallScreen ? 20 : isMediumScreen ? 22 : isLargeScreen ? 24 : Math.min(24, screenWidth * 0.058);
+    const emptyIconSize = isSmallScreen ? 60 : isMediumScreen ? 70 : isLargeScreen ? 80 : Math.min(80, screenWidth * 0.195);
+
+    // Tamanho do ícone do card
+    const iconContainerSize = isSmallScreen ? 45 : isMediumScreen ? 47 : isLargeScreen ? 50 : Math.min(50, screenWidth * 0.122);
+
+    return StyleSheet.create({
+      header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: horizontalPadding,
+        backgroundColor: '#FFF',
+        borderBottomWidth: 1,
+        borderBottomColor: '#E0E0E0',
+        width: '100%',
+        maxWidth: '100%',
+      },
+      headerTitle: {
+        fontSize: titleFontSize,
+        fontWeight: 'bold',
+        color: '#333',
+      },
+      lista: {
+        padding: horizontalPadding,
+        width: '100%',
+        maxWidth: '100%',
+      },
+      categoriaCard: {
+        flexDirection: 'row',
+        backgroundColor: '#FFF',
+        borderRadius: 12,
+        padding: horizontalPadding,
+        marginBottom: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+        alignItems: 'center',
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 2 },
+        width: '100%',
+        maxWidth: '100%',
+        overflow: 'hidden',
+      },
+      categoriaIconContainer: {
+        width: iconContainerSize,
+        height: iconContainerSize,
+        borderRadius: iconContainerSize / 2,
+        backgroundColor: '#F0F0F0',
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexShrink: 0,
+      },
+      categoriaInfo: {
+        flex: 1,
+        marginLeft: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        minWidth: 0,
+      },
+      categoriaNome: {
+        fontSize: isSmallScreen ? 16 : isMediumScreen ? 17 : isLargeScreen ? 18 : Math.min(18, screenWidth * 0.044),
+        fontWeight: '600',
+        color: '#333',
+      },
+      categoriaAcoes: {
+        flexDirection: 'row',
+        marginLeft: isSmallScreen ? 8 : isMediumScreen ? 10 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+        flexShrink: 0,
+      },
+      botaoEditar: {
+        padding: isSmallScreen ? 6 : isMediumScreen ? 7 : isLargeScreen ? 8 : Math.min(8, screenWidth * 0.019),
+        marginRight: isSmallScreen ? 6 : isMediumScreen ? 7 : isLargeScreen ? 8 : Math.min(8, screenWidth * 0.019),
+      },
+      botaoDeletar: {
+        padding: isSmallScreen ? 6 : isMediumScreen ? 7 : isLargeScreen ? 8 : Math.min(8, screenWidth * 0.019),
+      },
+      emptyContainer: {
+        padding: isSmallScreen ? 36 : isMediumScreen ? 42 : isLargeScreen ? 48 : Math.min(48, screenWidth * 0.117),
+        alignItems: 'center',
+      },
+      emptyText: {
+        fontSize: isSmallScreen ? 14 : isMediumScreen ? 15 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        color: '#999',
+        marginTop: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        marginBottom: isSmallScreen ? 20 : isMediumScreen ? 22 : isLargeScreen ? 24 : Math.min(24, screenWidth * 0.058),
+        textAlign: 'center',
+      },
+      botaoAdicionar: {
+        backgroundColor: '#4CAF50',
+        paddingHorizontal: isSmallScreen ? 20 : isMediumScreen ? 22 : isLargeScreen ? 24 : Math.min(24, screenWidth * 0.058),
+        paddingVertical: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+        borderRadius: 8,
+      },
+      botaoAdicionarText: {
+        color: '#FFF',
+        fontSize: isSmallScreen ? 14 : isMediumScreen ? 15 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        fontWeight: '600',
+      },
+      modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: horizontalPadding,
+      },
+      modalContainer: {
+        width: '100%',
+        maxWidth: isSmallScreen ? screenWidth - (horizontalPadding * 2) : isMediumScreen ? 380 : isLargeScreen ? 400 : Math.min(400, screenWidth * 0.975),
+        backgroundColor: '#FFF',
+        borderRadius: 12,
+        maxHeight: '80%',
+      },
+      modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: isSmallScreen ? 16 : isMediumScreen ? 18 : isLargeScreen ? 20 : Math.min(20, screenWidth * 0.049),
+        borderBottomWidth: 1,
+        borderBottomColor: '#E0E0E0',
+      },
+      modalTitle: {
+        fontSize: titleFontSize,
+        fontWeight: 'bold',
+        color: '#333',
+      },
+      modalContent: {
+        padding: isSmallScreen ? 16 : isMediumScreen ? 18 : isLargeScreen ? 20 : Math.min(20, screenWidth * 0.049),
+      },
+      inputContainer: {
+        marginBottom: isSmallScreen ? 16 : isMediumScreen ? 18 : isLargeScreen ? 20 : Math.min(20, screenWidth * 0.049),
+      },
+      label: {
+        fontSize: labelFontSize,
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: isSmallScreen ? 6 : isMediumScreen ? 7 : isLargeScreen ? 8 : Math.min(8, screenWidth * 0.019),
+      },
+      input: {
+        borderWidth: 1,
+        borderColor: '#DDD',
+        borderRadius: 8,
+        paddingHorizontal: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        paddingVertical: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+        fontSize: bodyFontSize,
+        color: '#333',
+        width: '100%',
+        maxWidth: '100%',
+      },
+      botaoSalvar: {
+        backgroundColor: '#4CAF50',
+        borderRadius: 8,
+        paddingVertical: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        alignItems: 'center',
+        width: '100%',
+      },
+      botaoSalvarText: {
+        color: '#FFF',
+        fontSize: isSmallScreen ? 14 : isMediumScreen ? 15 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        fontWeight: '600',
+      },
+      errorContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: isSmallScreen ? 24 : isMediumScreen ? 28 : isLargeScreen ? 32 : Math.min(32, screenWidth * 0.078),
+      },
+      errorText: {
+        fontSize: isSmallScreen ? 18 : isMediumScreen ? 19 : isLargeScreen ? 20 : Math.min(20, screenWidth * 0.049),
+        fontWeight: 'bold',
+        color: '#999',
+        marginTop: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        textAlign: 'center',
+      },
+      linkText: {
+        fontSize: isSmallScreen ? 14 : isMediumScreen ? 15 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        color: '#2196F3',
+        marginTop: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+      },
+    });
+  };
+
+  const dynamicStyles = createDynamicStyles(screenWidth, isSmallScreen, isMediumScreen, isLargeScreen);
+
+  // Tamanhos de ícones dinâmicos
+  const headerIconSize = isSmallScreen ? 20 : isMediumScreen ? 22 : isLargeScreen ? 24 : Math.min(24, screenWidth * 0.058);
+  const addIconSize = isSmallScreen ? 24 : isMediumScreen ? 26 : isLargeScreen ? 28 : Math.min(28, screenWidth * 0.068);
+  const categoryIconSize = isSmallScreen ? 28 : isMediumScreen ? 30 : isLargeScreen ? 32 : Math.min(32, screenWidth * 0.078);
+  const actionIconSize = isSmallScreen ? 18 : isMediumScreen ? 19 : isLargeScreen ? 20 : Math.min(20, screenWidth * 0.049);
+  const modalIconSize = isSmallScreen ? 20 : isMediumScreen ? 22 : isLargeScreen ? 24 : Math.min(24, screenWidth * 0.058);
+  const emptyIconSize = isSmallScreen ? 60 : isMediumScreen ? 70 : isLargeScreen ? 80 : Math.min(80, screenWidth * 0.195);
+
   const handleDeletar = (categoria: Categoria) => {
     Alert.alert(
       'Confirmar Exclusão',
@@ -119,28 +342,28 @@ export default function GerenciarCategoriasScreen() {
   };
 
   const renderCategoria = ({ item }: { item: Categoria }) => (
-    <View style={styles.categoriaCard}>
-      <View style={styles.categoriaIconContainer}>
-        <Icon name="category" size={32} color="#333" />
+    <View style={dynamicStyles.categoriaCard}>
+      <View style={dynamicStyles.categoriaIconContainer}>
+        <Icon name="category" size={categoryIconSize} color="#333" />
       </View>
       
-      <View style={styles.categoriaInfo}>
-        <Text style={styles.categoriaNome}>{item.name}</Text>
+      <View style={dynamicStyles.categoriaInfo}>
+        <Text style={dynamicStyles.categoriaNome}>{item.name}</Text>
       </View>
 
-      <View style={styles.categoriaAcoes}>
+      <View style={dynamicStyles.categoriaAcoes}>
         <TouchableOpacity
-          style={styles.botaoEditar}
+          style={dynamicStyles.botaoEditar}
           onPress={() => abrirModal(item)}
         >
-          <Icon name="edit" size={20} color="#2196F3" />
+          <Icon name="edit" size={actionIconSize} color="#2196F3" />
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.botaoDeletar}
+          style={dynamicStyles.botaoDeletar}
           onPress={() => handleDeletar(item)}
         >
-          <Icon name="delete" size={20} color="#F44336" />
+          <Icon name="delete" size={actionIconSize} color="#F44336" />
         </TouchableOpacity>
       </View>
     </View>
@@ -148,45 +371,47 @@ export default function GerenciarCategoriasScreen() {
 
   if (!podeGerenciar) {
     return (
-      <View style={styles.errorContainer}>
-        <Icon name="block" size={80} color="#DDD" />
-        <Text style={styles.errorText}>Acesso Negado</Text>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.linkText}>Voltar</Text>
-        </TouchableOpacity>
+      <View style={styles.container}>
+        <View style={dynamicStyles.errorContainer}>
+          <Icon name="block" size={emptyIconSize} color="#DDD" />
+          <Text style={dynamicStyles.errorText}>Acesso Negado</Text>
+          <TouchableOpacity onPress={() => router.back()}>
+            <Text style={dynamicStyles.linkText}>Voltar</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <View style={dynamicStyles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Icon name="arrow-back" size={24} color="#333" />
+          <Icon name="arrow-back" size={headerIconSize} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Gerenciar Categorias</Text>
+        <Text style={dynamicStyles.headerTitle}>Gerenciar Categorias</Text>
         <TouchableOpacity onPress={() => abrirModal()}>
-          <Icon name="add-circle" size={28} color="#4CAF50" />
+          <Icon name="add-circle" size={addIconSize} color="#4CAF50" />
         </TouchableOpacity>
       </View>
 
       {carregando ? (
-        <ActivityIndicator size="large" color="#333" style={{ marginTop: 32 }} />
+        <ActivityIndicator size="large" color="#333" style={{ marginTop: isSmallScreen ? 24 : isMediumScreen ? 28 : isLargeScreen ? 32 : Math.min(32, screenWidth * 0.078) }} />
       ) : (
         <FlatList
           data={categorias}
           renderItem={renderCategoria}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.lista}
+          contentContainerStyle={dynamicStyles.lista}
           ListEmptyComponent={() => (
-            <View style={styles.emptyContainer}>
-              <Icon name="category" size={80} color="#DDD" />
-              <Text style={styles.emptyText}>Nenhuma categoria cadastrada</Text>
+            <View style={dynamicStyles.emptyContainer}>
+              <Icon name="category" size={emptyIconSize} color="#DDD" />
+              <Text style={dynamicStyles.emptyText}>Nenhuma categoria cadastrada</Text>
               <TouchableOpacity
-                style={styles.botaoAdicionar}
+                style={dynamicStyles.botaoAdicionar}
                 onPress={() => abrirModal()}
               >
-                <Text style={styles.botaoAdicionarText}>Adicionar Primeira Categoria</Text>
+                <Text style={dynamicStyles.botaoAdicionarText}>Adicionar Primeira Categoria</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -199,22 +424,22 @@ export default function GerenciarCategoriasScreen() {
         transparent={true}
         onRequestClose={fecharModal}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
+        <View style={dynamicStyles.modalOverlay}>
+          <View style={dynamicStyles.modalContainer}>
+            <View style={dynamicStyles.modalHeader}>
+              <Text style={dynamicStyles.modalTitle}>
                 {categoriaEditando ? 'Editar Categoria' : 'Nova Categoria'}
               </Text>
               <TouchableOpacity onPress={fecharModal}>
-                <Icon name="close" size={24} color="#333" />
+                <Icon name="close" size={modalIconSize} color="#333" />
               </TouchableOpacity>
             </View>
 
-            <View style={styles.modalContent}>
-              <View style={styles.inputContainer}>
-                <Text style={styles.label}>Nome da Categoria *</Text>
+            <View style={dynamicStyles.modalContent}>
+              <View style={dynamicStyles.inputContainer}>
+                <Text style={dynamicStyles.label}>Nome da Categoria *</Text>
                 <TextInput
-                  style={styles.input}
+                  style={dynamicStyles.input}
                   value={nome}
                   onChangeText={setNome}
                   placeholder="Ex: Hambúrgueres, Bebidas..."
@@ -223,14 +448,14 @@ export default function GerenciarCategoriasScreen() {
               </View>
 
               <TouchableOpacity
-                style={[styles.botaoSalvar, salvando && styles.botaoDesabilitado]}
+                style={[dynamicStyles.botaoSalvar, salvando && styles.botaoDesabilitado]}
                 onPress={handleSalvar}
                 disabled={salvando}
               >
                 {salvando ? (
                   <ActivityIndicator color="#FFF" />
                 ) : (
-                  <Text style={styles.botaoSalvarText}>
+                  <Text style={dynamicStyles.botaoSalvarText}>
                     {categoriaEditando ? 'Atualizar' : 'Criar'}
                   </Text>
                 )}
@@ -247,161 +472,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5F5F5',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#FFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  lista: {
-    padding: 16,
-  },
-  categoriaCard: {
-    flexDirection: 'row',
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    alignItems: 'center',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  categoriaIconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#F0F0F0',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  categoriaInfo: {
-    flex: 1,
-    marginLeft: 16,
-  },
-  categoriaNome: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-  },
-  categoriaAcoes: {
-    flexDirection: 'row',
-  },
-  botaoEditar: {
-    padding: 8,
-    marginRight: 8,
-  },
-  botaoDeletar: {
-    padding: 8,
-  },
-  emptyContainer: {
-    padding: 48,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#999',
-    marginTop: 16,
-    marginBottom: 24,
-  },
-  botaoAdicionar: {
-    backgroundColor: '#4CAF50',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  botaoAdicionarText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContainer: {
-    width: '90%',
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    maxHeight: '80%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  modalContent: {
-    padding: 20,
-  },
-  inputContainer: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#DDD',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: '#333',
-  },
-  botaoSalvar: {
-    backgroundColor: '#4CAF50',
-    borderRadius: 8,
-    paddingVertical: 16,
-    alignItems: 'center',
+    width: '100%',
+    maxWidth: '100%',
+    overflow: 'hidden',
   },
   botaoDesabilitado: {
     opacity: 0.6,
-  },
-  botaoSalvarText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-  },
-  errorText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#999',
-    marginTop: 16,
-  },
-  linkText: {
-    fontSize: 16,
-    color: '#2196F3',
-    marginTop: 16,
   },
 });
 

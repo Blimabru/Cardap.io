@@ -16,6 +16,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
@@ -25,7 +26,13 @@ import HomeHeader from '../../components/HomeHeader';
 
 export default function PedidosScreen() {
   const router = useRouter();
+  const { width: screenWidth } = useWindowDimensions();
   const { autenticado, podeGerenciar } = useAuth();
+
+  // Variáveis responsivas baseadas na largura da tela
+  const isSmallScreen = screenWidth < 375;
+  const isMediumScreen = screenWidth >= 375 && screenWidth < 412;
+  const isLargeScreen = screenWidth >= 412;
 
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -74,6 +81,217 @@ export default function PedidosScreen() {
     }
   };
 
+  // Função para criar estilos dinâmicos baseados no tamanho da tela
+  const createDynamicStyles = (
+    screenWidth: number,
+    isSmallScreen: boolean,
+    isMediumScreen: boolean,
+    isLargeScreen: boolean
+  ) => {
+    // Padding horizontal responsivo
+    const horizontalPadding = isSmallScreen 
+      ? 12 
+      : isMediumScreen 
+      ? 14 
+      : isLargeScreen
+      ? 16
+      : Math.min(16, screenWidth * 0.039);
+
+    // Tamanhos de fonte responsivos
+    const titleFontSize = isSmallScreen ? 18 : isMediumScreen ? 20 : isLargeScreen ? 20 : Math.min(20, screenWidth * 0.049);
+    const bodyFontSize = isSmallScreen ? 14 : isMediumScreen ? 15 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039);
+    const labelFontSize = isSmallScreen ? 13 : isMediumScreen ? 14 : isLargeScreen ? 14 : Math.min(14, screenWidth * 0.034);
+    const smallFontSize = isSmallScreen ? 11 : isMediumScreen ? 12 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029);
+
+    return StyleSheet.create({
+      list: {
+        padding: horizontalPadding,
+        width: '100%',
+        maxWidth: '100%',
+      },
+      pedidoCard: {
+        backgroundColor: '#FFF',
+        borderRadius: 12,
+        padding: horizontalPadding,
+        marginBottom: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 2 },
+        width: '100%',
+        maxWidth: '100%',
+        overflow: 'hidden',
+      },
+      pedidoHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+        flexWrap: 'wrap',
+      },
+      pedidoNumero: {
+        fontSize: isSmallScreen ? 15 : isMediumScreen ? 16 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        fontWeight: 'bold',
+        color: '#333',
+      },
+      pedidoMesa: {
+        fontSize: isSmallScreen ? 13 : isMediumScreen ? 14 : isLargeScreen ? 14 : Math.min(14, screenWidth * 0.034),
+        color: '#666',
+        marginTop: isSmallScreen ? 2 : isMediumScreen ? 2 : isLargeScreen ? 2 : Math.min(2, screenWidth * 0.005),
+        fontWeight: '600',
+      },
+      pedidoData: {
+        fontSize: smallFontSize,
+        color: '#999',
+        marginTop: isSmallScreen ? 2 : isMediumScreen ? 2 : isLargeScreen ? 2 : Math.min(2, screenWidth * 0.005),
+      },
+      statusBadge: {
+        paddingHorizontal: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+        paddingVertical: isSmallScreen ? 5 : isMediumScreen ? 5.5 : isLargeScreen ? 6 : Math.min(6, screenWidth * 0.015),
+        borderRadius: 16,
+        flexShrink: 0,
+        marginLeft: isSmallScreen ? 8 : isMediumScreen ? 10 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+      },
+      statusText: {
+        fontSize: smallFontSize,
+        fontWeight: '600',
+        color: '#FFF',
+      },
+      pedidoItens: {
+        marginBottom: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+      },
+      itemText: {
+        fontSize: bodyFontSize,
+        color: '#666',
+        marginBottom: isSmallScreen ? 3 : isMediumScreen ? 4 : isLargeScreen ? 4 : Math.min(4, screenWidth * 0.010),
+      },
+      observacoes: {
+        fontSize: smallFontSize,
+        color: '#999',
+        fontStyle: 'italic',
+        marginBottom: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+      },
+      pedidoFooter: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        borderTopWidth: 1,
+        borderTopColor: '#F0F0F0',
+        paddingTop: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+        flexWrap: 'wrap',
+      },
+      total: {
+        fontSize: isSmallScreen ? 16 : isMediumScreen ? 17 : isLargeScreen ? 18 : Math.min(18, screenWidth * 0.044),
+        fontWeight: 'bold',
+        color: '#333',
+      },
+      cancelarButton: {
+        paddingHorizontal: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        paddingVertical: isSmallScreen ? 6 : isMediumScreen ? 7 : isLargeScreen ? 8 : Math.min(8, screenWidth * 0.019),
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#F44336',
+        marginTop: isSmallScreen ? 8 : 0,
+      },
+      cancelarText: {
+        fontSize: isSmallScreen ? 12 : isMediumScreen ? 13 : isLargeScreen ? 14 : Math.min(14, screenWidth * 0.034),
+        fontWeight: '600',
+        color: '#F44336',
+      },
+      emptyContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: isSmallScreen ? 24 : isMediumScreen ? 28 : isLargeScreen ? 32 : Math.min(32, screenWidth * 0.078),
+        backgroundColor: '#F5F5F5',
+      },
+      emptyText: {
+        fontSize: isSmallScreen ? 16 : isMediumScreen ? 17 : isLargeScreen ? 18 : Math.min(18, screenWidth * 0.044),
+        color: '#999',
+        marginTop: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        marginBottom: isSmallScreen ? 20 : isMediumScreen ? 22 : isLargeScreen ? 24 : Math.min(24, screenWidth * 0.058),
+        textAlign: 'center',
+      },
+      loginButton: {
+        backgroundColor: '#333',
+        borderRadius: 8,
+        paddingHorizontal: isSmallScreen ? 24 : isMediumScreen ? 28 : isLargeScreen ? 32 : Math.min(32, screenWidth * 0.078),
+        paddingVertical: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+      },
+      loginButtonText: {
+        color: '#FFF',
+        fontSize: isSmallScreen ? 14 : isMediumScreen ? 15 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        fontWeight: '600',
+      },
+      modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: horizontalPadding,
+      },
+      modalContainer: {
+        backgroundColor: '#FFF',
+        borderRadius: 12,
+        width: '100%',
+        maxWidth: isSmallScreen ? screenWidth - (horizontalPadding * 2) : isMediumScreen ? 380 : isLargeScreen ? 400 : Math.min(400, screenWidth * 0.975),
+        maxHeight: '80%',
+      },
+      modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: isSmallScreen ? 16 : isMediumScreen ? 18 : isLargeScreen ? 20 : Math.min(20, screenWidth * 0.049),
+        borderBottomWidth: 1,
+        borderBottomColor: '#E0E0E0',
+      },
+      modalTitle: {
+        fontSize: isSmallScreen ? 18 : isMediumScreen ? 19 : isLargeScreen ? 20 : Math.min(20, screenWidth * 0.049),
+        fontWeight: 'bold',
+        color: '#333',
+      },
+      modalContent: {
+        padding: isSmallScreen ? 16 : isMediumScreen ? 18 : isLargeScreen ? 20 : Math.min(20, screenWidth * 0.049),
+      },
+      modalSubtitle: {
+        fontSize: isSmallScreen ? 14 : isMediumScreen ? 15 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        color: '#666',
+        marginBottom: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+      },
+      statusOption: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        borderRadius: 8,
+        marginBottom: isSmallScreen ? 6 : isMediumScreen ? 7 : isLargeScreen ? 8 : Math.min(8, screenWidth * 0.019),
+        backgroundColor: '#F5F5F5',
+      },
+      statusOptionAtual: {
+        backgroundColor: '#E8F5E9',
+      },
+      statusIndicator: {
+        width: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+        height: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+        borderRadius: isSmallScreen ? 5 : isMediumScreen ? 5.5 : isLargeScreen ? 6 : Math.min(6, screenWidth * 0.015),
+        marginRight: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+      },
+      statusOptionText: {
+        flex: 1,
+        fontSize: isSmallScreen ? 14 : isMediumScreen ? 15 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        color: '#333',
+        fontWeight: '500',
+      },
+      centerContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+      },
+    });
+  };
+
+  const dynamicStyles = createDynamicStyles(screenWidth, isSmallScreen, isMediumScreen, isLargeScreen);
+
   const handleCancelar = (pedido: Pedido) => {
     Alert.alert(
       'Cancelar Pedido',
@@ -105,54 +323,57 @@ export default function PedidosScreen() {
     });
 
     const podeCancelar = item.status === 'pendente' || item.status === 'confirmado';
+    const expandIconSize = isSmallScreen ? 14 : isMediumScreen ? 15 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039);
+    const checkIconSize = isSmallScreen ? 18 : isMediumScreen ? 19 : isLargeScreen ? 20 : Math.min(20, screenWidth * 0.049);
+    const closeIconSize = isSmallScreen ? 20 : isMediumScreen ? 22 : isLargeScreen ? 24 : Math.min(24, screenWidth * 0.058);
 
     return (
-      <View style={styles.pedidoCard}>
-        <View style={styles.pedidoHeader}>
-          <View>
-            <Text style={styles.pedidoNumero}>Pedido #{item.numero_pedido}</Text>
+      <View style={dynamicStyles.pedidoCard}>
+        <View style={dynamicStyles.pedidoHeader}>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={dynamicStyles.pedidoNumero}>Pedido #{item.numero_pedido}</Text>
             {item.mesa && (
-              <Text style={styles.pedidoMesa}>Mesa #{item.mesa.numero}</Text>
+              <Text style={dynamicStyles.pedidoMesa}>Mesa #{item.mesa.numero}</Text>
             )}
-            <Text style={styles.pedidoData}>{data} às {hora}</Text>
+            <Text style={dynamicStyles.pedidoData}>{data} às {hora}</Text>
           </View>
           
           {podeGerenciar ? (
             <TouchableOpacity
-              style={[styles.statusBadge, { backgroundColor: corDoStatus(item.status) }]}
+              style={[dynamicStyles.statusBadge, { backgroundColor: corDoStatus(item.status) }]}
               onPress={() => abrirModalStatus(item)}
             >
-              <Text style={styles.statusText}>{formatarStatus(item.status)}</Text>
-              <Icon name="expand-more" size={16} color="#FFF" style={{ marginLeft: 4 }} />
+              <Text style={dynamicStyles.statusText}>{formatarStatus(item.status)}</Text>
+              <Icon name="expand-more" size={expandIconSize} color="#FFF" style={{ marginLeft: 4 }} />
             </TouchableOpacity>
           ) : (
-            <View style={[styles.statusBadge, { backgroundColor: corDoStatus(item.status) }]}>
-              <Text style={styles.statusText}>{formatarStatus(item.status)}</Text>
+            <View style={[dynamicStyles.statusBadge, { backgroundColor: corDoStatus(item.status) }]}>
+              <Text style={dynamicStyles.statusText}>{formatarStatus(item.status)}</Text>
             </View>
           )}
         </View>
 
-        <View style={styles.pedidoItens}>
+        <View style={dynamicStyles.pedidoItens}>
           {item.itens.map((itemPedido, index) => (
-            <Text key={index} style={styles.itemText}>
+            <Text key={index} style={dynamicStyles.itemText}>
               {itemPedido.quantidade}x {itemPedido.produto.name}
             </Text>
           ))}
         </View>
 
         {item.observacoes && (
-          <Text style={styles.observacoes}>Obs: {item.observacoes}</Text>
+          <Text style={dynamicStyles.observacoes}>Obs: {item.observacoes}</Text>
         )}
 
-        <View style={styles.pedidoFooter}>
-          <Text style={styles.total}>Total: R$ {Number(item.total).toFixed(2)}</Text>
+        <View style={dynamicStyles.pedidoFooter}>
+          <Text style={dynamicStyles.total}>Total: R$ {Number(item.total).toFixed(2)}</Text>
           
           {podeCancelar && (
             <TouchableOpacity
-              style={styles.cancelarButton}
+              style={dynamicStyles.cancelarButton}
               onPress={() => handleCancelar(item)}
             >
-              <Text style={styles.cancelarText}>Cancelar</Text>
+              <Text style={dynamicStyles.cancelarText}>Cancelar</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -160,40 +381,53 @@ export default function PedidosScreen() {
     );
   };
 
+  const emptyIconSize = isSmallScreen ? 60 : isMediumScreen ? 70 : isLargeScreen ? 80 : Math.min(80, screenWidth * 0.195);
+  const closeIconSize = isSmallScreen ? 20 : isMediumScreen ? 22 : isLargeScreen ? 24 : Math.min(24, screenWidth * 0.058);
+  const checkIconSize = isSmallScreen ? 18 : isMediumScreen ? 19 : isLargeScreen ? 20 : Math.min(20, screenWidth * 0.049);
+
   if (!autenticado) {
     return (
-      <View style={styles.emptyContainer}>
-        <Icon name="lock" size={80} color="#DDD" />
-        <Text style={styles.emptyText}>Faça login para ver seus pedidos</Text>
-        <TouchableOpacity
-          style={styles.loginButton}
-          onPress={() => router.push('/login')}
-        >
-          <Text style={styles.loginButtonText}>Fazer Login</Text>
-        </TouchableOpacity>
+      <View style={styles.container}>
+        <HomeHeader />
+        <View style={dynamicStyles.emptyContainer}>
+          <Icon name="lock" size={emptyIconSize} color="#DDD" />
+          <Text style={dynamicStyles.emptyText}>Faça login para ver seus pedidos</Text>
+          <TouchableOpacity
+            style={dynamicStyles.loginButton}
+            onPress={() => router.push('/login')}
+          >
+            <Text style={dynamicStyles.loginButtonText}>Fazer Login</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
 
   if (carregando) {
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#333" />
+      <View style={styles.container}>
+        <HomeHeader />
+        <View style={dynamicStyles.centerContainer}>
+          <ActivityIndicator size="large" color="#333" />
+        </View>
       </View>
     );
   }
 
   if (pedidos.length === 0) {
     return (
-      <View style={styles.emptyContainer}>
-        <Icon name="receipt-long" size={80} color="#DDD" />
-        <Text style={styles.emptyText}>Você ainda não fez nenhum pedido</Text>
-        <TouchableOpacity
-          style={styles.loginButton}
-          onPress={() => router.push('/(tabs)')}
-        >
-          <Text style={styles.loginButtonText}>Ver Cardápio</Text>
-        </TouchableOpacity>
+      <View style={styles.container}>
+        <HomeHeader />
+        <View style={dynamicStyles.emptyContainer}>
+          <Icon name="receipt-long" size={emptyIconSize} color="#DDD" />
+          <Text style={dynamicStyles.emptyText}>Você ainda não fez nenhum pedido</Text>
+          <TouchableOpacity
+            style={dynamicStyles.loginButton}
+            onPress={() => router.push('/(tabs)')}
+          >
+            <Text style={dynamicStyles.loginButtonText}>Ver Cardápio</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
@@ -205,7 +439,7 @@ export default function PedidosScreen() {
         data={pedidos}
         renderItem={renderPedido}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={dynamicStyles.list}
         refreshControl={
           <RefreshControl
             refreshing={atualizando}
@@ -225,17 +459,17 @@ export default function PedidosScreen() {
           transparent={true}
           onRequestClose={() => setModalStatusVisivel(false)}
         >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContainer}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Atualizar Status</Text>
+          <View style={dynamicStyles.modalOverlay}>
+            <View style={dynamicStyles.modalContainer}>
+              <View style={dynamicStyles.modalHeader}>
+                <Text style={dynamicStyles.modalTitle}>Atualizar Status</Text>
                 <TouchableOpacity onPress={() => setModalStatusVisivel(false)}>
-                  <Icon name="close" size={24} color="#333" />
+                  <Icon name="close" size={closeIconSize} color="#333" />
                 </TouchableOpacity>
               </View>
 
-              <View style={styles.modalContent}>
-                <Text style={styles.modalSubtitle}>
+              <View style={dynamicStyles.modalContent}>
+                <Text style={dynamicStyles.modalSubtitle}>
                   Pedido #{pedidoSelecionado?.numero_pedido}
                 </Text>
                 
@@ -251,20 +485,20 @@ export default function PedidosScreen() {
                   <TouchableOpacity
                     key={status}
                     style={[
-                      styles.statusOption,
-                      pedidoSelecionado?.status === status && styles.statusOptionAtual,
+                      dynamicStyles.statusOption,
+                      pedidoSelecionado?.status === status && dynamicStyles.statusOptionAtual,
                     ]}
                     onPress={() => handleAtualizarStatus(status)}
                   >
                     <View
                       style={[
-                        styles.statusIndicator,
+                        dynamicStyles.statusIndicator,
                         { backgroundColor: corDoStatus(status) },
                       ]}
                     />
-                    <Text style={styles.statusOptionText}>{formatarStatus(status)}</Text>
+                    <Text style={dynamicStyles.statusOptionText}>{formatarStatus(status)}</Text>
                     {pedidoSelecionado?.status === status && (
-                      <Icon name="check" size={20} color="#4CAF50" />
+                      <Icon name="check" size={checkIconSize} color="#4CAF50" />
                     )}
                   </TouchableOpacity>
                 ))}
@@ -281,179 +515,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5F5F5',
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  list: {
-    padding: 16,
-  },
-  pedidoCard: {
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  pedidoHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  pedidoNumero: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  pedidoMesa: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 2,
-    fontWeight: '600',
-  },
-  pedidoData: {
-    fontSize: 12,
-    color: '#999',
-    marginTop: 2,
-  },
-  statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#FFF',
-  },
-  pedidoItens: {
-    marginBottom: 12,
-  },
-  itemText: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 4,
-  },
-  observacoes: {
-    fontSize: 12,
-    color: '#999',
-    fontStyle: 'italic',
-    marginBottom: 12,
-  },
-  pedidoFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-    paddingTop: 12,
-  },
-  total: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  cancelarButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#F44336',
-  },
-  cancelarText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#F44336',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-    backgroundColor: '#F5F5F5',
-  },
-  emptyText: {
-    fontSize: 18,
-    color: '#999',
-    marginTop: 16,
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-  loginButton: {
-    backgroundColor: '#333',
-    borderRadius: 8,
-    paddingHorizontal: 32,
-    paddingVertical: 12,
-  },
-  loginButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  // Modal de Status
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContainer: {
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    width: '90%',
-    maxWidth: 400,
-    maxHeight: '80%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  modalContent: {
-    padding: 20,
-  },
-  modalSubtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 16,
-  },
-  statusOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 8,
-    backgroundColor: '#F5F5F5',
-  },
-  statusOptionAtual: {
-    backgroundColor: '#E8F5E9',
-  },
-  statusIndicator: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 12,
-  },
-  statusOptionText: {
-    flex: 1,
-    fontSize: 16,
-    color: '#333',
-    fontWeight: '500',
+    width: '100%',
+    maxWidth: '100%',
+    overflow: 'hidden',
   },
 });
 

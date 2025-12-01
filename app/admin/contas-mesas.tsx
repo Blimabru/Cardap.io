@@ -15,6 +15,8 @@ import {
   ActivityIndicator,
   RefreshControl,
   Modal,
+  useWindowDimensions,
+  ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons as Icon } from '@expo/vector-icons';
@@ -24,7 +26,13 @@ import * as contasService from '../../services/contas.service';
 
 export default function ContasMesasScreen() {
   const router = useRouter();
+  const { width: screenWidth } = useWindowDimensions();
   const { podeGerenciar } = useAuth();
+
+  // Variáveis responsivas baseadas na largura da tela
+  const isSmallScreen = screenWidth < 375;
+  const isMediumScreen = screenWidth >= 375 && screenWidth < 412;
+  const isLargeScreen = screenWidth >= 412;
 
   const [contas, setContas] = useState<ContaMesa[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -105,6 +113,282 @@ export default function ContasMesasScreen() {
     return formasMap[forma] || forma;
   };
 
+  // Função para criar estilos dinâmicos baseados no tamanho da tela
+  const createDynamicStyles = (
+    screenWidth: number,
+    isSmallScreen: boolean,
+    isMediumScreen: boolean,
+    isLargeScreen: boolean
+  ) => {
+    // Padding horizontal responsivo
+    const horizontalPadding = isSmallScreen 
+      ? 12 
+      : isMediumScreen 
+      ? 14 
+      : isLargeScreen
+      ? 16
+      : Math.min(16, screenWidth * 0.039);
+
+    // Tamanhos de fonte responsivos
+    const titleFontSize = isSmallScreen ? 18 : isMediumScreen ? 19 : isLargeScreen ? 18 : Math.min(18, screenWidth * 0.044);
+    const bodyFontSize = isSmallScreen ? 14 : isMediumScreen ? 15 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039);
+    const labelFontSize = isSmallScreen ? 13 : isMediumScreen ? 14 : isLargeScreen ? 14 : Math.min(14, screenWidth * 0.034);
+    const smallFontSize = isSmallScreen ? 11 : isMediumScreen ? 12 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029);
+    const largeFontSize = isSmallScreen ? 16 : isMediumScreen ? 17 : isLargeScreen ? 18 : Math.min(18, screenWidth * 0.044);
+    const modalTitleFontSize = isSmallScreen ? 18 : isMediumScreen ? 19 : isLargeScreen ? 20 : Math.min(20, screenWidth * 0.049);
+
+    // Tamanhos de ícones responsivos
+    const headerIconSize = isSmallScreen ? 20 : isMediumScreen ? 22 : isLargeScreen ? 24 : Math.min(24, screenWidth * 0.058);
+    const actionIconSize = isSmallScreen ? 18 : isMediumScreen ? 19 : isLargeScreen ? 20 : Math.min(20, screenWidth * 0.049);
+    const modalIconSize = isSmallScreen ? 20 : isMediumScreen ? 22 : isLargeScreen ? 24 : Math.min(24, screenWidth * 0.058);
+    const emptyIconSize = isSmallScreen ? 60 : isMediumScreen ? 70 : isLargeScreen ? 80 : Math.min(80, screenWidth * 0.195);
+
+    return StyleSheet.create({
+      header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: horizontalPadding,
+        backgroundColor: '#FFF',
+        borderBottomWidth: 1,
+        borderBottomColor: '#E0E0E0',
+        width: '100%',
+        maxWidth: '100%',
+      },
+      headerTitle: {
+        fontSize: titleFontSize,
+        fontWeight: 'bold',
+        color: '#333',
+      },
+      filtrosContainer: {
+        flexDirection: 'row',
+        padding: horizontalPadding,
+        backgroundColor: '#FFF',
+        borderBottomWidth: 1,
+        borderBottomColor: '#E0E0E0',
+        width: '100%',
+        maxWidth: '100%',
+        gap: isSmallScreen ? 6 : isMediumScreen ? 7 : isLargeScreen ? 8 : Math.min(8, screenWidth * 0.019),
+      },
+      filtroButton: {
+        flex: 1,
+        paddingVertical: isSmallScreen ? 6 : isMediumScreen ? 7 : isLargeScreen ? 8 : Math.min(8, screenWidth * 0.019),
+        paddingHorizontal: isSmallScreen ? 8 : isMediumScreen ? 10 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+        borderRadius: 8,
+        backgroundColor: '#F5F5F5',
+        alignItems: 'center',
+        minWidth: 0,
+      },
+      filtroButtonActive: {
+        backgroundColor: '#4CAF50',
+      },
+      filtroButtonText: {
+        fontSize: isSmallScreen ? 11 : isMediumScreen ? 12 : isLargeScreen ? 14 : Math.min(14, screenWidth * 0.034),
+        fontWeight: '600',
+        color: '#666',
+      },
+      filtroButtonTextActive: {
+        color: '#FFF',
+      },
+      lista: {
+        padding: horizontalPadding,
+        width: '100%',
+        maxWidth: '100%',
+      },
+      contaCard: {
+        backgroundColor: '#FFF',
+        borderRadius: 12,
+        padding: horizontalPadding,
+        marginBottom: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 2 },
+        width: '100%',
+        maxWidth: '100%',
+        overflow: 'hidden',
+      },
+      contaHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+      },
+      contaMesaNumero: {
+        fontSize: largeFontSize,
+        fontWeight: 'bold',
+        color: '#333',
+        marginBottom: isSmallScreen ? 3 : isMediumScreen ? 3.5 : isLargeScreen ? 4 : Math.min(4, screenWidth * 0.010),
+      },
+      contaData: {
+        fontSize: smallFontSize,
+        color: '#666',
+      },
+      statusBadge: {
+        paddingHorizontal: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+        paddingVertical: isSmallScreen ? 5 : isMediumScreen ? 5.5 : isLargeScreen ? 6 : Math.min(6, screenWidth * 0.015),
+        borderRadius: 12,
+      },
+      statusText: {
+        color: '#FFF',
+        fontSize: smallFontSize,
+        fontWeight: '600',
+      },
+      contaInfo: {
+        marginBottom: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+      },
+      contaInfoRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: isSmallScreen ? 6 : isMediumScreen ? 7 : isLargeScreen ? 8 : Math.min(8, screenWidth * 0.019),
+        width: '100%',
+        maxWidth: '100%',
+      },
+      contaInfoLabel: {
+        fontSize: bodyFontSize,
+        color: '#666',
+      },
+      contaInfoValue: {
+        fontSize: bodyFontSize,
+        fontWeight: '600',
+        color: '#333',
+      },
+      marcarPagaButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#E8F5E9',
+        paddingVertical: isSmallScreen ? 8 : isMediumScreen ? 9 : isLargeScreen ? 10 : Math.min(10, screenWidth * 0.024),
+        borderRadius: 8,
+        gap: isSmallScreen ? 6 : isMediumScreen ? 7 : isLargeScreen ? 8 : Math.min(8, screenWidth * 0.019),
+        width: '100%',
+      },
+      marcarPagaButtonText: {
+        color: '#4CAF50',
+        fontSize: isSmallScreen ? 12 : isMediumScreen ? 13 : isLargeScreen ? 14 : Math.min(14, screenWidth * 0.034),
+        fontWeight: '600',
+      },
+      emptyContainer: {
+        padding: isSmallScreen ? 36 : isMediumScreen ? 42 : isLargeScreen ? 48 : Math.min(48, screenWidth * 0.117),
+        alignItems: 'center',
+      },
+      emptyText: {
+        fontSize: isSmallScreen ? 14 : isMediumScreen ? 15 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        color: '#999',
+        marginTop: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        textAlign: 'center',
+      },
+      modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'flex-end',
+      },
+      modalContent: {
+        backgroundColor: '#FFF',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        maxHeight: '90%',
+        paddingBottom: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        width: '100%',
+        maxWidth: '100%',
+      },
+      modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: horizontalPadding,
+        borderBottomWidth: 1,
+        borderBottomColor: '#E0E0E0',
+        width: '100%',
+        maxWidth: '100%',
+      },
+      modalTitle: {
+        fontSize: modalTitleFontSize,
+        fontWeight: 'bold',
+        color: '#333',
+        flex: 1,
+        marginRight: isSmallScreen ? 8 : isMediumScreen ? 10 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+      },
+      modalCloseButton: {
+        padding: isSmallScreen ? 3 : isMediumScreen ? 3.5 : isLargeScreen ? 4 : Math.min(4, screenWidth * 0.010),
+      },
+      modalBody: {
+        padding: horizontalPadding,
+        width: '100%',
+        maxWidth: '100%',
+      },
+      modalInfoRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        width: '100%',
+        maxWidth: '100%',
+      },
+      modalInfoLabel: {
+        fontSize: bodyFontSize,
+        color: '#666',
+        flex: 1,
+      },
+      modalInfoValue: {
+        fontSize: bodyFontSize,
+        fontWeight: '600',
+        color: '#333',
+        flex: 1,
+        textAlign: 'right',
+      },
+      modalFooter: {
+        padding: horizontalPadding,
+        borderTopWidth: 1,
+        borderTopColor: '#E0E0E0',
+        width: '100%',
+        maxWidth: '100%',
+      },
+      modalButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#4CAF50',
+        paddingVertical: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        borderRadius: 8,
+        gap: isSmallScreen ? 6 : isMediumScreen ? 7 : isLargeScreen ? 8 : Math.min(8, screenWidth * 0.019),
+        width: '100%',
+      },
+      modalButtonText: {
+        color: '#FFF',
+        fontSize: isSmallScreen ? 14 : isMediumScreen ? 16 : isLargeScreen ? 18 : Math.min(18, screenWidth * 0.044),
+        fontWeight: 'bold',
+      },
+      errorContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: isSmallScreen ? 24 : isMediumScreen ? 28 : isLargeScreen ? 32 : Math.min(32, screenWidth * 0.078),
+      },
+      errorText: {
+        fontSize: isSmallScreen ? 18 : isMediumScreen ? 19 : isLargeScreen ? 20 : Math.min(20, screenWidth * 0.049),
+        fontWeight: 'bold',
+        color: '#999',
+        marginTop: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        textAlign: 'center',
+      },
+      linkText: {
+        fontSize: isSmallScreen ? 14 : isMediumScreen ? 15 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        color: '#2196F3',
+        marginTop: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+      },
+    });
+  };
+
+  const dynamicStyles = createDynamicStyles(screenWidth, isSmallScreen, isMediumScreen, isLargeScreen);
+
+  // Tamanhos de ícones dinâmicos
+  const headerIconSize = isSmallScreen ? 20 : isMediumScreen ? 22 : isLargeScreen ? 24 : Math.min(24, screenWidth * 0.058);
+  const actionIconSize = isSmallScreen ? 18 : isMediumScreen ? 19 : isLargeScreen ? 20 : Math.min(20, screenWidth * 0.049);
+  const modalIconSize = isSmallScreen ? 20 : isMediumScreen ? 22 : isLargeScreen ? 24 : Math.min(24, screenWidth * 0.058);
+  const emptyIconSize = isSmallScreen ? 60 : isMediumScreen ? 70 : isLargeScreen ? 80 : Math.min(80, screenWidth * 0.195);
+
   const abrirModalDetalhes = (conta: ContaMesa) => {
     setContaSelecionada(conta);
     setModalDetalhesVisivel(true);
@@ -148,41 +432,41 @@ export default function ContasMesasScreen() {
 
     return (
       <TouchableOpacity
-        style={styles.contaCard}
+        style={dynamicStyles.contaCard}
         onPress={() => abrirModalDetalhes(item)}
       >
-        <View style={styles.contaHeader}>
-          <View>
-            <Text style={styles.contaMesaNumero}>Mesa #{item.mesa?.numero}</Text>
-            <Text style={styles.contaData}>
+        <View style={dynamicStyles.contaHeader}>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={dynamicStyles.contaMesaNumero}>Mesa #{item.mesa?.numero}</Text>
+            <Text style={dynamicStyles.contaData}>
               {dataFechamento ? `Fechada em ${dataFechamento}` : `Aberta em ${dataAbertura}`}
             </Text>
           </View>
-          <View style={[styles.statusBadge, { backgroundColor: corDoStatus(item.status) }]}>
-            <Text style={styles.statusText}>{formatarStatus(item.status)}</Text>
+          <View style={[dynamicStyles.statusBadge, { backgroundColor: corDoStatus(item.status) }]}>
+            <Text style={dynamicStyles.statusText}>{formatarStatus(item.status)}</Text>
           </View>
         </View>
 
-        <View style={styles.contaInfo}>
-          <View style={styles.contaInfoRow}>
-            <Text style={styles.contaInfoLabel}>Total:</Text>
-            <Text style={styles.contaInfoValue}>R$ {item.total.toFixed(2)}</Text>
+        <View style={dynamicStyles.contaInfo}>
+          <View style={dynamicStyles.contaInfoRow}>
+            <Text style={dynamicStyles.contaInfoLabel}>Total:</Text>
+            <Text style={dynamicStyles.contaInfoValue}>R$ {item.total.toFixed(2)}</Text>
           </View>
           {item.forma_pagamento && (
-            <View style={styles.contaInfoRow}>
-              <Text style={styles.contaInfoLabel}>Pagamento:</Text>
-              <Text style={styles.contaInfoValue}>{formatarFormaPagamento(item.forma_pagamento)}</Text>
+            <View style={dynamicStyles.contaInfoRow}>
+              <Text style={dynamicStyles.contaInfoLabel}>Pagamento:</Text>
+              <Text style={dynamicStyles.contaInfoValue}>{formatarFormaPagamento(item.forma_pagamento)}</Text>
             </View>
           )}
         </View>
 
         {item.status === StatusConta.FECHADA && (
           <TouchableOpacity
-            style={styles.marcarPagaButton}
+            style={dynamicStyles.marcarPagaButton}
             onPress={() => handleMarcarComoPaga(item)}
           >
-            <Icon name="check-circle" size={20} color="#4CAF50" />
-            <Text style={styles.marcarPagaButtonText}>Marcar como Paga</Text>
+            <Icon name="check-circle" size={actionIconSize} color="#4CAF50" />
+            <Text style={dynamicStyles.marcarPagaButtonText}>Marcar como Paga</Text>
           </TouchableOpacity>
         )}
       </TouchableOpacity>
@@ -199,86 +483,88 @@ export default function ContasMesasScreen() {
         transparent={true}
         onRequestClose={() => setModalDetalhesVisivel(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
+        <View style={dynamicStyles.modalOverlay}>
+          <View style={dynamicStyles.modalContent}>
+            <View style={dynamicStyles.modalHeader}>
+              <Text style={dynamicStyles.modalTitle} numberOfLines={2}>
                 Detalhes - Mesa #{contaSelecionada.mesa?.numero}
               </Text>
               <TouchableOpacity
                 onPress={() => setModalDetalhesVisivel(false)}
-                style={styles.modalCloseButton}
+                style={dynamicStyles.modalCloseButton}
               >
-                <Icon name="close" size={24} color="#333" />
+                <Icon name="close" size={modalIconSize} color="#333" />
               </TouchableOpacity>
             </View>
 
-            <View style={styles.modalBody}>
-              <View style={styles.modalInfoRow}>
-                <Text style={styles.modalInfoLabel}>Status:</Text>
-                <View style={[styles.statusBadge, { backgroundColor: corDoStatus(contaSelecionada.status) }]}>
-                  <Text style={styles.statusText}>{formatarStatus(contaSelecionada.status)}</Text>
+            <ScrollView style={dynamicStyles.modalBody} showsVerticalScrollIndicator={false}>
+              <View style={dynamicStyles.modalInfoRow}>
+                <Text style={dynamicStyles.modalInfoLabel}>Status:</Text>
+                <View style={[dynamicStyles.statusBadge, { backgroundColor: corDoStatus(contaSelecionada.status) }]}>
+                  <Text style={dynamicStyles.statusText}>{formatarStatus(contaSelecionada.status)}</Text>
                 </View>
               </View>
 
-              <View style={styles.modalInfoRow}>
-                <Text style={styles.modalInfoLabel}>Total:</Text>
-                <Text style={styles.modalInfoValue}>R$ {contaSelecionada.total.toFixed(2)}</Text>
+              <View style={dynamicStyles.modalInfoRow}>
+                <Text style={dynamicStyles.modalInfoLabel}>Total:</Text>
+                <Text style={dynamicStyles.modalInfoValue}>R$ {contaSelecionada.total.toFixed(2)}</Text>
               </View>
 
               {contaSelecionada.forma_pagamento && (
-                <View style={styles.modalInfoRow}>
-                  <Text style={styles.modalInfoLabel}>Forma de Pagamento:</Text>
-                  <Text style={styles.modalInfoValue}>
+                <View style={dynamicStyles.modalInfoRow}>
+                  <Text style={dynamicStyles.modalInfoLabel}>Forma de Pagamento:</Text>
+                  <Text style={dynamicStyles.modalInfoValue} numberOfLines={2}>
                     {formatarFormaPagamento(contaSelecionada.forma_pagamento)}
                   </Text>
                 </View>
               )}
 
-              <View style={styles.modalInfoRow}>
-                <Text style={styles.modalInfoLabel}>Data de Abertura:</Text>
-                <Text style={styles.modalInfoValue}>
+              <View style={dynamicStyles.modalInfoRow}>
+                <Text style={dynamicStyles.modalInfoLabel}>Data de Abertura:</Text>
+                <Text style={dynamicStyles.modalInfoValue} numberOfLines={2}>
                   {new Date(contaSelecionada.data_abertura).toLocaleString('pt-BR')}
                 </Text>
               </View>
 
               {contaSelecionada.data_fechamento && (
-                <View style={styles.modalInfoRow}>
-                  <Text style={styles.modalInfoLabel}>Data de Fechamento:</Text>
-                  <Text style={styles.modalInfoValue}>
+                <View style={dynamicStyles.modalInfoRow}>
+                  <Text style={dynamicStyles.modalInfoLabel}>Data de Fechamento:</Text>
+                  <Text style={dynamicStyles.modalInfoValue} numberOfLines={2}>
                     {new Date(contaSelecionada.data_fechamento).toLocaleString('pt-BR')}
                   </Text>
                 </View>
               )}
 
               {contaSelecionada.data_pagamento && (
-                <View style={styles.modalInfoRow}>
-                  <Text style={styles.modalInfoLabel}>Data de Pagamento:</Text>
-                  <Text style={styles.modalInfoValue}>
+                <View style={dynamicStyles.modalInfoRow}>
+                  <Text style={dynamicStyles.modalInfoLabel}>Data de Pagamento:</Text>
+                  <Text style={dynamicStyles.modalInfoValue} numberOfLines={2}>
                     {new Date(contaSelecionada.data_pagamento).toLocaleString('pt-BR')}
                   </Text>
                 </View>
               )}
 
               {contaSelecionada.observacoes && (
-                <View style={styles.modalInfoRow}>
-                  <Text style={styles.modalInfoLabel}>Observações:</Text>
-                  <Text style={styles.modalInfoValue}>{contaSelecionada.observacoes}</Text>
+                <View style={dynamicStyles.modalInfoRow}>
+                  <Text style={dynamicStyles.modalInfoLabel}>Observações:</Text>
+                  <Text style={dynamicStyles.modalInfoValue} numberOfLines={3}>
+                    {contaSelecionada.observacoes}
+                  </Text>
                 </View>
               )}
-            </View>
+            </ScrollView>
 
-            <View style={styles.modalFooter}>
+            <View style={dynamicStyles.modalFooter}>
               {contaSelecionada.status === StatusConta.FECHADA && (
                 <TouchableOpacity
-                  style={styles.modalButton}
+                  style={dynamicStyles.modalButton}
                   onPress={() => {
                     setModalDetalhesVisivel(false);
                     handleMarcarComoPaga(contaSelecionada);
                   }}
                 >
-                  <Icon name="check-circle" size={20} color="#FFF" />
-                  <Text style={styles.modalButtonText}>Marcar como Paga</Text>
+                  <Icon name="check-circle" size={actionIconSize} color="#FFF" />
+                  <Text style={dynamicStyles.modalButtonText}>Marcar como Paga</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -290,73 +576,75 @@ export default function ContasMesasScreen() {
 
   if (!podeGerenciar) {
     return (
-      <View style={styles.errorContainer}>
-        <Icon name="block" size={80} color="#DDD" />
-        <Text style={styles.errorText}>Acesso Negado</Text>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.linkText}>Voltar</Text>
-        </TouchableOpacity>
+      <View style={styles.container}>
+        <View style={dynamicStyles.errorContainer}>
+          <Icon name="block" size={emptyIconSize} color="#DDD" />
+          <Text style={dynamicStyles.errorText}>Acesso Negado</Text>
+          <TouchableOpacity onPress={() => router.back()}>
+            <Text style={dynamicStyles.linkText}>Voltar</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <View style={dynamicStyles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Icon name="arrow-back" size={24} color="#333" />
+          <Icon name="arrow-back" size={headerIconSize} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Contas das Mesas</Text>
-        <View style={{ width: 24 }} />
+        <Text style={dynamicStyles.headerTitle}>Contas das Mesas</Text>
+        <View style={{ width: headerIconSize }} />
       </View>
 
-      <View style={styles.filtrosContainer}>
+      <View style={dynamicStyles.filtrosContainer}>
         <TouchableOpacity
-          style={[styles.filtroButton, filtroStatus === 'todos' && styles.filtroButtonActive]}
+          style={[dynamicStyles.filtroButton, filtroStatus === 'todos' && dynamicStyles.filtroButtonActive]}
           onPress={() => setFiltroStatus('todos')}
         >
-          <Text style={[styles.filtroButtonText, filtroStatus === 'todos' && styles.filtroButtonTextActive]}>
+          <Text style={[dynamicStyles.filtroButtonText, filtroStatus === 'todos' && dynamicStyles.filtroButtonTextActive]}>
             Todos
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.filtroButton, filtroStatus === 'abertas' && styles.filtroButtonActive]}
+          style={[dynamicStyles.filtroButton, filtroStatus === 'abertas' && dynamicStyles.filtroButtonActive]}
           onPress={() => setFiltroStatus('abertas')}
         >
-          <Text style={[styles.filtroButtonText, filtroStatus === 'abertas' && styles.filtroButtonTextActive]}>
+          <Text style={[dynamicStyles.filtroButtonText, filtroStatus === 'abertas' && dynamicStyles.filtroButtonTextActive]}>
             Abertas
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.filtroButton, filtroStatus === 'fechadas' && styles.filtroButtonActive]}
+          style={[dynamicStyles.filtroButton, filtroStatus === 'fechadas' && dynamicStyles.filtroButtonActive]}
           onPress={() => setFiltroStatus('fechadas')}
         >
-          <Text style={[styles.filtroButtonText, filtroStatus === 'fechadas' && styles.filtroButtonTextActive]}>
+          <Text style={[dynamicStyles.filtroButtonText, filtroStatus === 'fechadas' && dynamicStyles.filtroButtonTextActive]}>
             Fechadas
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.filtroButton, filtroStatus === 'pagas' && styles.filtroButtonActive]}
+          style={[dynamicStyles.filtroButton, filtroStatus === 'pagas' && dynamicStyles.filtroButtonActive]}
           onPress={() => setFiltroStatus('pagas')}
         >
-          <Text style={[styles.filtroButtonText, filtroStatus === 'pagas' && styles.filtroButtonTextActive]}>
+          <Text style={[dynamicStyles.filtroButtonText, filtroStatus === 'pagas' && dynamicStyles.filtroButtonTextActive]}>
             Pagas
           </Text>
         </TouchableOpacity>
       </View>
 
       {carregando ? (
-        <ActivityIndicator size="large" color="#333" style={{ marginTop: 32 }} />
+        <ActivityIndicator size="large" color="#333" style={{ marginTop: isSmallScreen ? 24 : isMediumScreen ? 28 : isLargeScreen ? 32 : Math.min(32, screenWidth * 0.078) }} />
       ) : (
         <FlatList
           data={contas}
           renderItem={renderConta}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.lista}
+          contentContainerStyle={dynamicStyles.lista}
           ListEmptyComponent={() => (
-            <View style={styles.emptyContainer}>
-              <Icon name="receipt-long" size={80} color="#DDD" />
-              <Text style={styles.emptyText}>Nenhuma conta encontrada</Text>
+            <View style={dynamicStyles.emptyContainer}>
+              <Icon name="receipt-long" size={emptyIconSize} color="#DDD" />
+              <Text style={dynamicStyles.emptyText}>Nenhuma conta encontrada</Text>
             </View>
           )}
           refreshControl={
@@ -380,212 +668,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5F5F5',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-  },
-  errorText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#999',
-    marginTop: 16,
-  },
-  linkText: {
-    fontSize: 16,
-    color: '#2196F3',
-    marginTop: 16,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#FFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  filtrosContainer: {
-    flexDirection: 'row',
-    padding: 16,
-    backgroundColor: '#FFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-    gap: 8,
-  },
-  filtroButton: {
-    flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    backgroundColor: '#F5F5F5',
-    alignItems: 'center',
-  },
-  filtroButtonActive: {
-    backgroundColor: '#4CAF50',
-  },
-  filtroButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#666',
-  },
-  filtroButtonTextActive: {
-    color: '#FFF',
-  },
-  lista: {
-    padding: 16,
-  },
-  contaCard: {
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  contaHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  contaMesaNumero: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
-  },
-  contaData: {
-    fontSize: 12,
-    color: '#666',
-  },
-  statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-  },
-  statusText: {
-    color: '#FFF',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  contaInfo: {
-    marginBottom: 12,
-  },
-  contaInfoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  contaInfoLabel: {
-    fontSize: 14,
-    color: '#666',
-  },
-  contaInfoValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-  },
-  marcarPagaButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#E8F5E9',
-    paddingVertical: 10,
-    borderRadius: 8,
-    gap: 8,
-  },
-  marcarPagaButtonText: {
-    color: '#4CAF50',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  emptyContainer: {
-    padding: 48,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#999',
-    marginTop: 16,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: '#FFF',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '90%',
-    paddingBottom: 16,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  modalCloseButton: {
-    padding: 4,
-  },
-  modalBody: {
-    padding: 20,
-  },
-  modalInfoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  modalInfoLabel: {
-    fontSize: 14,
-    color: '#666',
-    flex: 1,
-  },
-  modalInfoValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    flex: 1,
-    textAlign: 'right',
-  },
-  modalFooter: {
-    padding: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
-  },
-  modalButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#4CAF50',
-    paddingVertical: 16,
-    borderRadius: 8,
-    gap: 8,
-  },
-  modalButtonText: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: 'bold',
+    width: '100%',
+    maxWidth: '100%',
+    overflow: 'hidden',
   },
 });
 

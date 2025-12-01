@@ -93,9 +93,10 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
       paddingHorizontal: containerPadding,
       width: '100%',
       maxWidth: '100%',
+      overflow: 'hidden',
     }]}>
       {/* Container do input com ícones */}
-      <View style={styles.searchInputContainer}>
+      <View style={[styles.searchInputContainer, { width: '100%', maxWidth: '100%' }]}>
         {/* Ícone de lupa à esquerda */}
         <Icon name="search" size={iconSize} color="#888" style={styles.searchIcon} />
         

@@ -68,11 +68,11 @@ const CategoryList = ({ categories, selectedCategory, onSelectCategory }: Catego
     : Math.min(10, screenWidth * 0.024); // Responsivo para telas maiores
   
   return (
-    <View style={{ width: '100%', maxWidth: '100%' }}>
+    <View style={{ width: '100%', maxWidth: '100%', overflow: 'hidden' }}>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        style={styles.categoryScroll}
+        style={[styles.categoryScroll, { width: '100%', maxWidth: '100%' }]}
         contentContainerStyle={[styles.categoryScrollContainer, { paddingHorizontal: containerPadding }]}>
         <TouchableOpacity
           style={[

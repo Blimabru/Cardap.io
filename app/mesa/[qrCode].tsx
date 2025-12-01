@@ -43,26 +43,44 @@ function MesaCardapioContent() {
   const qrCode = params.qrCode as string;
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   
-  // Variáveis responsivas baseadas na largura da tela
+  // Variáveis responsivas baseadas na largura da tela - totalmente responsivo
   const isSmallScreen = screenWidth < 375;
-  const isMediumScreen = screenWidth >= 375 && screenWidth < 768;
-  const isLargeScreen = screenWidth >= 768;
+  const isMediumScreen = screenWidth >= 375 && screenWidth < 412;
+  const isLargeScreen = screenWidth >= 412;
   
-  // Padding responsivo
-  const horizontalPadding = isSmallScreen ? 8 : isMediumScreen ? 12 : 16;
-  const verticalPadding = isSmallScreen ? 12 : isMediumScreen ? 16 : 20;
+  // Padding responsivo - totalmente responsivo (igual à tela principal)
+  const horizontalPadding = isSmallScreen 
+    ? 8 
+    : isMediumScreen 
+    ? 12 
+    : isLargeScreen
+    ? Math.min(16, screenWidth * 0.039)
+    : Math.min(16, screenWidth * 0.039);
+  const verticalPadding = isSmallScreen 
+    ? 12 
+    : isMediumScreen 
+    ? 16 
+    : isLargeScreen
+    ? Math.min(20, screenWidth * 0.049)
+    : Math.min(20, screenWidth * 0.049);
   
-  // Tamanhos de fonte responsivos
-  const titleFontSize = isSmallScreen ? 18 : isMediumScreen ? 20 : 24;
-  const subtitleFontSize = isSmallScreen ? 12 : isMediumScreen ? 13 : 14;
-  const bodyFontSize = isSmallScreen ? 14 : isMediumScreen ? 16 : 18;
+  // Tamanhos de fonte responsivos - totalmente responsivo
+  const titleFontSize = isSmallScreen ? 18 : isMediumScreen ? 20 : Math.min(20, screenWidth * 0.049);
+  const subtitleFontSize = isSmallScreen ? 12 : isMediumScreen ? 13 : Math.min(14, screenWidth * 0.034);
+  const bodyFontSize = isSmallScreen ? 14 : isMediumScreen ? 15 : Math.min(16, screenWidth * 0.039);
   
   // Cálculo de largura dos cards (1 coluna em telas pequenas, 2 em médias/grandes)
   const numColumns = isSmallScreen ? 1 : 2;
-  const cardSpacing = isSmallScreen ? 0 : isMediumScreen ? 8 : 10;
-  const cardWidth = isSmallScreen 
-    ? screenWidth - (horizontalPadding * 2) // 100% da largura disponível em telas pequenas
-    : (screenWidth - (horizontalPadding * 2) - cardSpacing) / numColumns; // 2 colunas em telas maiores
+  const cardSpacing = isSmallScreen ? 0 : isMediumScreen ? 8 : Math.min(10, screenWidth * 0.024);
+  // Largura disponível para os cards (garantir que não ultrapasse a tela)
+  const availableWidth = screenWidth; // Sempre usar a largura real da tela
+  // Largura de cada card (2 colunas com espaçamento) - totalmente responsivo
+  const cardWidth = numColumns === 1 
+    ? availableWidth - (horizontalPadding * 2)
+    : (availableWidth - (horizontalPadding * 2) - cardSpacing) / numColumns;
+  
+  // Garantir que o cardWidth nunca seja negativo ou muito pequeno
+  const finalCardWidth = Math.max(100, cardWidth);
   
   const { 
     itens, 
@@ -362,8 +380,8 @@ function MesaCardapioContent() {
     const isFirstInRow = numColumns === 2 && index % 2 === 0;
     return (
       <View style={{ 
-        width: cardWidth,
-        maxWidth: cardWidth, // Garantir que não ultrapasse a largura calculada
+        width: finalCardWidth,
+        maxWidth: finalCardWidth, // Garantir que não ultrapasse a largura calculada
         marginRight: isFirstInRow ? cardSpacing : 0,
         marginBottom: 15, // Espaçamento vertical consistente
         flexShrink: 0, // Não encolher
@@ -380,7 +398,7 @@ function MesaCardapioContent() {
     titleFontSize,
     subtitleFontSize,
     bodyFontSize,
-    cardWidth,
+    cardWidth: finalCardWidth,
     cardSpacing,
     isSmallScreen,
     isMediumScreen,
@@ -390,9 +408,13 @@ function MesaCardapioContent() {
   const renderListHeader = () => (
     <>
       <View style={dynamicStyles.mesaHeader}>
-        <View>
-          <Text style={dynamicStyles.mesaTitle}>Mesa #{mesaValidada?.numero}</Text>
-          <Text style={dynamicStyles.mesaSubtitle}>Escaneie o QR code para acessar o cardápio</Text>
+        <View style={{ flex: 1, minWidth: 0, width: '100%' }}>
+          <Text style={dynamicStyles.mesaTitle} numberOfLines={1} ellipsizeMode="tail">
+            Mesa #{mesaValidada?.numero}
+          </Text>
+          <Text style={dynamicStyles.mesaSubtitle} numberOfLines={2} ellipsizeMode="tail">
+            Escaneie o QR code para acessar o cardápio
+          </Text>
         </View>
       </View>
       <SearchBar onSearch={handleSearch} />
@@ -402,7 +424,7 @@ function MesaCardapioContent() {
         onSelectCategory={handleCategorySelect}
       />
       <View style={dynamicStyles.titleContainer}>
-        <Text style={dynamicStyles.sectionTitle}>
+        <Text style={dynamicStyles.sectionTitle} numberOfLines={1} ellipsizeMode="tail">
           {selectedCategory ? 'Itens Filtrados' : 'Todos os Itens'}
         </Text>
         {(searchQuery || selectedCategory) && (
@@ -466,8 +488,21 @@ function MesaCardapioContent() {
             <Text style={dynamicStyles.emptyText}>Nenhum produto encontrado</Text>
           </View>
         )}
-        contentContainerStyle={dynamicStyles.listContainer}
-        columnWrapperStyle={numColumns > 1 ? dynamicStyles.columnWrapper : undefined}
+        contentContainerStyle={[
+          dynamicStyles.listContainer,
+          { 
+            paddingHorizontal: horizontalPadding,
+            width: '100%',
+            maxWidth: '100%',
+          }
+        ]}
+        columnWrapperStyle={numColumns > 1 ? [
+          dynamicStyles.columnWrapper,
+          {
+            width: '100%',
+            maxWidth: '100%',
+          }
+        ] : undefined}
         showsVerticalScrollIndicator={false}
         onRefresh={fetchData}
         refreshing={loading}
@@ -797,6 +832,8 @@ const createDynamicStyles = (
     subtitleFontSize, 
     bodyFontSize,
     isSmallScreen,
+    isMediumScreen,
+    isLargeScreen,
   } = responsive;
 
   return StyleSheet.create({
@@ -804,62 +841,76 @@ const createDynamicStyles = (
       flex: 1,
       backgroundColor: '#FFFFFF',
       paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0,
-      alignItems: isWeb ? 'center' : 'stretch',
+      alignItems: 'stretch',
       width: '100%',
       maxWidth: '100%',
+      overflow: 'hidden',
     },
     listContainer: {
       maxWidth: isWeb ? 1200 : '100%',
       width: '100%',
-      paddingHorizontal: horizontalPadding,
-      alignSelf: 'center',
-      paddingBottom: isSmallScreen ? 120 : 100,
+      paddingHorizontal: 0, // Padding será aplicado inline no contentContainerStyle
+      alignSelf: 'stretch',
+      paddingBottom: isSmallScreen ? 120 : isMediumScreen ? 110 : Math.min(100, screenWidth * 0.243),
     },
     columnWrapper: {
       justifyContent: isWeb ? 'center' : 'space-between',
       paddingHorizontal: 0,
       marginHorizontal: 0,
+      width: '100%',
+      maxWidth: '100%',
     },
     mesaHeader: {
       backgroundColor: '#333',
       paddingHorizontal: horizontalPadding,
-      paddingVertical: isSmallScreen ? 12 : verticalPadding,
-      marginBottom: isSmallScreen ? 12 : 16,
+      paddingVertical: isSmallScreen ? 12 : isMediumScreen ? 14 : verticalPadding,
+      marginBottom: isSmallScreen ? 12 : isMediumScreen ? 14 : Math.min(16, screenWidth * 0.039),
+      width: '100%',
+      maxWidth: '100%',
+      overflow: 'hidden',
     },
     mesaTitle: {
       fontSize: titleFontSize,
       fontWeight: 'bold',
       color: '#FFF',
+      width: '100%',
+      maxWidth: '100%',
     },
     mesaSubtitle: {
       fontSize: subtitleFontSize,
       color: '#FFF',
       opacity: 0.8,
-      marginTop: 4,
+      marginTop: isSmallScreen ? 3 : isMediumScreen ? 3.5 : isLargeScreen ? 4 : Math.min(4, screenWidth * 0.010),
+      width: '100%',
+      maxWidth: '100%',
     },
     titleContainer: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
       paddingHorizontal: horizontalPadding,
-      paddingBottom: isSmallScreen ? 8 : 10,
+      paddingBottom: isSmallScreen ? 8 : isMediumScreen ? 9 : Math.min(10, screenWidth * 0.024),
       flexWrap: 'wrap',
+      width: '100%',
+      maxWidth: '100%',
     },
     sectionTitle: {
-      fontSize: isSmallScreen ? 18 : bodyFontSize,
+      fontSize: isSmallScreen ? 16 : isMediumScreen ? 17 : bodyFontSize,
       fontWeight: 'bold',
       color: '#333',
       flex: 1,
-      marginRight: 8,
+      marginRight: isSmallScreen ? 6 : isMediumScreen ? 7 : Math.min(8, screenWidth * 0.019),
+      minWidth: 0,
     },
     clearButton: {
-      paddingHorizontal: isSmallScreen ? 10 : 12,
-      paddingVertical: isSmallScreen ? 5 : 6,
+      paddingHorizontal: isSmallScreen ? 10 : isMediumScreen ? 11 : Math.min(12, screenWidth * 0.029),
+      paddingVertical: isSmallScreen ? 5 : isMediumScreen ? 5.5 : Math.min(6, screenWidth * 0.015),
       backgroundColor: '#F0F0F0',
       borderRadius: 6,
+      flexShrink: 0,
     },
     clearButtonText: {
-      fontSize: isSmallScreen ? 11 : 12,
+      fontSize: isSmallScreen ? 11 : isMediumScreen ? 11.5 : Math.min(12, screenWidth * 0.029),
       color: '#666',
       fontWeight: '600',
     },
@@ -923,7 +974,7 @@ const createDynamicStyles = (
       borderTopWidth: 1,
       borderTopColor: '#E0E0E0',
       paddingHorizontal: horizontalPadding,
-      paddingVertical: isSmallScreen ? 12 : 16,
+      paddingVertical: isSmallScreen ? 12 : isMediumScreen ? 14 : Math.min(16, screenWidth * 0.039),
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -932,40 +983,43 @@ const createDynamicStyles = (
       shadowOpacity: 0.1,
       shadowRadius: 4,
       shadowOffset: { width: 0, height: -2 },
+      width: '100%',
       maxWidth: '100%',
     },
     cartInfoButton: {
       flex: 1,
-      marginRight: isSmallScreen ? 8 : 12,
+      marginRight: isSmallScreen ? 8 : isMediumScreen ? 10 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
       minWidth: 0,
     },
     cartInfo: {
       flexDirection: 'row',
       alignItems: 'center',
       flexWrap: 'wrap',
+      width: '100%',
     },
     cartText: {
-      fontSize: isSmallScreen ? 12 : 14,
+      fontSize: isSmallScreen ? 12 : isMediumScreen ? 13 : isLargeScreen ? 14 : Math.min(14, screenWidth * 0.034),
       color: '#666',
       fontWeight: '600',
-      marginRight: 8,
+      marginRight: isSmallScreen ? 6 : isMediumScreen ? 7 : isLargeScreen ? 8 : Math.min(8, screenWidth * 0.019),
     },
     cartTotal: {
-      fontSize: isSmallScreen ? 14 : 16,
+      fontSize: isSmallScreen ? 14 : isMediumScreen ? 15 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
       color: '#4CAF50',
       fontWeight: 'bold',
       marginLeft: 'auto',
     },
     cartButton: {
       backgroundColor: '#4CAF50',
-      paddingHorizontal: isSmallScreen ? 16 : 24,
-      paddingVertical: isSmallScreen ? 10 : 12,
+      paddingHorizontal: isSmallScreen ? 16 : isMediumScreen ? 20 : isLargeScreen ? 24 : Math.min(24, screenWidth * 0.058),
+      paddingVertical: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
       borderRadius: 8,
-      minWidth: isSmallScreen ? 80 : 100,
+      minWidth: isSmallScreen ? 80 : isMediumScreen ? 90 : isLargeScreen ? 100 : Math.min(100, screenWidth * 0.243),
+      flexShrink: 0,
     },
     cartButtonText: {
       color: '#FFF',
-      fontSize: isSmallScreen ? 14 : 16,
+      fontSize: isSmallScreen ? 14 : isMediumScreen ? 15 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
       fontWeight: '600',
     },
     // Modal styles
@@ -988,17 +1042,19 @@ const createDynamicStyles = (
       justifyContent: 'space-between',
       alignItems: 'center',
       paddingHorizontal: horizontalPadding,
-      paddingVertical: isSmallScreen ? 12 : 20,
+      paddingVertical: isSmallScreen ? 12 : isMediumScreen ? 16 : isLargeScreen ? 20 : Math.min(20, screenWidth * 0.049),
       borderBottomWidth: 1,
       borderBottomColor: '#E0E0E0',
       width: '100%',
+      maxWidth: '100%',
     },
     modalTitle: {
-      fontSize: isSmallScreen ? 16 : 20,
+      fontSize: isSmallScreen ? 16 : isMediumScreen ? 18 : isLargeScreen ? 20 : Math.min(20, screenWidth * 0.049),
       fontWeight: 'bold',
       color: '#333',
       flex: 1,
-      marginRight: 8,
+      marginRight: isSmallScreen ? 6 : isMediumScreen ? 7 : isLargeScreen ? 8 : Math.min(8, screenWidth * 0.019),
+      minWidth: 0,
     },
     modalCloseButton: {
       padding: 4,
@@ -1169,12 +1225,12 @@ const createDynamicStyles = (
     // Botão flutuante ver conta
     floatingButton: {
       position: 'absolute',
-      bottom: isSmallScreen ? 80 : 100,
+      bottom: isSmallScreen ? 80 : isMediumScreen ? 90 : Math.min(100, screenWidth * 0.243),
       right: horizontalPadding,
       backgroundColor: '#2196F3',
-      width: isSmallScreen ? 56 : 64,
-      height: isSmallScreen ? 56 : 64,
-      borderRadius: isSmallScreen ? 28 : 32,
+      width: isSmallScreen ? 56 : isMediumScreen ? 60 : Math.min(64, screenWidth * 0.156),
+      height: isSmallScreen ? 56 : isMediumScreen ? 60 : Math.min(64, screenWidth * 0.156),
+      borderRadius: isSmallScreen ? 28 : isMediumScreen ? 30 : Math.min(32, screenWidth * 0.078),
       justifyContent: 'center',
       alignItems: 'center',
       elevation: 8,
@@ -1186,19 +1242,19 @@ const createDynamicStyles = (
     },
     floatingButtonBadge: {
       position: 'absolute',
-      top: -4,
-      right: -4,
+      top: isSmallScreen ? -4 : isMediumScreen ? -4 : isLargeScreen ? -4 : Math.min(-4, screenWidth * -0.010),
+      right: isSmallScreen ? -4 : isMediumScreen ? -4 : isLargeScreen ? -4 : Math.min(-4, screenWidth * -0.010),
       backgroundColor: '#F44336',
-      borderRadius: 10,
-      minWidth: 20,
-      height: 20,
+      borderRadius: isSmallScreen ? 10 : isMediumScreen ? 10 : isLargeScreen ? 10 : Math.min(10, screenWidth * 0.024),
+      minWidth: isSmallScreen ? 18 : isMediumScreen ? 19 : isLargeScreen ? 20 : Math.min(20, screenWidth * 0.049),
+      height: isSmallScreen ? 18 : isMediumScreen ? 19 : isLargeScreen ? 20 : Math.min(20, screenWidth * 0.049),
       justifyContent: 'center',
       alignItems: 'center',
-      paddingHorizontal: 4,
+      paddingHorizontal: isSmallScreen ? 3 : isMediumScreen ? 3.5 : isLargeScreen ? 4 : Math.min(4, screenWidth * 0.010),
     },
     floatingButtonBadgeText: {
       color: '#FFF',
-      fontSize: 12,
+      fontSize: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
       fontWeight: 'bold',
     },
     // Modal de conta

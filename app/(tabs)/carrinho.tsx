@@ -39,6 +39,7 @@ import {
   Text, // Indicador de carregamento
   TextInput, // Lista otimizada para performance
   TouchableOpacity,
+  useWindowDimensions, // Hook para dimensões da tela
   View, // Container básico
 } from 'react-native';
 // Hook de navegação do Expo Router
@@ -58,14 +59,252 @@ import HomeHeader from '../../components/HomeHeader';
 export default function CarrinhoScreen() {
   // Hook de navegação para mudanças de tela
   const router = useRouter();
+  // Dimensões da tela para responsividade
+  const { width: screenWidth } = useWindowDimensions();
   // Funções e estado do contexto do carrinho
   const { itens, quantidadeTotal, valorSubtotal, removerDoCarrinho, atualizarQuantidade, limparCarrinho } = useCarrinho();
   // Estado de autenticação do usuário
   const { autenticado } = useAuth();
 
+  // Variáveis responsivas baseadas na largura da tela
+  const isSmallScreen = screenWidth < 375;
+  const isMediumScreen = screenWidth >= 375 && screenWidth < 412;
+  const isLargeScreen = screenWidth >= 412;
+
   // Estados locais da tela
   const [carregando, setCarregando] = useState(false); // Loading durante criação do pedido
   const [observacoes, setObservacoes] = useState(''); // Observações/comentários do pedido
+
+  // Função para criar estilos dinâmicos baseados no tamanho da tela
+  const createDynamicStyles = (
+    screenWidth: number,
+    isSmallScreen: boolean,
+    isMediumScreen: boolean,
+    isLargeScreen: boolean
+  ) => {
+    // Padding horizontal responsivo
+    const horizontalPadding = isSmallScreen 
+      ? 12 
+      : isMediumScreen 
+      ? 14 
+      : isLargeScreen
+      ? 16
+      : Math.min(16, screenWidth * 0.039);
+
+    // Tamanhos de fonte responsivos
+    const titleFontSize = isSmallScreen ? 18 : isMediumScreen ? 20 : isLargeScreen ? 20 : Math.min(20, screenWidth * 0.049);
+    const bodyFontSize = isSmallScreen ? 14 : isMediumScreen ? 15 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039);
+    const labelFontSize = isSmallScreen ? 13 : isMediumScreen ? 14 : isLargeScreen ? 14 : Math.min(14, screenWidth * 0.034);
+    const smallFontSize = isSmallScreen ? 11 : isMediumScreen ? 12 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029);
+
+    // Tamanhos de imagem responsivos
+    const imageSize = isSmallScreen ? 60 : isMediumScreen ? 65 : isLargeScreen ? 70 : Math.min(70, screenWidth * 0.17);
+
+    return StyleSheet.create({
+      list: {
+        padding: horizontalPadding,
+        width: '100%',
+        maxWidth: '100%',
+      },
+      itemCard: {
+        flexDirection: 'row',
+        backgroundColor: '#FFF',
+        borderRadius: 12,
+        padding: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+        marginBottom: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 2 },
+        width: '100%',
+        maxWidth: '100%',
+        overflow: 'hidden',
+      },
+      itemImage: {
+        width: imageSize,
+        height: imageSize,
+        borderRadius: 8,
+        backgroundColor: '#E0E0E0',
+        flexShrink: 0,
+      },
+      itemInfo: {
+        flex: 1,
+        marginLeft: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+        justifyContent: 'center',
+        minWidth: 0,
+      },
+      itemName: {
+        fontSize: isSmallScreen ? 14 : isMediumScreen ? 15 : isLargeScreen ? 15 : Math.min(15, screenWidth * 0.036),
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: isSmallScreen ? 3 : isMediumScreen ? 4 : isLargeScreen ? 4 : Math.min(4, screenWidth * 0.010),
+      },
+      itemPrice: {
+        fontSize: isSmallScreen ? 13 : isMediumScreen ? 14 : isLargeScreen ? 14 : Math.min(14, screenWidth * 0.034),
+        color: '#666',
+      },
+      itemObs: {
+        fontSize: smallFontSize,
+        color: '#999',
+        fontStyle: 'italic',
+        marginTop: isSmallScreen ? 2 : isMediumScreen ? 2 : isLargeScreen ? 2 : Math.min(2, screenWidth * 0.005),
+      },
+      itemActions: {
+        alignItems: 'flex-end',
+        justifyContent: 'space-between',
+        marginLeft: isSmallScreen ? 8 : isMediumScreen ? 10 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+        flexShrink: 0,
+      },
+      quantityContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F5F5F5',
+        borderRadius: 8,
+        padding: isSmallScreen ? 3 : isMediumScreen ? 3.5 : isLargeScreen ? 4 : Math.min(4, screenWidth * 0.010),
+      },
+      quantityButton: {
+        width: isSmallScreen ? 24 : isMediumScreen ? 26 : isLargeScreen ? 28 : Math.min(28, screenWidth * 0.068),
+        height: isSmallScreen ? 24 : isMediumScreen ? 26 : isLargeScreen ? 28 : Math.min(28, screenWidth * 0.068),
+        justifyContent: 'center',
+        alignItems: 'center',
+      },
+      quantity: {
+        fontSize: isSmallScreen ? 14 : isMediumScreen ? 15 : isLargeScreen ? 15 : Math.min(15, screenWidth * 0.036),
+        fontWeight: '600',
+        color: '#333',
+        paddingHorizontal: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+      },
+      subtotal: {
+        fontSize: isSmallScreen ? 14 : isMediumScreen ? 15 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        fontWeight: 'bold',
+        color: '#333',
+        marginTop: isSmallScreen ? 4 : isMediumScreen ? 5 : isLargeScreen ? 6 : Math.min(6, screenWidth * 0.015),
+      },
+      removeButton: {
+        padding: isSmallScreen ? 3 : isMediumScreen ? 3.5 : isLargeScreen ? 4 : Math.min(4, screenWidth * 0.010),
+        marginTop: isSmallScreen ? 4 : isMediumScreen ? 5 : isLargeScreen ? 6 : Math.min(6, screenWidth * 0.015),
+      },
+      footer: {
+        marginTop: isSmallScreen ? 6 : isMediumScreen ? 7 : isLargeScreen ? 8 : Math.min(8, screenWidth * 0.019),
+      },
+      loginBanner: {
+        flexDirection: 'row',
+        backgroundColor: '#E3F2FD',
+        borderRadius: 12,
+        padding: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        marginBottom: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        alignItems: 'flex-start',
+        gap: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+      },
+      loginBannerContent: {
+        flex: 1,
+        minWidth: 0,
+      },
+      loginBannerText: {
+        fontSize: isSmallScreen ? 12 : isMediumScreen ? 13 : isLargeScreen ? 14 : Math.min(14, screenWidth * 0.034),
+        color: '#1976D2',
+        marginBottom: isSmallScreen ? 6 : isMediumScreen ? 7 : isLargeScreen ? 8 : Math.min(8, screenWidth * 0.019),
+        lineHeight: isSmallScreen ? 18 : isMediumScreen ? 19 : isLargeScreen ? 20 : Math.min(20, screenWidth * 0.049),
+      },
+      loginBannerButton: {
+        alignSelf: 'flex-start',
+        backgroundColor: '#2196F3',
+        paddingHorizontal: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        paddingVertical: isSmallScreen ? 6 : isMediumScreen ? 7 : isLargeScreen ? 8 : Math.min(8, screenWidth * 0.019),
+        borderRadius: 6,
+      },
+      loginBannerButtonText: {
+        color: '#FFF',
+        fontSize: isSmallScreen ? 12 : isMediumScreen ? 13 : isLargeScreen ? 14 : Math.min(14, screenWidth * 0.034),
+        fontWeight: '600',
+      },
+      observacoesContainer: {
+        backgroundColor: '#FFF',
+        borderRadius: 12,
+        padding: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+      },
+      observacoesLabel: {
+        fontSize: labelFontSize,
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: isSmallScreen ? 6 : isMediumScreen ? 7 : isLargeScreen ? 8 : Math.min(8, screenWidth * 0.019),
+      },
+      observacoesInput: {
+        borderWidth: 1,
+        borderColor: '#DDD',
+        borderRadius: 8,
+        padding: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+        fontSize: bodyFontSize,
+        color: '#333',
+        minHeight: isSmallScreen ? 70 : isMediumScreen ? 75 : isLargeScreen ? 80 : Math.min(80, screenWidth * 0.195),
+        textAlignVertical: 'top',
+        width: '100%',
+        maxWidth: '100%',
+      },
+      resumo: {
+        backgroundColor: '#FFF',
+        padding: horizontalPadding,
+        borderTopWidth: 1,
+        borderTopColor: '#E0E0E0',
+        width: '100%',
+        maxWidth: '100%',
+      },
+      resumoRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+      },
+      resumoLabel: {
+        fontSize: isSmallScreen ? 14 : isMediumScreen ? 15 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        color: '#666',
+      },
+      resumoValue: {
+        fontSize: isSmallScreen ? 18 : isMediumScreen ? 19 : isLargeScreen ? 20 : Math.min(20, screenWidth * 0.049),
+        fontWeight: 'bold',
+        color: '#333',
+      },
+      finalizarButton: {
+        backgroundColor: '#4CAF50',
+        borderRadius: 8,
+        paddingVertical: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        alignItems: 'center',
+        width: '100%',
+      },
+      finalizarButtonText: {
+        color: '#FFF',
+        fontSize: isSmallScreen ? 14 : isMediumScreen ? 15 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        fontWeight: '600',
+      },
+      emptyContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: isSmallScreen ? 24 : isMediumScreen ? 28 : isLargeScreen ? 32 : Math.min(32, screenWidth * 0.078),
+      },
+      emptyText: {
+        fontSize: isSmallScreen ? 16 : isMediumScreen ? 17 : isLargeScreen ? 18 : Math.min(18, screenWidth * 0.044),
+        color: '#999',
+        marginTop: isSmallScreen ? 12 : isMediumScreen ? 14 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        marginBottom: isSmallScreen ? 20 : isMediumScreen ? 22 : isLargeScreen ? 24 : Math.min(24, screenWidth * 0.058),
+        textAlign: 'center',
+      },
+      emptyButton: {
+        backgroundColor: '#333',
+        borderRadius: 8,
+        paddingHorizontal: isSmallScreen ? 24 : isMediumScreen ? 28 : isLargeScreen ? 32 : Math.min(32, screenWidth * 0.078),
+        paddingVertical: isSmallScreen ? 10 : isMediumScreen ? 11 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+      },
+      emptyButtonText: {
+        color: '#FFF',
+        fontSize: isSmallScreen ? 14 : isMediumScreen ? 15 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+        fontWeight: '600',
+      },
+    });
+  };
+
+  const dynamicStyles = createDynamicStyles(screenWidth, isSmallScreen, isMediumScreen, isLargeScreen);
 
   const handleFinalizarPedido = async () => {
     if (itens.length === 0) {
@@ -135,75 +374,85 @@ export default function CarrinhoScreen() {
       : item.produto.price;
     const subtotal = preco * item.quantidade;
 
+    // Tamanhos de ícone responsivos
+    const iconSize = isSmallScreen ? 16 : isMediumScreen ? 17 : isLargeScreen ? 18 : Math.min(18, screenWidth * 0.044);
+    const deleteIconSize = isSmallScreen ? 18 : isMediumScreen ? 19 : isLargeScreen ? 20 : Math.min(20, screenWidth * 0.049);
+
     return (
-      <View style={styles.itemCard}>
-        <Image source={{ uri: item.produto.imageUrl }} style={styles.itemImage} />
+      <View style={dynamicStyles.itemCard}>
+        <Image source={{ uri: item.produto.imageUrl }} style={dynamicStyles.itemImage} />
         
-        <View style={styles.itemInfo}>
-          <Text style={styles.itemName} numberOfLines={1}>
+        <View style={dynamicStyles.itemInfo}>
+          <Text style={dynamicStyles.itemName} numberOfLines={1}>
             {item.produto.name}
           </Text>
-          <Text style={styles.itemPrice}>R$ {preco.toFixed(2)}</Text>
+          <Text style={dynamicStyles.itemPrice}>R$ {preco.toFixed(2)}</Text>
           
           {item.observacoes && (
-            <Text style={styles.itemObs} numberOfLines={1}>
+            <Text style={dynamicStyles.itemObs} numberOfLines={1}>
               Obs: {item.observacoes}
             </Text>
           )}
         </View>
 
-        <View style={styles.itemActions}>
-          <View style={styles.quantityContainer}>
+        <View style={dynamicStyles.itemActions}>
+          <View style={dynamicStyles.quantityContainer}>
             <TouchableOpacity
               onPress={() => atualizarQuantidade(item.produto.id, item.quantidade - 1)}
-              style={styles.quantityButton}
+              style={dynamicStyles.quantityButton}
             >
-              <Icon name="remove" size={18} color="#333" />
+              <Icon name="remove" size={iconSize} color="#333" />
             </TouchableOpacity>
             
-            <Text style={styles.quantity}>{item.quantidade}</Text>
+            <Text style={dynamicStyles.quantity}>{item.quantidade}</Text>
             
             <TouchableOpacity
               onPress={() => atualizarQuantidade(item.produto.id, item.quantidade + 1)}
-              style={styles.quantityButton}
+              style={dynamicStyles.quantityButton}
             >
-              <Icon name="add" size={18} color="#333" />
+              <Icon name="add" size={iconSize} color="#333" />
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.subtotal}>R$ {subtotal.toFixed(2)}</Text>
+          <Text style={dynamicStyles.subtotal}>R$ {subtotal.toFixed(2)}</Text>
 
           <TouchableOpacity
             onPress={() => removerDoCarrinho(item.produto.id)}
-            style={styles.removeButton}
+            style={dynamicStyles.removeButton}
           >
-            <Icon name="delete" size={20} color="#F44336" />
+            <Icon name="delete" size={deleteIconSize} color="#F44336" />
           </TouchableOpacity>
         </View>
       </View>
     );
   };
 
-  const renderEmpty = () => (
-    <View style={styles.emptyContainer}>
-      <Icon name="shopping-cart" size={80} color="#DDD" />
-      <Text style={styles.emptyText}>Seu carrinho está vazio</Text>
-      <TouchableOpacity
-        style={styles.emptyButton}
-        onPress={() => router.push('/(tabs)')}
-      >
-        <Text style={styles.emptyButtonText}>Ver Cardápio</Text>
-      </TouchableOpacity>
-    </View>
-  );
+  const renderEmpty = () => {
+    const emptyIconSize = isSmallScreen ? 60 : isMediumScreen ? 70 : isLargeScreen ? 80 : Math.min(80, screenWidth * 0.195);
+    return (
+      <View style={dynamicStyles.emptyContainer}>
+        <Icon name="shopping-cart" size={emptyIconSize} color="#DDD" />
+        <Text style={dynamicStyles.emptyText}>Seu carrinho está vazio</Text>
+        <TouchableOpacity
+          style={dynamicStyles.emptyButton}
+          onPress={() => router.push('/(tabs)')}
+        >
+          <Text style={dynamicStyles.emptyButtonText}>Ver Cardápio</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
 
   if (itens.length === 0) {
     return (
       <View style={styles.container}>
+        <HomeHeader />
         {renderEmpty()}
       </View>
     );
   }
+
+  const infoIconSize = isSmallScreen ? 18 : isMediumScreen ? 19 : isLargeScreen ? 20 : Math.min(20, screenWidth * 0.049);
 
   return (
     <View style={styles.container}>
@@ -212,29 +461,29 @@ export default function CarrinhoScreen() {
         data={itens}
         renderItem={renderItem}
         keyExtractor={(item) => item.produto.id}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={dynamicStyles.list}
         ListFooterComponent={
-          <View style={styles.footer}>
+          <View style={dynamicStyles.footer}>
             {!autenticado && (
-              <View style={styles.loginBanner}>
-                <Icon name="info" size={20} color="#2196F3" />
-                <View style={styles.loginBannerContent}>
-                  <Text style={styles.loginBannerText}>
+              <View style={dynamicStyles.loginBanner}>
+                <Icon name="info" size={infoIconSize} color="#2196F3" />
+                <View style={dynamicStyles.loginBannerContent}>
+                  <Text style={dynamicStyles.loginBannerText}>
                     Faça login para salvar seu histórico de pedidos
                   </Text>
                   <TouchableOpacity
-                    style={styles.loginBannerButton}
+                    style={dynamicStyles.loginBannerButton}
                     onPress={() => router.push('/login')}
                   >
-                    <Text style={styles.loginBannerButtonText}>Fazer Login</Text>
+                    <Text style={dynamicStyles.loginBannerButtonText}>Fazer Login</Text>
                   </TouchableOpacity>
                 </View>
               </View>
             )}
-            <View style={styles.observacoesContainer}>
-              <Text style={styles.observacoesLabel}>Observações do Pedido</Text>
+            <View style={dynamicStyles.observacoesContainer}>
+              <Text style={dynamicStyles.observacoesLabel}>Observações do Pedido</Text>
               <TextInput
-                style={styles.observacoesInput}
+                style={dynamicStyles.observacoesInput}
                 placeholder="Ex: Sem cebola, ponto da carne..."
                 value={observacoes}
                 onChangeText={setObservacoes}
@@ -246,21 +495,21 @@ export default function CarrinhoScreen() {
         }
       />
 
-      <View style={styles.resumo}>
-        <View style={styles.resumoRow}>
-          <Text style={styles.resumoLabel}>Subtotal ({quantidadeTotal} itens)</Text>
-          <Text style={styles.resumoValue}>R$ {valorSubtotal.toFixed(2)}</Text>
+      <View style={dynamicStyles.resumo}>
+        <View style={dynamicStyles.resumoRow}>
+          <Text style={dynamicStyles.resumoLabel}>Subtotal ({quantidadeTotal} itens)</Text>
+          <Text style={dynamicStyles.resumoValue}>R$ {valorSubtotal.toFixed(2)}</Text>
         </View>
 
         <TouchableOpacity
-          style={[styles.finalizarButton, carregando && styles.buttonDisabled]}
+          style={[dynamicStyles.finalizarButton, carregando && styles.buttonDisabled]}
           onPress={handleFinalizarPedido}
           disabled={carregando}
         >
           {carregando ? (
             <ActivityIndicator color="#FFF" />
           ) : (
-            <Text style={styles.finalizarButtonText}>Finalizar Pedido</Text>
+            <Text style={dynamicStyles.finalizarButtonText}>Finalizar Pedido</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -272,191 +521,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5F5F5',
-  },
-  list: {
-    padding: 16,
-  },
-  itemCard: {
-    flexDirection: 'row',
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 12,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  itemImage: {
-    width: 70,
-    height: 70,
-    borderRadius: 8,
-    backgroundColor: '#E0E0E0',
-  },
-  itemInfo: {
-    flex: 1,
-    marginLeft: 12,
-    justifyContent: 'center',
-  },
-  itemName: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
-  },
-  itemPrice: {
-    fontSize: 14,
-    color: '#666',
-  },
-  itemObs: {
-    fontSize: 12,
-    color: '#999',
-    fontStyle: 'italic',
-    marginTop: 2,
-  },
-  itemActions: {
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-  },
-  quantityContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    borderRadius: 8,
-    padding: 4,
-  },
-  quantityButton: {
-    width: 28,
-    height: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  quantity: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#333',
-    paddingHorizontal: 12,
-  },
-  subtotal: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  removeButton: {
-    padding: 4,
-  },
-  footer: {
-    marginTop: 8,
-  },
-  loginBanner: {
-    flexDirection: 'row',
-    backgroundColor: '#E3F2FD',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    alignItems: 'flex-start',
-    gap: 12,
-  },
-  loginBannerContent: {
-    flex: 1,
-  },
-  loginBannerText: {
-    fontSize: 14,
-    color: '#1976D2',
-    marginBottom: 8,
-    lineHeight: 20,
-  },
-  loginBannerButton: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#2196F3',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 6,
-  },
-  loginBannerButtonText: {
-    color: '#FFF',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  observacoesContainer: {
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    padding: 16,
-  },
-  observacoesLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-  },
-  observacoesInput: {
-    borderWidth: 1,
-    borderColor: '#DDD',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 14,
-    color: '#333',
-    minHeight: 80,
-    textAlignVertical: 'top',
-  },
-  resumo: {
-    backgroundColor: '#FFF',
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
-  },
-  resumoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  resumoLabel: {
-    fontSize: 16,
-    color: '#666',
-  },
-  resumoValue: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  finalizarButton: {
-    backgroundColor: '#4CAF50',
-    borderRadius: 8,
-    paddingVertical: 16,
-    alignItems: 'center',
+    width: '100%',
+    maxWidth: '100%',
+    overflow: 'hidden',
   },
   buttonDisabled: {
     opacity: 0.6,
-  },
-  finalizarButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-  },
-  emptyText: {
-    fontSize: 18,
-    color: '#999',
-    marginTop: 16,
-    marginBottom: 24,
-  },
-  emptyButton: {
-    backgroundColor: '#333',
-    borderRadius: 8,
-    paddingHorizontal: 32,
-    paddingVertical: 12,
-  },
-  emptyButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
   },
 });
 
