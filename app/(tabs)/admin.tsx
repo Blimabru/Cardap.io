@@ -4,21 +4,22 @@
  * Dashboard para Admin e Dono gerenciarem o sistema
  */
 
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-  Platform,
-} from 'react-native';
-import { useRouter } from 'expo-router';
 import { MaterialIcons as Icon } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { obterEstatisticas } from '../../services/pedidos.service';
+import * as rendimentosService from '../../services/rendimentos.service';
 import { EstatisticasPedidos } from '../../types';
 
 export default function AdminScreen() {
@@ -26,6 +27,7 @@ export default function AdminScreen() {
   const { usuario, podeGerenciar, logout } = useAuth();
 
   const [estatisticas, setEstatisticas] = useState<EstatisticasPedidos | null>(null);
+  const [rendimentosDia, setRendimentosDia] = useState<number>(0);
   const [carregando, setCarregando] = useState(true);
 
   useEffect(() => {
@@ -36,8 +38,12 @@ export default function AdminScreen() {
 
   const carregarEstatisticas = async () => {
     try {
-      const dados = await obterEstatisticas();
+      const [dados, rendimentos] = await Promise.all([
+        obterEstatisticas(),
+        rendimentosService.obterRendimentosDoDia(),
+      ]);
       setEstatisticas(dados);
+      setRendimentosDia(rendimentos);
     } catch (erro) {
       console.error('Erro ao carregar estatísticas:', erro);
     } finally {
@@ -174,6 +180,12 @@ export default function AdminScreen() {
             <Text style={styles.statValue}>R$ {estatisticas.valor_total.toFixed(2)}</Text>
             <Text style={styles.statLabel}>Faturamento Total</Text>
           </View>
+
+          <View style={[styles.statCard, styles.statCardWide]}>
+            <Icon name="trending-up" size={32} color="#4CAF50" />
+            <Text style={styles.statValue}>R$ {rendimentosDia.toFixed(2)}</Text>
+            <Text style={styles.statLabel}>Rendimentos do Dia</Text>
+          </View>
         </View>
       )}
 
@@ -220,6 +232,17 @@ export default function AdminScreen() {
           <View style={styles.menuItemLeft}>
             <Icon name="table-restaurant" size={24} color="#333" />
             <Text style={styles.menuItemText}>Gerenciar Mesas</Text>
+          </View>
+          <Icon name="chevron-right" size={24} color="#999" />
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.menuItem}
+          onPress={() => router.push('/admin/contas-mesas')}
+        >
+          <View style={styles.menuItemLeft}>
+            <Icon name="account-balance-wallet" size={24} color="#333" />
+            <Text style={styles.menuItemText}>Contas das Mesas</Text>
           </View>
           <Icon name="chevron-right" size={24} color="#999" />
         </TouchableOpacity>

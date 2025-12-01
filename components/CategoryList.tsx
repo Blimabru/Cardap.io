@@ -1,10 +1,10 @@
 import React from 'react';
 import {
-  View,
-  Text,
   ScrollView,
-  TouchableOpacity,
   StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 // Definindo o tipo das props
@@ -65,9 +65,12 @@ const CategoryList = ({ categories, selectedCategory, onSelectCategory }: Catego
 const styles = StyleSheet.create({
   categoryScroll: {
     paddingVertical: 10,
+    width: '100%',
+    maxWidth: '100%',
   },
   categoryScrollContainer: {
     paddingHorizontal: 15,
+    alignItems: 'center',
   },
   categoryButton: {
     backgroundColor: '#F5F5F5',
@@ -75,6 +78,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     marginRight: 10,
+    minWidth: 60,
   },
   categoryButtonActive: {
     backgroundColor: '#333333',

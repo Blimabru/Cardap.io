@@ -88,6 +88,8 @@ const styles = StyleSheet.create({
   searchContainer: {
     paddingHorizontal: 15, // Espaçamento lateral (15px cada lado)
     paddingVertical: 10, // Espaçamento vertical (10px cima/baixo)
+    width: '100%',
+    maxWidth: '100%',
   },
   // Container do input que engloba ícones e campo de texto
   searchInputContainer: {
@@ -96,10 +98,13 @@ const styles = StyleSheet.create({
     borderRadius: 12, // Bordas arredondadas
     alignItems: 'center', // Centraliza verticalmente os elementos
     paddingRight: 12, // Espaço para o ícone de fechar
+    width: '100%',
+    maxWidth: '100%',
   },
   // Estilo do ícone de busca (lupa)
   searchIcon: {
     paddingLeft: 15, // Espaçamento à esquerda do ícone
+    flexShrink: 0, // Não encolher
   },
   // Estilo do campo de texto principal
   searchInput: {
@@ -108,10 +113,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10, // Espaçamento interno horizontal
     fontSize: 16, // Tamanho da fonte
     color: '#333', // Cor do texto digitado
+    minWidth: 0, // Permite que o texto encolha se necessário
   },
   // Estilo do ícone de limpar (X)
   clearIcon: {
     padding: 4, // Área de toque maior que o ícone
+    flexShrink: 0, // Não encolher
   },
 });
 

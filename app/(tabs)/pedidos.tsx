@@ -4,46 +4,72 @@
  * Lista pedidos do usuário autenticado
  */
 
-import React, { useState, useEffect } from 'react';
+import { MaterialIcons as Icon } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  RefreshControl,
   ActivityIndicator,
   Alert,
+  FlatList,
+  Modal,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import { MaterialIcons as Icon } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
-import { Pedido } from '../../types';
-import { listarMeusPedidos, cancelarPedido, formatarStatus, corDoStatus } from '../../services/pedidos.service';
+import { atualizarStatusPedido, cancelarPedido, corDoStatus, formatarStatus, listarMeusPedidos, listarTodosPedidos } from '../../services/pedidos.service';
+import { Pedido, StatusPedido } from '../../types';
 
 export default function PedidosScreen() {
   const router = useRouter();
-  const { autenticado } = useAuth();
+  const { autenticado, podeGerenciar } = useAuth();
 
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [atualizando, setAtualizando] = useState(false);
+  const [modalStatusVisivel, setModalStatusVisivel] = useState(false);
+  const [pedidoSelecionado, setPedidoSelecionado] = useState<Pedido | null>(null);
 
   useEffect(() => {
     if (autenticado) {
       carregarPedidos();
     }
-  }, [autenticado]);
+  }, [autenticado, podeGerenciar]);
 
   const carregarPedidos = async () => {
     try {
-      const dados = await listarMeusPedidos();
+      // Se for Admin/Dono, carrega todos os pedidos (incluindo mesas)
+      // Caso contrário, carrega apenas os pedidos do usuário
+      const dados = podeGerenciar 
+        ? await listarTodosPedidos()
+        : await listarMeusPedidos();
       setPedidos(dados);
     } catch (erro) {
       console.error('Erro ao carregar pedidos:', erro);
     } finally {
       setCarregando(false);
       setAtualizando(false);
+    }
+  };
+
+  const abrirModalStatus = (pedido: Pedido) => {
+    setPedidoSelecionado(pedido);
+    setModalStatusVisivel(true);
+  };
+
+  const handleAtualizarStatus = async (novoStatus: StatusPedido) => {
+    if (!pedidoSelecionado) return;
+
+    try {
+      await atualizarStatusPedido(pedidoSelecionado.id, novoStatus);
+      Alert.alert('Sucesso', 'Status atualizado com sucesso!');
+      setModalStatusVisivel(false);
+      setPedidoSelecionado(null);
+      carregarPedidos();
+    } catch (erro: any) {
+      Alert.alert('Erro', erro.message || 'Não foi possível atualizar o status');
     }
   };
 
@@ -84,12 +110,25 @@ export default function PedidosScreen() {
         <View style={styles.pedidoHeader}>
           <View>
             <Text style={styles.pedidoNumero}>Pedido #{item.numero_pedido}</Text>
+            {item.mesa && (
+              <Text style={styles.pedidoMesa}>Mesa #{item.mesa.numero}</Text>
+            )}
             <Text style={styles.pedidoData}>{data} às {hora}</Text>
           </View>
           
-          <View style={[styles.statusBadge, { backgroundColor: corDoStatus(item.status) }]}>
-            <Text style={styles.statusText}>{formatarStatus(item.status)}</Text>
-          </View>
+          {podeGerenciar ? (
+            <TouchableOpacity
+              style={[styles.statusBadge, { backgroundColor: corDoStatus(item.status) }]}
+              onPress={() => abrirModalStatus(item)}
+            >
+              <Text style={styles.statusText}>{formatarStatus(item.status)}</Text>
+              <Icon name="expand-more" size={16} color="#FFF" style={{ marginLeft: 4 }} />
+            </TouchableOpacity>
+          ) : (
+            <View style={[styles.statusBadge, { backgroundColor: corDoStatus(item.status) }]}>
+              <Text style={styles.statusText}>{formatarStatus(item.status)}</Text>
+            </View>
+          )}
         </View>
 
         <View style={styles.pedidoItens}>
@@ -175,6 +214,63 @@ export default function PedidosScreen() {
           />
         }
       />
+
+      {/* Modal de Atualização de Status (apenas para Admin/Dono) */}
+      {podeGerenciar && (
+        <Modal
+          visible={modalStatusVisivel}
+          animationType="slide"
+          transparent={true}
+          onRequestClose={() => setModalStatusVisivel(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Atualizar Status</Text>
+                <TouchableOpacity onPress={() => setModalStatusVisivel(false)}>
+                  <Icon name="close" size={24} color="#333" />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.modalContent}>
+                <Text style={styles.modalSubtitle}>
+                  Pedido #{pedidoSelecionado?.numero_pedido}
+                </Text>
+                
+                {[
+                  StatusPedido.PENDENTE,
+                  StatusPedido.CONFIRMADO,
+                  StatusPedido.EM_PREPARO,
+                  StatusPedido.PRONTO,
+                  StatusPedido.SAIU_ENTREGA,
+                  StatusPedido.ENTREGUE,
+                  StatusPedido.CANCELADO,
+                ].map((status) => (
+                  <TouchableOpacity
+                    key={status}
+                    style={[
+                      styles.statusOption,
+                      pedidoSelecionado?.status === status && styles.statusOptionAtual,
+                    ]}
+                    onPress={() => handleAtualizarStatus(status)}
+                  >
+                    <View
+                      style={[
+                        styles.statusIndicator,
+                        { backgroundColor: corDoStatus(status) },
+                      ]}
+                    />
+                    <Text style={styles.statusOptionText}>{formatarStatus(status)}</Text>
+                    {pedidoSelecionado?.status === status && (
+                      <Icon name="check" size={20} color="#4CAF50" />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </View>
+        </Modal>
+      )}
     </View>
   );
 }
@@ -213,6 +309,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
+  },
+  pedidoMesa: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 2,
+    fontWeight: '600',
   },
   pedidoData: {
     fontSize: 12,
@@ -292,6 +394,64 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  // Modal de Status
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    width: '90%',
+    maxWidth: 400,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  modalContent: {
+    padding: 20,
+  },
+  modalSubtitle: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 16,
+  },
+  statusOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 8,
+    backgroundColor: '#F5F5F5',
+  },
+  statusOptionAtual: {
+    backgroundColor: '#E8F5E9',
+  },
+  statusIndicator: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 12,
+  },
+  statusOptionText: {
+    flex: 1,
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '500',
   },
 });
 

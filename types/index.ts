@@ -291,6 +291,25 @@ export interface FinalizarPagamentoDto {
   forma_pagamento: FormaPagamento;
 }
 
+export interface Rendimento {
+  id: string;
+  id_conta_mesa: string;
+  valor: number;
+  forma_pagamento: FormaPagamento;
+  observacoes?: string;
+  data_pagamento: string;
+  data_criacao: string;
+  data_atualizacao: string;
+  conta_mesa?: ContaMesa;
+}
+
+export interface RegistrarRendimentoDto {
+  id_conta_mesa: string;
+  valor: number;
+  forma_pagamento: FormaPagamento;
+  observacoes?: string;
+}
+
 // ============================================
 // ESTATÍSTICAS (para dashboard)
 // ============================================

@@ -5,7 +5,7 @@
  */
 
 import { supabase } from '../lib/supabase';
-import { ContaMesa, FecharContaDto, FinalizarPagamentoDto, StatusConta, FormaPagamento } from '../types';
+import { ContaMesa, FecharContaDto, FinalizarPagamentoDto, FormaPagamento, StatusConta } from '../types';
 
 /**
  * Formata dados do Supabase para o tipo ContaMesa
@@ -71,6 +71,7 @@ export const fecharContaMesa = async (dados: FecharContaDto): Promise<ContaMesa>
 
 /**
  * Finaliza pagamento da conta
+ * Nota: A função RPC já atualiza o status da mesa para 'livre' e marca pedidos como pagos
  */
 export const finalizarPagamento = async (dados: FinalizarPagamentoDto): Promise<ContaMesa> => {
   // Chamar função RPC do Supabase
@@ -98,6 +99,46 @@ export const finalizarPagamento = async (dados: FinalizarPagamentoDto): Promise<
   }
 
   return formatarConta(conta);
+};
+
+/**
+ * Lista contas abertas (para admin)
+ */
+export const listarContasAbertas = async (): Promise<ContaMesa[]> => {
+  const { data, error } = await supabase
+    .from('contas_mesa')
+    .select(`
+      *,
+      mesa:mesas(*)
+    `)
+    .eq('status', StatusConta.ABERTA)
+    .order('data_abertura', { ascending: false });
+
+  if (error) {
+    throw new Error(error.message || 'Erro ao buscar contas abertas');
+  }
+
+  return (data || []).map(formatarConta);
+};
+
+/**
+ * Lista contas fechadas (para admin)
+ */
+export const listarContasFechadas = async (): Promise<ContaMesa[]> => {
+  const { data, error } = await supabase
+    .from('contas_mesa')
+    .select(`
+      *,
+      mesa:mesas(*)
+    `)
+    .in('status', [StatusConta.FECHADA, StatusConta.PAGA])
+    .order('data_fechamento', { ascending: false });
+
+  if (error) {
+    throw new Error(error.message || 'Erro ao buscar contas fechadas');
+  }
+
+  return (data || []).map(formatarConta);
 };
 
 /**
