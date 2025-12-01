@@ -1,98 +1,297 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  Platform,
+  SafeAreaView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
+import { MaterialIcons as Icon } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { useCarrinho } from '../../contexts/CarrinhoContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { Produto, Categoria } from '../../types';
+import * as produtosService from '../../services/produtos.service';
+import * as categoriasService from '../../services/categorias.service';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+// Componentes
+import CategoryList from '../../components/CategoryList';
+import HomeHeader from '../../components/HomeHeader';
+import SearchBar from '../../components/SearchBar';
+import ItemCard from '../../components/ItemCard';
 
-export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+const HomeScreen = () => {
+  const router = useRouter();
+  const { adicionarAoCarrinho } = useCarrinho();
+  const { autenticado, usuario } = useAuth();
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  const [products, setProducts] = useState<Produto[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Produto[]>([]);
+  const [categories, setCategories] = useState<Categoria[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    filterProducts();
+  }, [searchQuery, selectedCategory, products]);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Buscar produtos e categorias usando services Supabase
+      const [productsData, categoriesData] = await Promise.all([
+        produtosService.listarProdutos(),
+        categoriasService.listarCategorias(),
+      ]);
+
+      setProducts(productsData);
+      setCategories(categoriesData);
+      setFilteredProducts(productsData);
+    } catch (e) {
+      if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError('Um erro desconhecido ocorreu.');
+      }
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filterProducts = () => {
+    let filtered = [...products];
+
+    // Filtro por busca
+    if (searchQuery) {
+      filtered = filtered.filter((product) =>
+        product.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Filtro por categoria
+    if (selectedCategory) {
+      filtered = filtered.filter((product) => product.category.id === selectedCategory);
+    }
+
+    setFilteredProducts(filtered);
+  };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
+
+  const handleCategorySelect = (categoryId: string | null) => {
+    setSelectedCategory(categoryId);
+  };
+
+  const handleAddToCart = (product: Produto) => {
+    adicionarAoCarrinho(product, 1);
+    Alert.alert('Sucesso', `${product.name} adicionado ao carrinho!`);
+  };
+
+  const renderItem = ({ item }: { item: Produto }) => (
+    <ItemCard item={item} onAddToCart={() => handleAddToCart(item)} />
   );
-}
+
+  const renderListHeader = () => (
+    <>
+      <HomeHeader />
+      {!autenticado && (
+        <View style={styles.visitorBanner}>
+          <Icon name="info" size={16} color="#2196F3" />
+          <Text style={styles.visitorBannerText}>
+            Você está navegando como visitante. Faça login para acessar mais funcionalidades.
+          </Text>
+        </View>
+      )}
+      <SearchBar onSearch={handleSearch} />
+      <CategoryList 
+        categories={categories} 
+        selectedCategory={selectedCategory}
+        onSelectCategory={handleCategorySelect}
+      />
+      <View style={styles.titleContainer}>
+        <Text style={styles.sectionTitle}>
+          {selectedCategory ? 'Itens Filtrados' : 'Todos os Itens'}
+        </Text>
+        {(searchQuery || selectedCategory) && (
+          <TouchableOpacity
+            onPress={() => {
+              setSearchQuery('');
+              setSelectedCategory(null);
+            }}
+            style={styles.clearButton}
+          >
+            <Text style={styles.clearButtonText}>Limpar Filtros</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    </>
+  );
+
+  if (loading) {
+    return (
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size="large" color="#333" />
+        <Text>Carregando cardápio...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.centerContainer}>
+        <Icon name="error-outline" size={80} color="#F44336" />
+        <Text style={styles.errorText}>Erro ao carregar dados</Text>
+        <Text style={styles.errorSubtext}>{error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={fetchData}>
+          <Text style={styles.retryButtonText}>Tentar Novamente</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <FlatList
+        data={filteredProducts}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id}
+        // Mobile: 2 colunas fixas
+        numColumns={2}
+        key="two-columns"
+        ListHeaderComponent={renderListHeader}
+        ListEmptyComponent={() => (
+          <View style={styles.emptyContainer}>
+            <Icon name="search-off" size={80} color="#DDD" />
+            <Text style={styles.emptyText}>Nenhum produto encontrado</Text>
+          </View>
+        )}
+        contentContainerStyle={styles.listContainer}
+        columnWrapperStyle={styles.columnWrapper}
+        showsVerticalScrollIndicator={false}
+        onRefresh={fetchData}
+        refreshing={loading}
+      />
+    </SafeAreaView>
+  );
+};
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    // Web: centraliza conteúdo
+    alignItems: Platform.OS === 'web' ? 'center' : 'stretch',
+  },
+  listContainer: {
+    // Web: largura máxima e centralizado
+    maxWidth: Platform.OS === 'web' ? 1200 : undefined,
+    width: '100%',
+    paddingHorizontal: Platform.OS === 'web' ? 40 : 10,
+    alignSelf: 'center',
+  },
+  // Espaçamento entre colunas (para numColumns=2)
+  columnWrapper: {
+    justifyContent: Platform.OS === 'web' ? 'center' : 'space-between',
+    // Web: espaçamento entre cards
+    gap: Platform.OS === 'web' ? 20 : 10,
+  },
   titleContainer: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8,
+    paddingHorizontal: 15,
+    paddingBottom: 10,
   },
-  stepContainer: {
-    gap: 8,
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  clearButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: '#F0F0F0',
+    borderRadius: 6,
+  },
+  clearButtonText: {
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '600',
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    padding: 32,
+  },
+  errorText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'center',
+    marginTop: 16,
+  },
+  errorSubtext: {
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  retryButton: {
+    marginTop: 24,
+    backgroundColor: '#333',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  emptyContainer: {
+    padding: 48,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#999',
+    marginTop: 16,
+  },
+  visitorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E3F2FD',
+    padding: 12,
+    marginHorizontal: 15,
     marginBottom: 8,
+    borderRadius: 8,
+    gap: 8,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  visitorBannerText: {
+    flex: 1,
+    fontSize: 12,
+    color: '#1976D2',
+    lineHeight: 16,
   },
 });
+
+export default HomeScreen;
