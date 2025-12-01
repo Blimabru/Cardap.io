@@ -65,17 +65,25 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
  * - Não persiste sessão de usuário
  * - Não renova tokens automaticamente
  * - Ideal para operações públicas/anônimas
+ * - Otimizado para mobile (sem interferência de storage)
  * 
- * IMPORTANTE: Este client não persiste sessão e não tenta usar tokens existentes.
+ * IMPORTANTE: 
+ * - Este client não persiste sessão e não tenta usar tokens existentes
+ * - Sempre usa role 'anon' (nunca tenta autenticar)
+ * - Ideal para pedidos de mesa via QR code no mobile
  */
 export const supabaseAnon = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
-    // Não salva sessão do usuário
+    // Não salva sessão do usuário (crítico para mobile)
     persistSession: false,
     // Não renova tokens (operações pontuais)
     autoRefreshToken: false,
+    // Não detecta sessão na URL (mobile app)
     detectSessionInUrl: false,
-    storage: undefined, // Não usar storage para evitar sessões persistentes
+    // Não usar storage para evitar sessões persistentes no mobile
+    storage: undefined,
+    // Garantir que não tenta usar storage do AsyncStorage
+    storageKey: undefined,
   },
   // Garantir que não há headers de autenticação
   global: {

@@ -86,12 +86,32 @@ function MesaCardapioContent() {
   const validarEConfigurarMesa = async () => {
     try {
       setValidandoQR(true);
+      console.log('🔍 Validando QR code:', qrCode);
+      
       const mesa = await qrcodeService.validarQRCode(qrCode);
+      
+      console.log('✅ Mesa validada:', {
+        id: mesa.id,
+        numero: mesa.numero,
+        status: mesa.status,
+      });
+      
       setMesaValidada(mesa);
       // Definir mesa no contexto
       definirMesa(mesa);
     } catch (erro: any) {
-      setError(erro.message || 'QR code inválido');
+      // Serializar erro corretamente
+      const erroDetalhado = {
+        message: erro?.message || 'Erro desconhecido',
+        name: erro?.name,
+        qr_code: qrCode,
+      };
+      
+      console.error('❌ Erro ao validar QR code:', JSON.stringify(erroDetalhado, null, 2));
+      
+      const mensagemErro = erro?.message || 'QR code inválido';
+      setError(mensagemErro);
+      
       Alert.alert(
         'QR Code Inválido',
         'O QR code escaneado não é válido ou a mesa está inativa.',
@@ -121,12 +141,20 @@ function MesaCardapioContent() {
       setCategories(categoriesData);
       setFilteredProducts(productsData);
     } catch (e) {
+      // Serializar erro corretamente
+      const erroDetalhado = {
+        message: e instanceof Error ? e.message : 'Erro desconhecido',
+        name: e instanceof Error ? e.name : 'UnknownError',
+        stack: e instanceof Error ? e.stack : undefined,
+      };
+      
+      console.error('❌ Erro ao carregar dados:', JSON.stringify(erroDetalhado, null, 2));
+      
       if (e instanceof Error) {
         setError(e.message);
       } else {
         setError('Um erro desconhecido ocorreu.');
       }
-      console.error(e);
     } finally {
       setLoading(false);
     }
@@ -169,6 +197,12 @@ function MesaCardapioContent() {
 
     setEnviandoPedido(true);
     try {
+      console.log('📝 Iniciando criação de pedido:', {
+        id_mesa: idMesa,
+        quantidade_itens: itens.length,
+        mesa_numero: mesaValidada?.numero,
+      });
+
       await pedidosService.criarPedido({
         itens: itens.map((item) => ({
           id_produto: item.produto.id,
@@ -180,6 +214,8 @@ function MesaCardapioContent() {
         observacoes: observacoesPedido || undefined,
       });
 
+      console.log('✅ Pedido criado com sucesso');
+
       limparCarrinho();
       setObservacoesPedido('');
       setModalCarrinhoAberto(false);
@@ -190,7 +226,41 @@ function MesaCardapioContent() {
         [{ text: 'OK' }]
       );
     } catch (erro: any) {
-      Alert.alert('Erro', erro.message || 'Não foi possível finalizar o pedido');
+      // Serializar erro corretamente para logs
+      const erroDetalhado = {
+        message: erro?.message || 'Erro desconhecido',
+        name: erro?.name,
+        stack: erro?.stack,
+        id_mesa: idMesa,
+        quantidade_itens: itens.length,
+      };
+      
+      console.error('❌ Erro ao finalizar pedido:', JSON.stringify(erroDetalhado, null, 2));
+      
+      // Mensagem de erro mais amigável para o usuário
+      let mensagemErro = 'Não foi possível finalizar o pedido.';
+      
+      if (erro?.message) {
+        // Extrair mensagem mais clara do erro
+        if (erro.message.includes('autenticado') || erro.message.includes('autenticação')) {
+          mensagemErro = 'Erro de autenticação. Por favor, tente novamente.';
+        } else if (erro.message.includes('RLS') || erro.message.includes('policy')) {
+          mensagemErro = 'Erro de permissão. Por favor, verifique se o QR code está correto.';
+        } else if (erro.message.includes('produto') || erro.message.includes('Produto')) {
+          mensagemErro = 'Erro ao processar produtos. Por favor, tente novamente.';
+        } else {
+          mensagemErro = erro.message;
+        }
+      }
+      
+      Alert.alert(
+        'Erro ao Finalizar Pedido',
+        mensagemErro,
+        [
+          { text: 'Tentar Novamente', style: 'default' },
+          { text: 'Cancelar', style: 'cancel' },
+        ]
+      );
     } finally {
       setEnviandoPedido(false);
     }
