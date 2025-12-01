@@ -1,43 +1,62 @@
 /**
- * Layout de Tabs (Navegação Principal)
+ * Layout de Tabs (Navegação Principal por Abas)
  * 
- * Configura as tabs principais do app
+ * Este componente configura a navegação principal do app através de tabs (abas)
+ * na parte inferior da tela. Cada tab representa uma seção principal:
+ * - Cardápio (home)
+ * - Carrinho
+ * - Pedidos  
+ * - Perfil
+ * - Admin (só para administradores)
  */
 
 import React from 'react';
+// Componente de navegação por tabs do Expo Router
 import { Tabs } from 'expo-router';
+// Ícones do Material Design
 import { MaterialIcons } from '@expo/vector-icons';
-import { View, Text, StyleSheet } from 'react-native';
+// Componentes básicos do React Native
+import { StyleSheet, Text, View } from 'react-native';
+// Contextos para gerenciar estado de autenticação e carrinho
 import { useAuth } from '../../contexts/AuthContext';
 import { useCarrinho } from '../../contexts/CarrinhoContext';
 
 export default function TabLayout() {
+  // Obtém dados de autenticação e permissões do usuário
   const { autenticado, podeGerenciar, ehAdmin, ehDono, ehCliente } = useAuth();
+  // Obtém quantidade total de itens no carrinho (para badge)
   const { quantidadeTotal } = useCarrinho();
 
-  // Log de debug para verificar permissões
+  // Logs de debug para verificar permissões durante desenvolvimento
   console.log('🔍 TabLayout - podeGerenciar:', podeGerenciar);
   console.log('🔍 TabLayout - ehAdmin:', ehAdmin);
   console.log('🔍 TabLayout - ehDono:', ehDono);
   console.log('🔍 TabLayout - ehCliente:', ehCliente);
 
   return (
+    // Componente Tabs que cria navegação por abas na parte inferior
     <Tabs
       screenOptions={{
+        // Cor dos ícones/texto quando tab está ativa
         tabBarActiveTintColor: '#333',
+        // Cor dos ícones/texto quando tab está inativa
         tabBarInactiveTintColor: '#999',
+        // Estilo da barra de tabs
         tabBarStyle: {
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 8,
+          height: 60, // Altura da barra de tabs
+          paddingBottom: 8, // Espaçamento inferior
+          paddingTop: 8, // Espaçamento superior
         },
+        // Estilo do texto dos labels das tabs
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '600',
         },
+        // Estilo do header (cabeçalho) de cada tela
         headerStyle: {
           backgroundColor: '#FFF',
         },
+        // Estilo do título no header
         headerTitleStyle: {
           fontWeight: 'bold',
           color: '#333',
@@ -45,7 +64,7 @@ export default function TabLayout() {
       }}
     >
       {/* ============================================================ */}
-      {/* TABS VISÍVEIS PARA TODOS OS USUÁRIOS                         */}
+      {/* TABS VISÍVEIS PARA TODOS OS USUÁRIOS (LOGADOS OU NÃO)       */}
       {/* ============================================================ */}
 
       {/* Tab 1: Cardápio (todos podem ver) */}

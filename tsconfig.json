@@ -1,17 +1,27 @@
 {
+  // Herda configurações base do Expo para TypeScript
   "extends": "expo/tsconfig.base",
+  // Opções do compilador TypeScript
   "compilerOptions": {
+    // Modo estrito: ativa todas as verificações rígidas de tipos
     "strict": true,
+    // Mapeamento de caminhos para imports (aliases)
     "paths": {
+      // "@/*" mapeia para a raiz do projeto, permitindo imports como "@/components/Button"
       "@/*": [
         "./*"
       ]
     }
   },
+  // Arquivos que devem ser incluídos na compilação TypeScript
   "include": [
+    // Todos os arquivos .ts (TypeScript)
     "**/*.ts",
+    // Todos os arquivos .tsx (TypeScript + JSX/React)
     "**/*.tsx",
+    // Tipos gerados automaticamente pelo Expo
     ".expo/types/**/*.ts",
+    // Declarações de tipos do ambiente Expo
     "expo-env.d.ts"
   ]
 }

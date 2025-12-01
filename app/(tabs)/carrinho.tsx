@@ -1,35 +1,69 @@
 /**
- * Tela de Carrinho
+ * ============================================================================
+ * CARRINHO.TSX - TELA DO CARRINHO DE COMPRAS
+ * ============================================================================
  * 
- * Exibe itens do carrinho e permite finalizar pedido
+ * Esta tela exibe os itens adicionados ao carrinho e permite finalizar pedidos.
+ * 
+ * FUNCIONALIDADES PRINCIPAIS:
+ * - Visualização de itens no carrinho com quantidades
+ * - Ajuste de quantidade (+ / -)
+ * - Remoção de itens do carrinho
+ * - Cálculo automático de subtotais e total
+ * - Finalização de pedido (com/sem login)
+ * - Campo de observações do pedido
+ * - Navegação para login se necessário
+ * 
+ * FLUXO DE FINALIZAÇÃO:
+ * 1. Usuário revisa itens no carrinho
+ * 2. Adiciona observações (opcional)
+ * 3. Clica "Finalizar Pedido"
+ * 4. Se não logado: oferece opção de login ou continuar como visitante
+ * 5. Cria pedido via service
+ * 6. Limpa carrinho e navega para pedidos
+ * 
+ * ESTADO GERENCIADO:
+ * - Loading durante criação do pedido
+ * - Observações do pedido
+ * - Integração com contextos de Carrinho e Auth
  */
 
 import React, { useState } from 'react';
+// Componentes básicos do React Native
 import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
+  ActivityIndicator, // Componente de imagem
+  Alert, // Estilos otimizados
+  FlatList, // Botão tocável com feedback
+  Image, // Componente de texto
+  StyleSheet, // Container básico
+  Text, // Indicador de carregamento
+  TextInput, // Lista otimizada para performance
   TouchableOpacity,
-  Image,
-  Alert,
-  ActivityIndicator,
-  TextInput,
+  View, // Container básico
 } from 'react-native';
+// Hook de navegação do Expo Router
 import { useRouter } from 'expo-router';
+// Ícones Material Design
 import { MaterialIcons as Icon } from '@expo/vector-icons';
-import { useCarrinho } from '../../contexts/CarrinhoContext';
+// Contextos globais para estado da aplicação
 import { useAuth } from '../../contexts/AuthContext';
+import { useCarrinho } from '../../contexts/CarrinhoContext';
+// Tipos TypeScript
 import { ItemCarrinho, TipoPedido } from '../../types';
+// Service para comunicação com API
 import { criarPedido } from '../../services/pedidos.service';
 
 export default function CarrinhoScreen() {
+  // Hook de navegação para mudanças de tela
   const router = useRouter();
+  // Funções e estado do contexto do carrinho
   const { itens, quantidadeTotal, valorSubtotal, removerDoCarrinho, atualizarQuantidade, limparCarrinho } = useCarrinho();
+  // Estado de autenticação do usuário
   const { autenticado } = useAuth();
 
-  const [carregando, setCarregando] = useState(false);
-  const [observacoes, setObservacoes] = useState('');
+  // Estados locais da tela
+  const [carregando, setCarregando] = useState(false); // Loading durante criação do pedido
+  const [observacoes, setObservacoes] = useState(''); // Observações/comentários do pedido
 
   const handleFinalizarPedido = async () => {
     if (itens.length === 0) {

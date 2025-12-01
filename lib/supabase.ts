@@ -3,53 +3,87 @@
  * SUPABASE.TS - CLIENTE SUPABASE CONFIGURADO
  * ============================================================================
  * 
- * Cliente centralizado do Supabase para uso em toda a aplicação.
+ * Este arquivo configura e exporta clientes Supabase para uso em toda a aplicação.
+ * 
+ * FUNCIONALIDADES:
+ * - Cliente principal autenticado (supabase)
+ * - Cliente anônimo para pedidos via QR (supabaseAnon)
+ * - Configurações de autenticação e persistência de sessão
+ * 
+ * USO:
+ * import { supabase } from '../lib/supabase';
+ * const { data } = await supabase.from('produtos').select('*');
  * 
  * IMPORTANTE:
- * - Use este cliente em todos os services
- * - Não crie múltiplas instâncias
+ * - Use este cliente único em todos os services
+ * - Não crie múltiplas instâncias do Supabase
  * - As variáveis de ambiente devem estar configuradas
  */
 
+// Importa função para criar cliente Supabase
 import { createClient } from '@supabase/supabase-js';
 
-// Variáveis de ambiente do Supabase
-// Estas devem estar no .env ou configuradas no Expo Constants
+// Variáveis de ambiente do projeto Supabase
+// EXPO_PUBLIC_ permite acesso no frontend (variáveis públicas)
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://cxisgfykkemcbqymtses.supabase.co';
 const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN4aXNnZnlra2VtY2JxeW10c2VzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5OTIzNTgsImV4cCI6MjA3OTU2ODM1OH0.oZPTCd0ot9wT06qB3mUZYLD1juvn-AAsSMBVp0CJEXo';
 
+// Validação: falha rapidamente se variáveis não estão configuradas
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   throw new Error('Variáveis de ambiente do Supabase não configuradas!');
 }
 
 /**
- * Cliente Supabase para uso no frontend
+ * Cliente Supabase principal para uso no frontend
  * 
- * Este cliente usa a chave anon (pública) e respeita as políticas RLS.
- * Para operações administrativas, use o cliente com service_role key.
+ * Este cliente usa a chave anônima (pública) e respeita as políticas RLS (Row Level Security).
+ * Ideal para operações que dependem do usuário autenticado.
+ * 
+ * CARACTERÍSTICAS:
+ * - Renova tokens automaticamente quando expiram
+ * - Persiste sessão de usuário no AsyncStorage
+ * - Não detecta sessões via URL (mobile app)
  */
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
+    // Renova automaticamente tokens JWT quando próximos do vencimento
     autoRefreshToken: true,
+    // Persiste sessão do usuário entre fechamentos do app
     persistSession: true,
+    // Não tenta detectar sessão na URL (não é web app)
     detectSessionInUrl: false,
   },
 });
 
 /**
- * Cliente Supabase para requisições anônimas (sem sessão)
+ * Cliente Supabase para requisições anônimas (sem sessão de usuário)
  * 
- * Use este cliente quando precisar fazer requisições sem autenticação,
- * como criar pedidos de mesa via QR code.
+ * Use este cliente quando precisar fazer operações sem autenticação,
+ * como criar pedidos de mesa via QR code onde não há usuário logado.
  * 
- * IMPORTANTE: Este client não persiste sessão e não tenta usar tokens existentes.
+ * CARACTERÍSTICAS:
+ * - Não persiste sessão de usuário
+ * - Não renova tokens automaticamente
+ * - Ideal para operações públicas/anônimas
+ * - Otimizado para mobile (sem interferência de storage)
+ * 
+ * IMPORTANTE: 
+ * - Este client não persiste sessão e não tenta usar tokens existentes
+ * - Sempre usa role 'anon' (nunca tenta autenticar)
+ * - Ideal para pedidos de mesa via QR code no mobile
  */
 export const supabaseAnon = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
+    // Não salva sessão do usuário (crítico para mobile)
     persistSession: false,
+    // Não renova tokens (operações pontuais)
     autoRefreshToken: false,
+    // Não detecta sessão na URL (mobile app)
     detectSessionInUrl: false,
-    storage: undefined, // Não usar storage para evitar sessões persistentes
+    // Não usar storage para evitar sessões persistentes no mobile
+    storage: undefined,
+    // Garantir que não tenta usar storage do AsyncStorage
+    storageKey: undefined,
   },
   // Garantir que não há headers de autenticação
   global: {

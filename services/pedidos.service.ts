@@ -4,6 +4,7 @@
  * Gerencia pedidos do sistema usando Supabase
  */
 
+import { SupabaseClient } from '@supabase/supabase-js';
 import { supabase, supabaseAnon } from '../lib/supabase';
 import { Pedido, CriarPedidoDto, StatusPedido, EstatisticasPedidos, ItemPedido, Usuario, Produto } from '../types';
 
@@ -121,7 +122,20 @@ export const criarPedido = async (dados: CriarPedidoDto): Promise<Pedido> => {
     .in('id', produtosIds);
 
   if (produtosError || !produtos) {
-    throw new Error('Erro ao buscar produtos');
+    // Serializar erro corretamente
+    const erroSerializado = JSON.stringify({
+      error: produtosError ? {
+        message: produtosError.message,
+        code: produtosError.code,
+        details: produtosError.details,
+        hint: produtosError.hint,
+      } : null,
+      produtos_ids: produtosIds,
+      quantidade_produtos: produtosIds.length,
+    }, null, 2);
+    
+    console.error('❌ Erro ao buscar produtos:', erroSerializado);
+    throw new Error(produtosError?.message || 'Erro ao buscar produtos');
   }
 
   // 3. Calcular totais
@@ -184,16 +198,25 @@ export const criarPedido = async (dados: CriarPedidoDto): Promise<Pedido> => {
     .single();
 
   if (pedidoError || !pedido) {
-    console.error('❌ Erro ao criar pedido:', {
-      error: pedidoError,
+    // Serializar erro corretamente para mobile (evitar [object Object])
+    const erroSerializado = JSON.stringify({
+      error: pedidoError ? {
+        message: pedidoError.message,
+        code: pedidoError.code,
+        details: pedidoError.details,
+        hint: pedidoError.hint,
+      } : null,
       id_mesa: dados.id_mesa,
       id_usuario: userId,
-      message: pedidoError?.message,
-      code: pedidoError?.code,
-      details: pedidoError?.details,
-      hint: pedidoError?.hint,
-    });
-    throw new Error(pedidoError?.message || 'Erro ao criar pedido');
+      quantidade_itens: dados.itens.length,
+    }, null, 2);
+    
+    console.error('❌ Erro ao criar pedido:', erroSerializado);
+    
+    // Mensagem de erro mais detalhada
+    const mensagemErro = pedidoError?.message || 'Erro ao criar pedido';
+    const codigoErro = pedidoError?.code || 'UNKNOWN';
+    throw new Error(`${mensagemErro} (Código: ${codigoErro})`);
   }
 
   console.log('✅ Pedido criado com sucesso:', {
@@ -218,13 +241,34 @@ export const criarPedido = async (dados: CriarPedidoDto): Promise<Pedido> => {
     .insert(itensParaInserir);
 
   if (itensError) {
-    // Rollback: deletar pedido criado
-    await supabase.from('pedidos').delete().eq('id', pedido.id);
+    // Serializar erro corretamente
+    const erroSerializado = JSON.stringify({
+      error: {
+        message: itensError.message,
+        code: itensError.code,
+        details: itensError.details,
+        hint: itensError.hint,
+      },
+      id_pedido: pedido.id,
+      quantidade_itens: itensParaInserir.length,
+    }, null, 2);
+    
+    console.error('❌ Erro ao criar itens do pedido:', erroSerializado);
+    
+    // Rollback: deletar pedido criado usando o mesmo cliente
+    try {
+      await client.from('pedidos').delete().eq('id', pedido.id);
+    } catch (rollbackError) {
+      console.error('❌ Erro ao fazer rollback do pedido:', JSON.stringify(rollbackError, null, 2));
+    }
+    
     throw new Error(itensError.message || 'Erro ao criar itens do pedido');
   }
 
   // 6. Buscar pedido completo com relacionamentos
-  return await buscarPedidoPorId(pedido.id);
+  // IMPORTANTE: Usar o mesmo cliente (anon ou normal) para buscar o pedido
+  // Isso garante que as RLS policies permitam a leitura
+  return await buscarPedidoPorIdComCliente(pedido.id, client);
 };
 
 /**
@@ -301,10 +345,14 @@ export const listarMeusPedidos = async (): Promise<Pedido[]> => {
 };
 
 /**
- * Busca pedido por ID
+ * Busca pedido por ID usando um cliente específico
+ * Útil para buscar pedidos criados com supabaseAnon usando o mesmo cliente
  */
-export const buscarPedidoPorId = async (id: string): Promise<Pedido> => {
-  const { data, error } = await supabase
+const buscarPedidoPorIdComCliente = async (
+  id: string, 
+  cliente: SupabaseClient
+): Promise<Pedido> => {
+  const { data, error } = await cliente
     .from('pedidos')
     .select(`
       *,
@@ -325,10 +373,30 @@ export const buscarPedidoPorId = async (id: string): Promise<Pedido> => {
     .single();
 
   if (error || !data) {
+    // Serializar erro corretamente
+    const erroSerializado = JSON.stringify({
+      error: error ? {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+      } : null,
+      id_pedido: id,
+      cliente: cliente === supabaseAnon ? 'anon' : 'authenticated',
+    }, null, 2);
+    
+    console.error('❌ Erro ao buscar pedido por ID:', erroSerializado);
     throw new Error(error?.message || 'Pedido não encontrado');
   }
 
   return formatarPedido(data);
+};
+
+/**
+ * Busca pedido por ID (usa cliente padrão supabase)
+ */
+export const buscarPedidoPorId = async (id: string): Promise<Pedido> => {
+  return buscarPedidoPorIdComCliente(id, supabase);
 };
 
 /**
