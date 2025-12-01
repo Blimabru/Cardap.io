@@ -1,0 +1,86 @@
+name: Deploy para o Plataforma Server
+
+on:
+  push:
+    branches: ["main"]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v3
+
+      - name: Login no GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extrair metadados (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Build e Push da Imagem Docker
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v0.1.10
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_USER: ${{ github.actor }}
+          GH_REPO: ${{ github.repository }}
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          envs: GH_TOKEN,GH_USER,GH_REPO
+          script: |
+            # --- CONFIGURAÇÕES ---
+            CONTAINER_NAME="cardapio_app"
+            PORT=9500
+            # ---------------------
+
+            # 1. Preparar URL da Imagem (Converter para minúsculo)
+            REPO_LOWER=$(echo "$GH_REPO" | tr '[:upper:]' '[:lower:]')
+            IMAGE_URL="ghcr.io/$REPO_LOWER:main"
+
+            echo "Deployando imagem: $IMAGE_URL no container: $CONTAINER_NAME"
+
+            # 2. Login no Docker
+            echo $GH_TOKEN | docker login ghcr.io -u $GH_USER --password-stdin
+
+            # 3. Baixar versão mais recente
+            docker pull $IMAGE_URL
+
+            # 4. Parar e remover a versão anterior (se existir)
+            docker stop $CONTAINER_NAME || true
+            docker rm $CONTAINER_NAME || true
+
+            # 5. Subir o novo container
+            docker run -d \
+              --name $CONTAINER_NAME \
+              --restart unless-stopped \
+              -p $PORT:$PORT \
+              $IMAGE_URL
