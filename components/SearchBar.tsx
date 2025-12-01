@@ -22,7 +22,7 @@
 
 import React, { useState } from 'react';
 // Componentes básicos do React Native
-import { StyleSheet, TextInput, View } from 'react-native';
+import { Platform, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
 // Ícones Material Design do Expo
 import { MaterialIcons as Icon } from '@expo/vector-icons';
 
@@ -34,8 +34,46 @@ interface SearchBarProps {
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
+  // Dimensões da tela para responsividade
+  const { width: screenWidth } = useWindowDimensions();
   // Estado local para controlar o texto digitado
   const [searchText, setSearchText] = useState('');
+  
+  // Variáveis responsivas - totalmente responsivo
+  const isSmallScreen = screenWidth < 375;
+  const isMediumScreen = screenWidth >= 375 && screenWidth < 412;
+  const isLargeScreen = screenWidth >= 412; // Telas grandes
+  const isWeb = Platform.OS === 'web';
+  
+  // Tamanhos responsivos - totalmente responsivo
+  const containerPadding = isSmallScreen 
+    ? 12 
+    : isMediumScreen 
+    ? 15 
+    : isLargeScreen
+    ? 15
+    : Math.min(15, screenWidth * 0.036); // Responsivo para telas maiores
+  const inputPadding = isSmallScreen 
+    ? 10 
+    : isMediumScreen 
+    ? 11 
+    : isLargeScreen
+    ? 12
+    : Math.min(12, screenWidth * 0.029); // Responsivo para telas maiores
+  const fontSize = isSmallScreen 
+    ? 14 
+    : isMediumScreen 
+    ? 15 
+    : isLargeScreen
+    ? 16
+    : Math.min(16, screenWidth * 0.039); // Responsivo para telas maiores
+  const iconSize = isSmallScreen 
+    ? 20 
+    : isMediumScreen 
+    ? 21 
+    : isLargeScreen
+    ? 22
+    : Math.min(22, screenWidth * 0.053); // Responsivo para telas maiores
 
   // Função executada a cada mudança no input
   const handleTextChange = (text: string) => {
@@ -51,16 +89,20 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
 
   return (
     // Container principal com espaçamento
-    <View style={styles.searchContainer}>
+    <View style={[styles.searchContainer, { 
+      paddingHorizontal: containerPadding,
+      width: '100%',
+      maxWidth: '100%',
+    }]}>
       {/* Container do input com ícones */}
       <View style={styles.searchInputContainer}>
         {/* Ícone de lupa à esquerda */}
-        <Icon name="search" size={22} color="#888" style={styles.searchIcon} />
+        <Icon name="search" size={iconSize} color="#888" style={styles.searchIcon} />
         
         {/* Campo de texto principal */}
         <TextInput
           placeholder="Buscar no cardápio..."
-          style={styles.searchInput}
+          style={[styles.searchInput, { fontSize, paddingVertical: inputPadding }]}
           placeholderTextColor="#888" // Cor do placeholder
           value={searchText} // Controlled component
           onChangeText={handleTextChange} // Callback para mudanças
@@ -70,7 +112,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
         {searchText.length > 0 && (
           <Icon 
             name="close" 
-            size={20} 
+            size={isSmallScreen ? 18 : 20} 
             color="#888" 
             style={styles.clearIcon}
             // Limpa o campo ao tocar no X
@@ -86,7 +128,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
 const styles = StyleSheet.create({
   // Container principal do componente
   searchContainer: {
-    paddingHorizontal: 15, // Espaçamento lateral (15px cada lado)
     paddingVertical: 10, // Espaçamento vertical (10px cima/baixo)
     width: '100%',
     maxWidth: '100%',
@@ -109,9 +150,7 @@ const styles = StyleSheet.create({
   // Estilo do campo de texto principal
   searchInput: {
     flex: 1, // Ocupa todo espaço disponível entre os ícones
-    paddingVertical: 12, // Espaçamento interno vertical
     paddingHorizontal: 10, // Espaçamento interno horizontal
-    fontSize: 16, // Tamanho da fonte
     color: '#333', // Cor do texto digitado
     minWidth: 0, // Permite que o texto encolha se necessário
   },

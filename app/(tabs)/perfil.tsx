@@ -28,6 +28,7 @@ import {
 import { MaterialIcons as Icon } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'expo-router';
+import HomeHeader from '../../components/HomeHeader';
 
 export default function PerfilScreen() {
   const { usuario, logout, ehAdmin, ehDono, ehCliente } = useAuth();
@@ -115,8 +116,10 @@ export default function PerfilScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Header do Perfil */}
+    <View style={styles.container}>
+      <HomeHeader />
+      <ScrollView style={styles.scrollContent}>
+        {/* Header do Perfil */}
       <View style={styles.header}>
         {/* Ícone de usuário */}
         <View style={[styles.avatarContainer, { backgroundColor: getBadgeColor() }]}>
@@ -231,7 +234,8 @@ export default function PerfilScreen() {
         <Text style={styles.footerText}>Cardap.io v1.0</Text>
         <Text style={styles.footerText}>Sistema de Cardápio Digital</Text>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -239,6 +243,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5F5F5',
+  },
+  scrollContent: {
+    flex: 1,
   },
   
   // Header com avatar e nome

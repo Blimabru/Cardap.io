@@ -16,12 +16,15 @@ import { Tabs } from 'expo-router';
 // Ícones do Material Design
 import { MaterialIcons } from '@expo/vector-icons';
 // Componentes básicos do React Native
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 // Contextos para gerenciar estado de autenticação e carrinho
 import { useAuth } from '../../contexts/AuthContext';
 import { useCarrinho } from '../../contexts/CarrinhoContext';
 
 export default function TabLayout() {
+  // Dimensões da tela para responsividade
+  const { width: screenWidth } = useWindowDimensions();
+  
   // Obtém dados de autenticação e permissões do usuário
   const { autenticado, podeGerenciar, ehAdmin, ehDono, ehCliente } = useAuth();
   // Obtém quantidade total de itens no carrinho (para badge)
@@ -32,7 +35,7 @@ export default function TabLayout() {
   console.log('🔍 TabLayout - ehAdmin:', ehAdmin);
   console.log('🔍 TabLayout - ehDono:', ehDono);
   console.log('🔍 TabLayout - ehCliente:', ehCliente);
-
+  
   return (
     // Componente Tabs que cria navegação por abas na parte inferior
     <Tabs
@@ -41,26 +44,28 @@ export default function TabLayout() {
         tabBarActiveTintColor: '#333',
         // Cor dos ícones/texto quando tab está inativa
         tabBarInactiveTintColor: '#999',
-        // Estilo da barra de tabs
+        // Estilo da barra de tabs - totalmente responsivo
         tabBarStyle: {
-          height: 60, // Altura da barra de tabs
-          paddingBottom: 8, // Espaçamento inferior
-          paddingTop: 8, // Espaçamento superior
+          height: 75, // Altura maior da barra de tabs para evitar cortes
+          paddingBottom: 12, // Espaçamento inferior maior
+          paddingTop: 12, // Espaçamento superior maior
+          paddingHorizontal: 0, // Sem padding horizontal para usar toda largura
+          width: '100%', // Sempre responsivo
+          maxWidth: '100%', // Sempre responsivo
+          overflow: 'hidden', // Prevenir cortes
         },
         // Estilo do texto dos labels das tabs
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '600',
+          marginTop: 2, // Espaçamento entre ícone e texto
         },
-        // Estilo do header (cabeçalho) de cada tela
-        headerStyle: {
-          backgroundColor: '#FFF',
+        // Estilo dos ícones das tabs
+        tabBarIconStyle: {
+          marginTop: 4, // Espaçamento superior do ícone
         },
-        // Estilo do título no header
-        headerTitleStyle: {
-          fontWeight: 'bold',
-          color: '#333',
-        },
+        // Esconder header padrão - usando HomeHeader customizado
+        headerShown: false,
       }}
     >
       {/* ============================================================ */}
@@ -72,7 +77,6 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Cardápio',
-          headerTitle: 'Cardap.io',
           tabBarIcon: ({ color }) => (
             <MaterialIcons name="restaurant-menu" size={28} color={color} />
           ),
@@ -84,7 +88,6 @@ export default function TabLayout() {
         name="carrinho"
         options={{
           title: 'Carrinho',
-          headerTitle: 'Meu Carrinho',
           tabBarIcon: ({ color }) => (
             <View>
               <MaterialIcons name="shopping-cart" size={28} color={color} />
@@ -103,7 +106,6 @@ export default function TabLayout() {
         name="pedidos"
         options={{
           title: 'Pedidos',
-          headerTitle: 'Meus Pedidos',
           tabBarIcon: ({ color }) => (
             <MaterialIcons name="receipt-long" size={28} color={color} />
           ),
@@ -116,7 +118,6 @@ export default function TabLayout() {
         name="perfil"
         options={{
           title: 'Perfil',
-          headerTitle: 'Meu Perfil',
           tabBarIcon: ({ color }) => (
             <MaterialIcons name="person" size={28} color={color} />
           ),
@@ -142,7 +143,6 @@ export default function TabLayout() {
         name="admin"
         options={{
           title: 'Admin',
-          headerTitle: 'Administração',
           // CHAVE: href: null REMOVE a tab completamente da navegação
           // Se podeGerenciar = false → href: null → tab invisível
           // Se podeGerenciar = true → href: undefined → tab visível

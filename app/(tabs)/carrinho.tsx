@@ -52,6 +52,8 @@ import { useCarrinho } from '../../contexts/CarrinhoContext';
 import { ItemCarrinho, TipoPedido } from '../../types';
 // Service para comunicação com API
 import { criarPedido } from '../../services/pedidos.service';
+// Componente de header
+import HomeHeader from '../../components/HomeHeader';
 
 export default function CarrinhoScreen() {
   // Hook de navegação para mudanças de tela
@@ -205,6 +207,7 @@ export default function CarrinhoScreen() {
 
   return (
     <View style={styles.container}>
+      <HomeHeader />
       <FlatList
         data={itens}
         renderItem={renderItem}
