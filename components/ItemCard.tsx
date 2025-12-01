@@ -130,14 +130,11 @@ const ItemCard = ({ item, onAddToCart }: ItemCardProps) => {
 
 const styles = StyleSheet.create({
   itemCard: {
-    // Tamanho fixo para garantir consistência
-    width: Platform.OS === 'web' ? 280 : '48%', // Web: 280px fixo, Mobile: 48% da largura (2 colunas)
-    minWidth: Platform.OS === 'web' ? 280 : 160, // Largura mínima
-    maxWidth: Platform.OS === 'web' ? 280 : '48%', // Largura máxima
+    // Largura será controlada pelo wrapper (100% do container)
+    width: '100%',
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     marginBottom: 15,
-    marginHorizontal: Platform.OS === 'web' ? 10 : '1%',
     // Sombra - usar boxShadow no web para evitar warning
     ...Platform.select({
       web: {

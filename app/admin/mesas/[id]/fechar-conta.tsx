@@ -4,24 +4,23 @@
  * Lista pedidos pendentes e calcula total para fechamento
  */
 
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-  ScrollView,
-} from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialIcons as Icon } from '@expo/vector-icons';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
 import { useAuth } from '../../../../contexts/AuthContext';
-import { Mesa, Pedido } from '../../../../types';
+import * as contasService from '../../../../services/contas.service';
 import * as mesasService from '../../../../services/mesas.service';
 import { listarPedidosPendentesPorMesa } from '../../../../services/pedidos.service';
-import * as contasService from '../../../../services/contas.service';
+import { Mesa, Pedido } from '../../../../types';
 
 export default function FecharContaScreen() {
   const router = useRouter();
@@ -104,7 +103,12 @@ export default function FecharContaScreen() {
     return (
       <View style={styles.pedidoCard}>
         <View style={styles.pedidoHeader}>
-          <Text style={styles.pedidoNumero}>Pedido #{item.numero_pedido}</Text>
+          <View>
+            <Text style={styles.pedidoNumero}>Pedido #{item.numero_pedido}</Text>
+            {item.mesa && (
+              <Text style={styles.pedidoMesa}>Mesa #{item.mesa.numero}</Text>
+            )}
+          </View>
           <Text style={styles.pedidoTotal}>R$ {item.total.toFixed(2)}</Text>
         </View>
 
@@ -305,6 +309,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
+  },
+  pedidoMesa: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 2,
+    fontWeight: '600',
   },
   pedidoTotal: {
     fontSize: 18,
