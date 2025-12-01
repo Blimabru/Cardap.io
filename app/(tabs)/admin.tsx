@@ -21,6 +21,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { obterEstatisticas } from '../../services/pedidos.service';
 import * as rendimentosService from '../../services/rendimentos.service';
 import { EstatisticasPedidos } from '../../types';
+import HomeHeader from '../../components/HomeHeader';
 
 export default function AdminScreen() {
   const router = useRouter();
@@ -102,16 +103,19 @@ export default function AdminScreen() {
 
   if (!autenticado) {
     return (
-      <View style={styles.errorContainer}>
-        <Icon name="lock" size={80} color="#DDD" />
-        <Text style={styles.errorText}>Login Necessário</Text>
-        <Text style={styles.errorSubtext}>Faça login para acessar a área administrativa</Text>
-        <TouchableOpacity
-          style={styles.loginButton}
-          onPress={() => router.push('/login')}
-        >
-          <Text style={styles.loginButtonText}>Fazer Login</Text>
-        </TouchableOpacity>
+      <View style={styles.container}>
+        <HomeHeader />
+        <View style={styles.errorContainer}>
+          <Icon name="lock" size={80} color="#DDD" />
+          <Text style={styles.errorText}>Login Necessário</Text>
+          <Text style={styles.errorSubtext}>Faça login para acessar a área administrativa</Text>
+          <TouchableOpacity
+            style={styles.loginButton}
+            onPress={() => router.push('/login')}
+          >
+            <Text style={styles.loginButtonText}>Fazer Login</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
@@ -127,8 +131,10 @@ export default function AdminScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
+    <View style={styles.container}>
+      <HomeHeader />
+      <ScrollView style={styles.scrollContent}>
+        <View style={styles.header}>
         <View>
           <Text style={styles.greeting}>Olá, {usuario?.nome_completo}</Text>
           <Text style={styles.role}>{usuario?.perfil.nome_perfil}</Text>
@@ -269,7 +275,8 @@ export default function AdminScreen() {
           As funcionalidades completas de gerenciamento estão disponíveis via API.
         </Text>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -277,6 +284,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5F5F5',
+  },
+  scrollContent: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',

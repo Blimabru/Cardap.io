@@ -21,6 +21,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { atualizarStatusPedido, cancelarPedido, corDoStatus, formatarStatus, listarMeusPedidos, listarTodosPedidos } from '../../services/pedidos.service';
 import { Pedido, StatusPedido } from '../../types';
+import HomeHeader from '../../components/HomeHeader';
 
 export default function PedidosScreen() {
   const router = useRouter();
@@ -199,6 +200,7 @@ export default function PedidosScreen() {
 
   return (
     <View style={styles.container}>
+      <HomeHeader />
       <FlatList
         data={pedidos}
         renderItem={renderPedido}

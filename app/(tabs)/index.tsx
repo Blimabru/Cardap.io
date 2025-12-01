@@ -71,15 +71,55 @@ const HomeScreen = () => {
   // Estado de autenticação do usuário
   const { autenticado, usuario } = useAuth();
   
-  // Cálculo de largura dos cards baseado na plataforma e tamanho da tela
+  // Variáveis responsivas baseadas na largura da tela - totalmente responsivo
   const isWeb = Platform.OS === 'web';
-  const numColumns = 2;
-  const horizontalPadding = isWeb ? 40 : 10;
-  const cardSpacing = isWeb ? 20 : 10;
+  const isSmallScreen = screenWidth < 375;
+  const isMediumScreen = screenWidth >= 375 && screenWidth < 412;
+  const isLargeScreen = screenWidth >= 412;
+  const isVeryLargeScreen = screenWidth >= 768;
+  
+  // Largura base para cálculos - totalmente responsivo
+  const baseWidth = screenWidth;
+  
+  // Cálculo de largura dos cards baseado na plataforma e tamanho da tela - totalmente responsivo
+  const numColumns = isSmallScreen ? 1 : 2; // 1 coluna em telas pequenas, 2 em outras
+  const horizontalPadding = isWeb 
+    ? (isSmallScreen ? 12 : isMediumScreen ? 24 : isLargeScreen ? 15 : Math.min(15, screenWidth * 0.036))
+    : (isSmallScreen ? 8 : isMediumScreen ? 10 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029));
+  const cardSpacing = isWeb 
+    ? (isSmallScreen ? 12 : isMediumScreen ? 16 : isLargeScreen ? 10 : Math.min(10, screenWidth * 0.024))
+    : (isSmallScreen ? 6 : isMediumScreen ? 8 : isLargeScreen ? 10 : Math.min(10, screenWidth * 0.024));
   // Largura máxima do container no web (para centralizar conteúdo)
-  const maxContainerWidth = isWeb ? Math.min(1200, screenWidth) : screenWidth;
-  // Largura de cada card (2 colunas com espaçamento)
-  const cardWidth = (maxContainerWidth - (horizontalPadding * 2) - cardSpacing) / numColumns;
+  const maxContainerWidth = isWeb 
+    ? Math.min(1200, screenWidth)
+    : screenWidth;
+  // Largura de cada card (2 colunas com espaçamento) - totalmente responsivo
+  const cardWidth = numColumns === 1 
+    ? maxContainerWidth - (horizontalPadding * 2)
+    : (maxContainerWidth - (horizontalPadding * 2) - cardSpacing) / numColumns;
+  
+  // Tamanhos de fonte responsivos - totalmente responsivo
+  const titleFontSize = isSmallScreen 
+    ? 18 
+    : isMediumScreen 
+    ? 20 
+    : isLargeScreen
+    ? 20
+    : Math.min(20, screenWidth * 0.049);
+  const sectionTitleFontSize = isSmallScreen 
+    ? 16 
+    : isMediumScreen 
+    ? 18 
+    : isLargeScreen
+    ? 18
+    : Math.min(18, screenWidth * 0.044);
+  const bodyFontSize = isSmallScreen 
+    ? 14 
+    : isMediumScreen 
+    ? 16 
+    : isLargeScreen
+    ? 16
+    : Math.min(16, screenWidth * 0.039);
 
   // Estados locais da tela
   const [products, setProducts] = useState<Produto[]>([]); // Lista completa de produtos
@@ -193,6 +233,18 @@ const HomeScreen = () => {
     Alert.alert('Sucesso', `${product.name} adicionado ao carrinho!`);
   };
 
+  // Criar estilos dinâmicos baseados no tamanho da tela
+  const dynamicStyles = createDynamicStyles(screenWidth, {
+    horizontalPadding,
+    titleFontSize,
+    sectionTitleFontSize,
+    bodyFontSize,
+    isSmallScreen,
+    isMediumScreen,
+    isLargeScreen,
+    isWeb,
+  });
+
   /**
    * Render function para cada item da FlatList
    * 
@@ -228,9 +280,9 @@ const HomeScreen = () => {
       <HomeHeader />
       {/* Banner informativo para usuários não autenticados */}
       {!autenticado && (
-        <View style={styles.visitorBanner}>
-          <Icon name="info" size={16} color="#2196F3" />
-          <Text style={styles.visitorBannerText}>
+        <View style={dynamicStyles.visitorBanner}>
+          <Icon name="info" size={isSmallScreen ? 14 : 16} color="#2196F3" /> {/* Fixo a partir de 412px */}
+          <Text style={dynamicStyles.visitorBannerText}>
             Você está navegando como visitante. Faça login para acessar mais funcionalidades.
           </Text>
         </View>
@@ -241,8 +293,8 @@ const HomeScreen = () => {
         selectedCategory={selectedCategory}
         onSelectCategory={handleCategorySelect}
       />
-      <View style={styles.titleContainer}>
-        <Text style={styles.sectionTitle}>
+      <View style={dynamicStyles.titleContainer}>
+        <Text style={dynamicStyles.sectionTitle}>
           {selectedCategory ? 'Itens Filtrados' : 'Todos os Itens'}
         </Text>
         {(searchQuery || selectedCategory) && (
@@ -251,9 +303,9 @@ const HomeScreen = () => {
               setSearchQuery('');
               setSelectedCategory(null);
             }}
-            style={styles.clearButton}
+            style={dynamicStyles.clearButton}
           >
-            <Text style={styles.clearButtonText}>Limpar Filtros</Text>
+            <Text style={dynamicStyles.clearButtonText}>Limpar Filtros</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -315,7 +367,93 @@ const HomeScreen = () => {
   );
 };
 
-// Estilos da tela usando StyleSheet para otimização
+// Função para criar estilos dinâmicos baseados no tamanho da tela
+const createDynamicStyles = (
+  screenWidth: number,
+  {
+    horizontalPadding,
+    titleFontSize,
+    sectionTitleFontSize,
+    bodyFontSize,
+    isSmallScreen,
+    isMediumScreen,
+    isLargeScreen,
+    isWeb,
+  }: {
+    horizontalPadding: number;
+    titleFontSize: number;
+    sectionTitleFontSize: number;
+    bodyFontSize: number;
+    isSmallScreen: boolean;
+    isMediumScreen: boolean;
+    isLargeScreen: boolean;
+    isWeb: boolean;
+  }
+) => {
+  return StyleSheet.create({
+    // Container da lista de produtos
+    listContainer: {
+      // Web: largura máxima para evitar layout muito largo
+      // Totalmente responsivo
+      maxWidth: isWeb ? 1200 : undefined,
+      width: '100%', // Sempre responsivo
+      // Padding horizontal responsivo
+      paddingHorizontal: 0, // Remover padding do container - cada componente terá seu próprio padding
+      alignSelf: 'center',
+    },
+    // Espaçamento entre colunas da FlatList (quando numColumns=2)
+    columnWrapper: {
+      justifyContent: isWeb ? 'center' : 'space-between',
+      paddingHorizontal: 0, // Remover padding horizontal do wrapper
+      marginHorizontal: 0, // Remover margin horizontal do wrapper
+      flexWrap: 'wrap', // Permitir quebra de linha se necessário
+    },
+    // Container do título da seção com botão de limpar filtros
+    titleContainer: {
+      flexDirection: 'row', // Título à esquerda, botão à direita
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: isSmallScreen ? 12 : isMediumScreen ? 15 : isLargeScreen ? 15 : Math.min(15, screenWidth * 0.036),
+      paddingBottom: isSmallScreen ? 8 : isMediumScreen ? 10 : isLargeScreen ? 10 : Math.min(10, screenWidth * 0.024),
+    },
+    // Título principal da seção
+    sectionTitle: {
+      fontSize: sectionTitleFontSize,
+      fontWeight: 'bold',
+      color: '#333',
+    },
+    // Botão de limpar filtros
+    clearButton: {
+      paddingHorizontal: isSmallScreen ? 10 : 12,
+      paddingVertical: isSmallScreen ? 5 : 6,
+      backgroundColor: '#F0F0F0',
+      borderRadius: 6,
+    },
+    clearButtonText: {
+      fontSize: isSmallScreen ? 11 : 12,
+      color: '#666',
+      fontWeight: '600',
+    },
+    visitorBanner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#E3F2FD',
+      padding: isSmallScreen ? 10 : isMediumScreen ? 12 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
+      marginHorizontal: isSmallScreen ? 12 : isMediumScreen ? 15 : isLargeScreen ? 20 : Math.min(20, screenWidth * 0.049),
+      marginBottom: isSmallScreen ? 6 : isMediumScreen ? 8 : isLargeScreen ? 8 : Math.min(8, screenWidth * 0.019),
+      borderRadius: 8,
+      gap: isSmallScreen ? 6 : isMediumScreen ? 8 : isLargeScreen ? 8 : Math.min(8, screenWidth * 0.019),
+    },
+    visitorBannerText: {
+      flex: 1,
+      fontSize: isSmallScreen ? 11 : isMediumScreen ? 12 : isLargeScreen ? 13 : Math.min(13, screenWidth * 0.032),
+      color: '#1976D2',
+      lineHeight: isSmallScreen ? 14 : isMediumScreen ? 16 : isLargeScreen ? 16 : Math.min(16, screenWidth * 0.039),
+    },
+  });
+};
+
+// Estilos estáticos da tela usando StyleSheet para otimização
 const styles = StyleSheet.create({
   // Container principal com SafeArea
   safeArea: {
@@ -324,6 +462,7 @@ const styles = StyleSheet.create({
     // Adiciona padding no Android para evitar sobreposição da status bar
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
     // Web: centraliza conteúdo horizontalmente
+    // Mobile: centraliza se >= 412px
     alignItems: Platform.OS === 'web' ? 'center' : 'stretch',
   },
   // Container da lista de produtos
@@ -341,32 +480,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0, // Remover padding horizontal do wrapper
     marginHorizontal: 0, // Remover margin horizontal do wrapper
     flexWrap: 'wrap', // Permitir quebra de linha se necessário
-  },
-  // Container do título da seção com botão de limpar filtros
-  titleContainer: {
-    flexDirection: 'row', // Título à esquerda, botão à direita
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 15,
-    paddingBottom: 10,
-  },
-  // Título principal da seção
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  // Botão de limpar filtros
-  clearButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    backgroundColor: '#F0F0F0',
-    borderRadius: 6,
-  },
-  clearButtonText: {
-    fontSize: 12,
-    color: '#666',
-    fontWeight: '600',
   },
   // Container centralizado para loading e estados de erro
   centerContainer: {
@@ -410,22 +523,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#999',
     marginTop: 16,
-  },
-  visitorBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#E3F2FD',
-    padding: 12,
-    marginHorizontal: 15,
-    marginBottom: 8,
-    borderRadius: 8,
-    gap: 8,
-  },
-  visitorBannerText: {
-    flex: 1,
-    fontSize: 12,
-    color: '#1976D2',
-    lineHeight: 16,
   },
 });
 
