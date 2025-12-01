@@ -16,7 +16,7 @@ import { Tabs } from 'expo-router';
 // Ícones do Material Design
 import { MaterialIcons } from '@expo/vector-icons';
 // Componentes básicos do React Native
-import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Platform, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 // Contextos para gerenciar estado de autenticação e carrinho
 import { useAuth } from '../../contexts/AuthContext';
 import { useCarrinho } from '../../contexts/CarrinhoContext';
@@ -46,9 +46,9 @@ export default function TabLayout() {
         tabBarInactiveTintColor: '#999',
         // Estilo da barra de tabs - totalmente responsivo
         tabBarStyle: {
-          height: 75, // Altura maior da barra de tabs para evitar cortes
-          paddingBottom: 12, // Espaçamento inferior maior
-          paddingTop: 12, // Espaçamento superior maior
+          height: 85, // Altura maior da barra de tabs para evitar cortes
+          paddingBottom: Platform.OS === 'ios' ? 25 : 12, // Espaçamento inferior maior no iOS (safe area), menor no Android
+          paddingTop: 10, // Espaçamento superior
           paddingHorizontal: 0, // Sem padding horizontal para usar toda largura
           width: '100%', // Sempre responsivo
           maxWidth: '100%', // Sempre responsivo
