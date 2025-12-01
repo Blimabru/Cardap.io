@@ -131,6 +131,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10, // Espaçamento vertical (10px cima/baixo)
     width: '100%',
     maxWidth: '100%',
+    backgroundColor: '#E95322'
   },
   // Container do input que engloba ícones e campo de texto
   searchInputContainer: {

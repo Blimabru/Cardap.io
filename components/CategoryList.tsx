@@ -128,6 +128,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     width: '100%',
     maxWidth: '100%',
+    backgroundColor: '#E95322',
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    boxShadow: '5px 5px 10px rgba(0, 0, 0, 0.5)',
+    marginBottom: 20
   },
   categoryScrollContainer: {
     alignItems: 'center',

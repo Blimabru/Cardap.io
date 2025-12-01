@@ -165,10 +165,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
-    color: '#333',
+    color: '#363636ff',
   },
   button: {
-    backgroundColor: '#333',
+    backgroundColor: '#E95322',
     borderRadius: 8,
     paddingVertical: 16,
     alignItems: 'center',

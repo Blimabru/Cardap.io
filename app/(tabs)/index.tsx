@@ -60,6 +60,7 @@ import CategoryList from '../../components/CategoryList'; // Lista de categorias
 import HomeHeader from '../../components/HomeHeader'; // Header da home
 import ItemCard from '../../components/ItemCard'; // Card de produto
 import SearchBar from '../../components/SearchBar'; // Barra de busca
+import { Background } from '@react-navigation/elements';
 
 const HomeScreen = () => {
   // Hook de navegação para mudanças de tela
@@ -283,11 +284,15 @@ const HomeScreen = () => {
       <HomeHeader />
       {/* Banner informativo para usuários não autenticados */}
       {!autenticado && (
-        <View style={dynamicStyles.visitorBanner}>
-          <Icon name="info" size={isSmallScreen ? 14 : 16} color="#2196F3" /> {/* Fixo a partir de 412px */}
-          <Text style={dynamicStyles.visitorBannerText}>
-            Você está navegando como visitante. Faça login para acessar mais funcionalidades.
-          </Text>
+        <View style={{
+          backgroundColor: '#E95322'
+        }}>
+          <View style={dynamicStyles.visitorBanner}>
+            <Icon name="info" size={isSmallScreen ? 14 : 16} color="#2196F3" /> {/* Fixo a partir de 412px */}
+            <Text style={dynamicStyles.visitorBannerText}>
+              Você está navegando como visitante. Faça login para acessar mais funcionalidades.
+            </Text>
+          </View>
         </View>
       )}
       <SearchBar onSearch={handleSearch} />
@@ -443,6 +448,7 @@ const createDynamicStyles = (
       paddingVertical: isSmallScreen ? 5 : 6,
       backgroundColor: '#F0F0F0',
       borderRadius: 6,
+      marginTop: 10,
     },
     clearButtonText: {
       fontSize: isSmallScreen ? 11 : 12,
@@ -455,9 +461,11 @@ const createDynamicStyles = (
       backgroundColor: '#E3F2FD',
       padding: isSmallScreen ? 10 : isMediumScreen ? 12 : isLargeScreen ? 12 : Math.min(12, screenWidth * 0.029),
       marginHorizontal: isSmallScreen ? 12 : isMediumScreen ? 15 : isLargeScreen ? 20 : Math.min(20, screenWidth * 0.049),
+      marginTop: isSmallScreen ? 12 : isMediumScreen ? 15 : isLargeScreen ? 20 : Math.min(20, screenWidth * 0.049),
       marginBottom: isSmallScreen ? 6 : isMediumScreen ? 8 : isLargeScreen ? 8 : Math.min(8, screenWidth * 0.019),
       borderRadius: 8,
       gap: isSmallScreen ? 6 : isMediumScreen ? 8 : isLargeScreen ? 8 : Math.min(8, screenWidth * 0.019),
+      
     },
     visitorBannerText: {
       flex: 1,
