@@ -1,41 +1,75 @@
 /**
- * Service de Autenticação
+ * ============================================================================
+ * AUTENTICACAO.SERVICE.TS - SERVICE DE AUTENTICAÇÃO
+ * ============================================================================
  * 
- * Gerencia login, registro e validação de usuários usando Supabase Auth
+ * Este service gerencia toda a autenticação da aplicação usando Supabase Auth.
+ * 
+ * RESPONSABILIDADES:
+ * - Login de usuários (fazerLogin)
+ * - Registro de novos usuários (registrarUsuario) 
+ * - Validação de sessões ativas (validarSessao)
+ * - Busca de dados completos do usuário
+ * - Persistência local de dados do usuário
+ * - Logout e limpeza de dados
+ * 
+ * FLUXO DE AUTENTICAÇÃO:
+ * 1. User digita email/senha → fazerLogin()
+ * 2. Supabase valida credenciais
+ * 3. Se válido, busca dados completos do usuário
+ * 4. Salva no AsyncStorage para persistência
+ * 5. Retorna dados para o AuthContext
+ * 
+ * USO:
+ * import * as autenticacaoService from '../services/autenticacao.service';
+ * const usuario = await autenticacaoService.fazerLogin(dadosLogin);
  */
 
+// Importa cliente Supabase configurado
 import { supabase } from '../lib/supabase';
+// Importa tipos TypeScript necessários
 import { DadosLogin, DadosRegistro, RespostaAutenticacao, Usuario } from '../types';
+// AsyncStorage para persistir dados localmente
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// Chave usada para salvar dados do usuário no AsyncStorage
 const CHAVE_USUARIO = '@cardapio:usuario';
 
 /**
  * Busca dados completos do usuário na tabela usuarios
+ * 
+ * O Supabase Auth só retorna dados básicos (id, email).
+ * Esta função busca dados completos incluindo nome, perfil, permissões.
+ * 
+ * @param userId - ID do usuário autenticado no Supabase Auth
+ * @returns Dados completos do usuário com perfil associado
+ * @throws Error se usuário não encontrado ou inativo
  */
 const buscarDadosUsuario = async (userId: string): Promise<Usuario> => {
+  // Busca na tabela usuarios com JOIN no perfil
   const { data, error } = await supabase
     .from('usuarios')
     .select(`
       *,
       perfil:perfis(*)
     `)
-    .eq('id', userId)
-    .single();
+    .eq('id', userId) // Filtra pelo ID do usuário
+    .single(); // Retorna apenas um registro
 
   if (error || !data) {
     throw new Error('Usuário não encontrado');
   }
 
-  // Formatar para o tipo Usuario esperado
+  // Transforma dados do Supabase para o tipo Usuario do frontend
   return {
     id: data.id,
     nome_completo: data.nome_completo,
     email: data.email,
-    telefone: data.telefone || undefined,
+    telefone: data.telefone || undefined, // null → undefined
     foto_perfil_url: data.foto_perfil_url || undefined,
     ativo: data.ativo,
     email_verificado: data.email_verificado,
+    // Formata dados do perfil associado
     perfil: {
       id: data.perfil.id,
       nome_perfil: data.perfil.nome_perfil as 'Administrador' | 'Dono' | 'Cliente',

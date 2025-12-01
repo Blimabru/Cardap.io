@@ -1,38 +1,69 @@
+/**
+ * ============================================================================
+ * ITEMCARD.TSX - COMPONENTE DE CARD DE PRODUTO
+ * ============================================================================
+ * 
+ * Componente que renderiza um produto individual na lista do cardápio.
+ * 
+ * FUNCIONALIDADES:
+ * - Exibe imagem do produto com fallback e loading
+ * - Mostra nome, preço e categoria do produto
+ * - Exibe avaliação com estrelas
+ * - Botão "+" para adicionar ao carrinho
+ * - Tratamento de erro de imagem
+ * - Layout responsivo para diferentes tamanhos
+ * 
+ * ESTADOS GERENCIADOS:
+ * - Loading da imagem
+ * - Erro de carregamento da imagem
+ * - Validação de URL da imagem
+ * 
+ * USO:
+ * <ItemCard 
+ *   item={produto} 
+ *   onAddToCart={() => adicionarAoCarrinho(produto)} 
+ * />
+ */
+
+// Ícones Material Design
 import { MaterialIcons as Icon } from '@expo/vector-icons';
 import React from 'react';
+// Componentes básicos do React Native
 import {
-  ActivityIndicator,
-  Image,
-  Platform,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+  ActivityIndicator, // Indicador de carregamento
+  Image, // Componente de imagem
+  Platform, // Detecta plataforma (iOS/Android/Web)
+  StyleSheet, // Estilos otimizados
+  Text, // Componente de texto
+  TouchableOpacity, // Botão tocável com feedback
+  View, // Container básico
 } from 'react-native';
 
-
+// Tipo que define a estrutura de dados de um produto
 type ItemData = {
-  id: string;
-  name: string;
-  price: string | number;
-  imageUrl: string;
-  category: {
+  id: string; // Identificador único do produto
+  name: string; // Nome do produto
+  price: string | number; // Preço (pode ser string ou number)
+  imageUrl: string; // URL da imagem do produto
+  category: { // Categoria do produto
     id: string;
     name: string;
   };
-  rating: string | number; 
+  rating: string | number; // Avaliação do produto (1-5 estrelas)
 };
 
+// Props que o componente aceita
 type ItemCardProps = {
-  item: ItemData;
-  onAddToCart?: () => void;
+  item: ItemData; // Dados do produto a ser exibido
+  onAddToCart?: () => void; // Callback executado ao adicionar no carrinho
 };
 
 const ItemCard = ({ item, onAddToCart }: ItemCardProps) => {
-  const [imageError, setImageError] = React.useState(false);
-  const [imageLoaded, setImageLoaded] = React.useState(false);
+  // Estados locais para controle de imagem
+  const [imageError, setImageError] = React.useState(false); // Se houve erro ao carregar imagem
+  const [imageLoaded, setImageLoaded] = React.useState(false); // Se a imagem foi carregada
   
-  // Verificar se imageUrl é válida
+  // Valida se a URL da imagem é válida (não nula/vazia)
   const hasValidImage = item.imageUrl && item.imageUrl.trim() !== '';
   
   return (

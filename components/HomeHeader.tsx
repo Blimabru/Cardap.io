@@ -1,42 +1,73 @@
+/**
+ * ============================================================================
+ * HOMEHEADER.TSX - COMPONENTE DE HEADER DA TELA PRINCIPAL
+ * ============================================================================
+ * 
+ * Header personalizado exibido no topo da tela de cardápio (home).
+ * 
+ * FUNCIONALIDADES:
+ * - Exibe logo do aplicativo
+ * - Mostra foto do perfil (se usuário logado) ou botão de login
+ * - Navegação para perfil ao tocar na foto
+ * - Navegação para login ao tocar no botão "Entrar"
+ * 
+ * COMPORTAMENTO CONDICIONAL:
+ * - Usuário logado: mostra foto de perfil
+ * - Usuário não logado: mostra botão "Entrar"
+ * 
+ * USO:
+ * <HomeHeader /> (usado na tela index.tsx)
+ */
+
 import React from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  Image,
+// Componentes básicos do React Native
+import {
+  Image, // Componente de texto
+  StyleSheet, // Container básico
+  Text, // Componente de imagem
   TouchableOpacity,
+  View, // Container básico
 } from 'react-native';
+// Hook de navegação
 import { useRouter } from 'expo-router';
+// Ícones Material Design
 import { MaterialIcons as Icon } from '@expo/vector-icons';
+// Contexto de autenticação
 import { useAuth } from '../contexts/AuthContext';
 
+// URL de imagem padrão para usuários sem foto de perfil
 const profileImageUrl = 'https://noticiasdatv.uol.com.br/media/_versions/everybody-hates-chris-julius-dia-dos-pais_fixed_large.jpg';
 
 const HomeHeader = () => {
+  // Hook para navegação programática
   const router = useRouter();
+  // Estado de autenticação e dados do usuário
   const { autenticado, usuario } = useAuth();
 
   return (
     <View style={styles.header}>
-      {/* Logo Cardap.io no header */}
+      {/* Logo do aplicativo Cardap.io */}
       <Image
-        source={require('../assets/images/Logo.png')}
+        source={require('../assets/images/Logo.png')} // Logo local do projeto
         style={styles.logo}
-        resizeMode="contain"
+        resizeMode="contain" // Mantém proporção da imagem
       />
       
+      {/* Renderização condicional baseada no estado de autenticação */}
       {autenticado && usuario ? (
+        // Se usuário está logado: mostra foto de perfil clicável
         <TouchableOpacity onPress={() => router.push('/(tabs)/perfil')}>
           <Image
-            source={{ uri: usuario.foto_perfil_url || profileImageUrl }}
+            source={{ uri: usuario.foto_perfil_url || profileImageUrl }} // Foto do usuário ou padrão
             style={styles.profileIcon}
-            resizeMode="cover" 
+            resizeMode="cover" // Preenche o container mantendo proporção
           />
         </TouchableOpacity>
       ) : (
+        // Se usuário NÃO está logado: mostra botão de login
         <TouchableOpacity 
           style={styles.loginButton}
-          onPress={() => router.push('/login')}
+          onPress={() => router.push('/login')} // Navega para tela de login
         >
           <Icon name="person" size={20} color="#333" />
           <Text style={styles.loginButtonText}>Entrar</Text>

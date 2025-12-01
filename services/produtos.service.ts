@@ -1,31 +1,66 @@
 /**
- * Service de Produtos
+ * ============================================================================
+ * PRODUTOS.SERVICE.TS - SERVICE DE GERENCIAMENTO DE PRODUTOS
+ * ============================================================================
  * 
- * Gerencia operações CRUD de produtos usando Supabase
+ * Este service gerencia todas as operações relacionadas a produtos no sistema.
+ * 
+ * RESPONSABILIDADES:
+ * - Listagem de produtos ativos com paginação
+ * - Busca de produtos por categoria
+ * - Criação, edição e exclusão de produtos
+ * - Formatação de dados entre Supabase e frontend
+ * - Tratamento de URLs de imagens
+ * - Validações de dados
+ * 
+ * FUNCIONALIDADES:
+ * - CRUD completo de produtos
+ * - Relacionamento com categorias
+ * - Upload e gestão de imagens
+ * - Filtros por categoria e busca
+ * - Formatação automática de preços
+ * 
+ * USO:
+ * import * as produtosService from '../services/produtos.service';
+ * const produtos = await produtosService.listarProdutos();
+ * 
+ * IMPORTANTE:
+ * - Usa políticas RLS do Supabase para controle de acesso
+ * - Formata dados para compatibilidade com tipos do frontend
+ * - Trata diferentes formatos de URL de imagem
  */
 
+// Cliente Supabase configurado
 import { supabase } from '../lib/supabase';
-import { Produto, Categoria } from '../types';
+// Tipos TypeScript do projeto
+import { Produto } from '../types';
 
 /**
- * Converte dados do Supabase para o tipo Produto
+ * Converte dados brutos do Supabase para o tipo Produto do frontend
+ * 
+ * Esta função é necessária porque:
+ * - O Supabase pode retornar nomes de colunas em formatos diferentes
+ * - Precisamos garantir tipos consistentes no frontend
+ * - Tratamos casos de dados faltantes ou inválidos
+ * 
+ * @param data - Dados brutos vindos do Supabase
+ * @returns Produto formatado conforme interface TypeScript
  */
 const formatarProduto = (data: any): Produto => {
-  // Tratar imageUrl (pode vir como imageUrl ou imageurl do banco)
-  // Após a migration, deve vir como imageUrl, mas mantemos fallback para imageurl
-  // Verificar todas as possíveis variações do nome da coluna (case-insensitive)
+  // Tratamento especial para imageUrl devido a inconsistências no banco
+  // Pode vir como 'imageUrl', 'imageurl', 'ImageUrl', etc.
   let imageUrl = '';
   
-  // Tentar todas as variações possíveis
+  // Lista de possíveis variações do nome da coluna (case-insensitive)
   const possiveisChaves = ['imageUrl', 'imageurl', 'ImageUrl', 'IMAGEURL'];
   for (const chave of possiveisChaves) {
     if (data[chave] && typeof data[chave] === 'string' && data[chave].trim() !== '') {
       imageUrl = data[chave];
-      break;
+      break; // Para no primeiro encontrado
     }
   }
   
-  // Se ainda não encontrou, tentar buscar por todas as chaves do objeto
+  // Fallback: busca case-insensitive em todas as chaves do objeto
   if (!imageUrl) {
     const todasChaves = Object.keys(data);
     const chaveImage = todasChaves.find(k => k.toLowerCase() === 'imageurl');
@@ -34,7 +69,7 @@ const formatarProduto = (data: any): Produto => {
     }
   }
   
-  // Debug: logar apenas produtos sem imagem (para não poluir o console)
+  // Log de debug para produtos sem imagem (ajuda na manutenção)
   if (data.id && !imageUrl) {
     console.warn('⚠️ Produto sem imageUrl:', {
       id: data.id,
@@ -44,10 +79,11 @@ const formatarProduto = (data: any): Produto => {
     });
   }
   
+  // Retorna produto formatado conforme interface TypeScript
   return {
     id: data.id,
     name: data.name,
-    description: data.description || undefined,
+    description: data.description || undefined, // null → undefined
     price: typeof data.price === 'string' ? parseFloat(data.price) : data.price,
     imageUrl: imageUrl,
     rating: typeof data.rating === 'string' ? parseFloat(data.rating) : data.rating,

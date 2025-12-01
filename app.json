@@ -1,47 +1,81 @@
 {
+  // Configuração principal do aplicativo Expo
   "expo": {
+    // Nome do app como aparecerá no dispositivo
     "name": "cardap.io",
+    // Identificador único do projeto (usado em URLs e deployments)
     "slug": "cardap.io",
+    // Versão atual do aplicativo
     "version": "1.0.0",
+    // Orientação da tela: portrait (vertical), landscape (horizontal) ou default
     "orientation": "portrait",
+    // Caminho para o ícone do app (usado para gerar ícones de diferentes tamanhos)
     "icon": "./assets/images/icon.png",
+    // Esquema de URL para deep linking (ex: cardapio://alguma-rota)
     "scheme": "cardapio",
+    // Tema da interface: light, dark ou automatic (segue sistema)
     "userInterfaceStyle": "automatic",
+    // Habilita a nova arquitetura React Native (Fabric + TurboModules)
     "newArchEnabled": true,
+    // Configurações específicas para iOS
     "ios": {
+      // Suporte para tablets iPad
       "supportsTablet": true
     },
+    // Configurações específicas para Android
     "android": {
+      // Ícone adaptativo (se ajusta ao tema/formato do launcher)
       "adaptiveIcon": {
+        // Cor de fundo do ícone
         "backgroundColor": "#E6F4FE",
+        // Imagem principal do ícone
         "foregroundImage": "./assets/images/android-icon-foreground.png",
+        // Imagem de fundo do ícone
         "backgroundImage": "./assets/images/android-icon-background.png",
+        // Versão monocromática (para temas especiais)
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
+      // Permite tela cheia (edge-to-edge)
       "edgeToEdgeEnabled": true,
+      // Desabilita gesto de voltar preditivo do Android 14+
       "predictiveBackGestureEnabled": false
     },
+    // Configurações para versão web
     "web": {
+      // Tipo de output: static (arquivos estáticos) ou single (SPA)
       "output": "static",
+      // Ícone que aparece na aba do navegador
       "favicon": "./assets/images/favicon.png"
     },
+    // Plugins do Expo que estendem funcionalidades
     "plugins": [
+      // Plugin de roteamento baseado em arquivos
       "expo-router",
       [
+        // Plugin de tela de splash (loading inicial)
         "expo-splash-screen",
         {
+          // Imagem exibida na splash screen
           "image": "./assets/images/splash-icon.png",
+          // Largura da imagem em pixels
           "imageWidth": 200,
+          // Como a imagem se ajusta: contain, cover, stretch
           "resizeMode": "contain",
+          // Cor de fundo no modo claro
           "backgroundColor": "#ffffff",
+          // Configurações para modo escuro
           "dark": {
+            // Cor de fundo no modo escuro
             "backgroundColor": "#000000"
           }
         }
       ]
     ],
+    // Recursos experimentais em desenvolvimento
     "experiments": {
+      // Roteamento com tipos TypeScript automáticos
       "typedRoutes": true,
+      // Compilador React otimizado
       "reactCompiler": true
     }
   }

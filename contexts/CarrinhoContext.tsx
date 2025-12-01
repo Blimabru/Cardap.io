@@ -1,46 +1,83 @@
 /**
- * Context do Carrinho
+ * ============================================================================
+ * CARRINHOCONTEXT.TSX - CONTEXT DE GERENCIAMENTO DO CARRINHO
+ * ============================================================================
  * 
- * Gerencia itens do carrinho de compras
+ * Este context gerencia todo o estado global do carrinho de compras.
+ * 
+ * RESPONSABILIDADES:
+ * - Adicionar/remover produtos do carrinho
+ * - Atualizar quantidades e observações
+ * - Calcular totais (quantidade e valor)
+ * - Persistir carrinho no AsyncStorage
+ * - Limpar carrinho após finalizar pedido
+ * 
+ * FUNCIONALIDADES:
+ * - Estado global acessível em toda a aplicação
+ * - Persistência automática (não perde dados ao fechar app)
+ * - Validações de quantidade e duplicatas
+ * - Cálculos automáticos de subtotal
+ * - Loading state para sincronização
+ * 
+ * USO:
+ * const { adicionarAoCarrinho, itens, valorSubtotal } = useCarrinho();
+ * 
+ * FLUXO TÍPICO:
+ * 1. Usuário adiciona produto → adicionarAoCarrinho()
+ * 2. Context atualiza estado e salva no AsyncStorage
+ * 3. Componentes re-renderizam com novos dados
+ * 4. Usuário finaliza pedido → limparCarrinho()
  */
 
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+// Tipos TypeScript do projeto
 import { ItemCarrinho, Produto } from '../types';
+// AsyncStorage para persistir carrinho localmente
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// Chave para salvar/carregar carrinho do AsyncStorage
 const CHAVE_CARRINHO = '@cardapio:carrinho';
 
+// Interface que define todas as funções e dados disponíveis via context
 interface CarrinhoContextData {
-  itens: ItemCarrinho[];
-  quantidadeTotal: number;
-  valorSubtotal: number;
+  // Estado do carrinho
+  itens: ItemCarrinho[]; // Lista de itens no carrinho
+  quantidadeTotal: number; // Soma de todas as quantidades
+  valorSubtotal: number; // Valor total dos itens
+  carregando: boolean; // Estado de loading inicial
+  
+  // Funções de manipulação
   adicionarAoCarrinho: (produto: Produto, quantidade?: number, observacoes?: string) => void;
   removerDoCarrinho: (produtoId: string) => void;
   atualizarQuantidade: (produtoId: string, quantidade: number) => void;
   atualizarObservacoes: (produtoId: string, observacoes: string) => void;
   limparCarrinho: () => void;
-  carregando: boolean;
 }
 
+// Context criado com valor padrão vazio
 const CarrinhoContext = createContext<CarrinhoContextData>({} as CarrinhoContextData);
 
+// Props do provider
 interface CarrinhoProviderProps {
-  children: ReactNode;
+  children: ReactNode; // Componentes filhos que terão acesso ao context
 }
 
 export const CarrinhoProvider: React.FC<CarrinhoProviderProps> = ({ children }) => {
-  const [itens, setItens] = useState<ItemCarrinho[]>([]);
-  const [carregando, setCarregando] = useState(true);
+  // Estados locais do context
+  const [itens, setItens] = useState<ItemCarrinho[]>([]); // Lista de itens
+  const [carregando, setCarregando] = useState(true); // Loading inicial
 
   /**
-   * Carrega carrinho do AsyncStorage ao iniciar
+   * Efeito executado uma vez ao montar o provider
+   * Carrega carrinho salvo do AsyncStorage
    */
   useEffect(() => {
     carregarCarrinho();
   }, []);
 
   /**
-   * Salva carrinho no AsyncStorage sempre que mudar
+   * Efeito executado sempre que itens mudam
+   * Salva carrinho automaticamente no AsyncStorage (exceto durante loading inicial)
    */
   useEffect(() => {
     if (!carregando) {
