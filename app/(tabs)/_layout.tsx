@@ -38,14 +38,15 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         // Cor dos ícones/texto quando tab está ativa
-        tabBarActiveTintColor: '#333',
+        tabBarActiveTintColor: '#fcfcfcff',
         // Cor dos ícones/texto quando tab está inativa
-        tabBarInactiveTintColor: '#999',
+        tabBarInactiveTintColor: '#070707ff',
         // Estilo da barra de tabs
         tabBarStyle: {
           height: 60, // Altura da barra de tabs
           paddingBottom: 8, // Espaçamento inferior
           paddingTop: 8, // Espaçamento superior
+          backgroundColor: '#F59930',
         },
         // Estilo do texto dos labels das tabs
         tabBarLabelStyle: {
@@ -54,7 +55,7 @@ export default function TabLayout() {
         },
         // Estilo do header (cabeçalho) de cada tela
         headerStyle: {
-          backgroundColor: '#FFF',
+          backgroundColor: '#F59930',
         },
         // Estilo do título no header
         headerTitleStyle: {

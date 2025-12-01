@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   categoryButton: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#F3E9B5',
     borderRadius: 20,
     paddingVertical: 8,
     paddingHorizontal: 16,
@@ -81,15 +81,15 @@ const styles = StyleSheet.create({
     minWidth: 60,
   },
   categoryButtonActive: {
-    backgroundColor: '#333333',
+    backgroundColor: '#efb20dff',
   },
   categoryText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#555',
+    color: '#000000ff',
   },
   categoryTextActive: {
-    color: '#FFFFFF',
+    color: '#000000ff',
   },
 });
 

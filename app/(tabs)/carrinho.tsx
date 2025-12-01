@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   finalizarButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#E95322',
     borderRadius: 8,
     paddingVertical: 16,
     alignItems: 'center',

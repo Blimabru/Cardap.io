@@ -48,7 +48,7 @@ const HomeHeader = () => {
     <View style={styles.header}>
       {/* Logo do aplicativo Cardap.io */}
       <Image
-        source={require('../assets/images/Logo.png')} // Logo local do projeto
+        source={require('../assets/images/Logobranca.png')} // Logo local do projeto
         style={styles.logo}
         resizeMode="contain" // Mantém proporção da imagem
       />
@@ -85,6 +85,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingTop: 10,
     paddingBottom: 5,
+    backgroundColor: '#F59930',
   },
   logo: {
     width: 180,
