@@ -56,4 +56,4 @@ EXPOSE 9500
 # npx expo start --web: Inicia o app na versão web
 # --port 9500: Define porta específica
 # --host 0.0.0.0: Permite conexões de qualquer IP (não apenas localhost)
-CMD ["npx", "expo", "start", "--web", "--port", "9500", "--host", "0.0.0.0"]
+CMD ["npx", "expo", "start", "--web", "--port", "9500", "--host", "lan"]
