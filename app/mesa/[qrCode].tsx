@@ -57,10 +57,12 @@ function MesaCardapioContent() {
   const subtitleFontSize = isSmallScreen ? 12 : isMediumScreen ? 13 : 14;
   const bodyFontSize = isSmallScreen ? 14 : isMediumScreen ? 16 : 18;
   
-  // Cálculo de largura dos cards (2 colunas com espaçamento)
-  const numColumns = 2;
-  const cardSpacing = isSmallScreen ? 6 : isMediumScreen ? 8 : 10;
-  const cardWidth = (screenWidth - (horizontalPadding * 2) - cardSpacing) / numColumns;
+  // Cálculo de largura dos cards (1 coluna em telas pequenas, 2 em médias/grandes)
+  const numColumns = isSmallScreen ? 1 : 2;
+  const cardSpacing = isSmallScreen ? 0 : isMediumScreen ? 8 : 10;
+  const cardWidth = isSmallScreen 
+    ? screenWidth - (horizontalPadding * 2) // 100% da largura disponível em telas pequenas
+    : (screenWidth - (horizontalPadding * 2) - cardSpacing) / numColumns; // 2 colunas em telas maiores
   
   const { 
     itens, 
@@ -356,12 +358,15 @@ function MesaCardapioContent() {
   };
 
   const renderItem = ({ item, index }: { item: Produto; index: number }) => {
-    // Aplicar marginRight apenas no primeiro item de cada linha (índice par)
-    const isFirstInRow = index % 2 === 0;
+    // Aplicar marginRight apenas no primeiro item de cada linha quando tiver 2 colunas
+    const isFirstInRow = numColumns === 2 && index % 2 === 0;
     return (
       <View style={{ 
-        width: cardWidth, 
+        width: cardWidth,
+        maxWidth: cardWidth, // Garantir que não ultrapasse a largura calculada
         marginRight: isFirstInRow ? cardSpacing : 0,
+        marginBottom: 15, // Espaçamento vertical consistente
+        flexShrink: 0, // Não encolher
       }}>
         <ItemCard item={item} onAddToCart={() => handleAddToCart(item)} />
       </View>
@@ -452,8 +457,8 @@ function MesaCardapioContent() {
         data={filteredProducts}
         renderItem={({ item, index }) => renderItem({ item, index })}
         keyExtractor={(item) => item.id}
-        numColumns={2}
-        key="two-columns"
+        numColumns={numColumns}
+        key={numColumns === 1 ? 'one-column' : 'two-columns'}
         ListHeaderComponent={renderListHeader}
         ListEmptyComponent={() => (
           <View style={dynamicStyles.emptyContainer}>
@@ -462,7 +467,7 @@ function MesaCardapioContent() {
           </View>
         )}
         contentContainerStyle={dynamicStyles.listContainer}
-        columnWrapperStyle={dynamicStyles.columnWrapper}
+        columnWrapperStyle={numColumns > 1 ? dynamicStyles.columnWrapper : undefined}
         showsVerticalScrollIndicator={false}
         onRefresh={fetchData}
         refreshing={loading}

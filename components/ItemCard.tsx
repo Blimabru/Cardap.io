@@ -135,6 +135,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     marginBottom: 15,
+    overflow: 'hidden', // Garantir que nada ultrapasse os limites
     // Sombra - usar boxShadow no web para evitar warning
     ...Platform.select({
       web: {
@@ -192,12 +193,14 @@ const styles = StyleSheet.create({
     padding: Platform.OS === 'web' ? 15 : 12, // Aumentado de 10 para 12 no mobile
     minHeight: Platform.OS === 'web' ? 80 : 70, // Aumentado de 60 para 70 no mobile
     flexShrink: 0, // Garantir que não encolha
+    width: '100%', // Garantir que ocupe toda a largura disponível
   },
   itemName: {
     fontSize: Platform.OS === 'web' ? 16 : 14,
     fontWeight: '600',
     color: '#333',
     marginBottom: 4,
+    width: '100%', // Garantir que ocupe toda a largura
   },
   itemPrice: {
     fontSize: Platform.OS === 'web' ? 18 : 15,

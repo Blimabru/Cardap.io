@@ -39,6 +39,7 @@ import {
   StyleSheet, // Estilos otimizados
   Text, // Container básico
   TouchableOpacity, // Componente de texto
+  useWindowDimensions, // Hook para dimensões da tela
   View, // Container básico
 } from 'react-native';
 // Ícones Material Design
@@ -63,10 +64,22 @@ import SearchBar from '../../components/SearchBar'; // Barra de busca
 const HomeScreen = () => {
   // Hook de navegação para mudanças de tela
   const router = useRouter();
+  // Dimensões da tela para layout responsivo
+  const { width: screenWidth } = useWindowDimensions();
   // Função do contexto para adicionar produtos ao carrinho
   const { adicionarAoCarrinho } = useCarrinho();
   // Estado de autenticação do usuário
   const { autenticado, usuario } = useAuth();
+  
+  // Cálculo de largura dos cards baseado na plataforma e tamanho da tela
+  const isWeb = Platform.OS === 'web';
+  const numColumns = 2;
+  const horizontalPadding = isWeb ? 40 : 10;
+  const cardSpacing = isWeb ? 20 : 10;
+  // Largura máxima do container no web (para centralizar conteúdo)
+  const maxContainerWidth = isWeb ? Math.min(1200, screenWidth) : screenWidth;
+  // Largura de cada card (2 colunas com espaçamento)
+  const cardWidth = (maxContainerWidth - (horizontalPadding * 2) - cardSpacing) / numColumns;
 
   // Estados locais da tela
   const [products, setProducts] = useState<Produto[]>([]); // Lista completa de produtos
@@ -184,11 +197,24 @@ const HomeScreen = () => {
    * Render function para cada item da FlatList
    * 
    * @param item - Produto a ser renderizado
-   * @returns Component ItemCard configurado
+   * @param index - Índice do item na lista
+   * @returns Component ItemCard configurado com wrapper de largura controlada
    */
-  const renderItem = ({ item }: { item: Produto }) => (
-    <ItemCard item={item} onAddToCart={() => handleAddToCart(item)} />
-  );
+  const renderItem = ({ item, index }: { item: Produto; index: number }) => {
+    // Aplicar marginRight apenas no primeiro item de cada linha (índice par)
+    const isFirstInRow = index % 2 === 0;
+    return (
+      <View style={{ 
+        width: cardWidth,
+        maxWidth: cardWidth, // Garantir que não ultrapasse a largura calculada
+        marginRight: isFirstInRow ? cardSpacing : 0,
+        marginBottom: 15, // Espaçamento vertical consistente
+        flexShrink: 0, // Não encolher
+      }}>
+        <ItemCard item={item} onAddToCart={() => handleAddToCart(item)} />
+      </View>
+    );
+  };
 
   /**
    * Componente header da lista (renderizado no topo da FlatList)
@@ -312,8 +338,9 @@ const styles = StyleSheet.create({
   // Espaçamento entre colunas da FlatList (quando numColumns=2)
   columnWrapper: {
     justifyContent: Platform.OS === 'web' ? 'center' : 'space-between',
-    // Gap entre cards (suporte melhor na web)
-    gap: Platform.OS === 'web' ? 20 : 10,
+    paddingHorizontal: 0, // Remover padding horizontal do wrapper
+    marginHorizontal: 0, // Remover margin horizontal do wrapper
+    flexWrap: 'wrap', // Permitir quebra de linha se necessário
   },
   // Container do título da seção com botão de limpar filtros
   titleContainer: {
