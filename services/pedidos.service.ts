@@ -83,26 +83,54 @@ const formatarPedido = (data: any): Pedido => {
  * Cria novo pedido com transação
  */
 export const criarPedido = async (dados: CriarPedidoDto): Promise<Pedido> => {
+  console.log('🚀 INÍCIO: Criar pedido', JSON.stringify({
+    tem_id_mesa: !!dados.id_mesa,
+    id_mesa: dados.id_mesa,
+    quantidade_itens: dados.itens.length,
+    tipo_pedido: dados.tipo_pedido,
+  }, null, 2));
+
   // 1. Obter usuário autenticado (se não for pedido por mesa)
   let userId: string | null = null;
   
   if (!dados.id_mesa) {
     // Pedido normal requer autenticação
-    const { data: { user } } = await supabase.auth.getUser();
+    console.log('🔐 Verificando autenticação para pedido normal...');
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError) {
+      console.error('❌ Erro ao verificar usuário:', JSON.stringify(userError, null, 2));
+    }
+    
     if (!user) {
       throw new Error('Usuário não autenticado. Para fazer pedidos sem login, você precisa estar em uma mesa (via QR code).');
     }
     userId = user.id;
+    console.log('✅ Usuário autenticado:', JSON.stringify({ user_id: userId }, null, 2));
   } else {
-    // Para pedidos de mesa, garantir que não há sessão inválida
-    // Se houver sessão inválida, pode causar erro 401
-    const { data: { session } } = await supabase.auth.getSession();
+    // Para pedidos de mesa, verificar se há sessão (opcional)
+    console.log('🔍 Verificando sessão para pedido de mesa...');
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError) {
+      console.warn('⚠️ Erro ao verificar sessão (pode ser normal para anon):', JSON.stringify(sessionError, null, 2));
+    }
+    
     if (session) {
       // Se há sessão, usar o usuário da sessão (opcional para pedidos de mesa)
-      const { data: { user } } = await supabase.auth.getUser();
+      console.log('📝 Sessão encontrada, verificando usuário...');
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError) {
+        console.warn('⚠️ Erro ao obter usuário da sessão:', JSON.stringify(userError, null, 2));
+      }
+      
       if (user) {
         userId = user.id; // Opcional: pode associar pedido de mesa ao usuário se estiver logado
+        console.log('✅ Usuário da sessão será associado ao pedido:', JSON.stringify({ user_id: userId }, null, 2));
       }
+    } else {
+      console.log('ℹ️ Nenhuma sessão encontrada - pedido será anônimo');
     }
     // Se não há sessão, userId fica null (pedido anônimo permitido)
   }
@@ -116,6 +144,13 @@ export const criarPedido = async (dados: CriarPedidoDto): Promise<Pedido> => {
   // Para pedidos de mesa anônimos, usar client anon também para buscar produtos
   const clientParaProdutos = (dados.id_mesa && !userId) ? supabaseAnon : supabase;
   const produtosIds = dados.itens.map(item => item.id_produto);
+  
+  console.log('🛒 Buscando produtos:', JSON.stringify({
+    quantidade_produtos: produtosIds.length,
+    produtos_ids: produtosIds,
+    cliente: clientParaProdutos === supabaseAnon ? 'anon' : 'authenticated',
+  }, null, 2));
+  
   const { data: produtos, error: produtosError } = await clientParaProdutos
     .from('products')
     .select('id, price')
@@ -139,6 +174,7 @@ export const criarPedido = async (dados: CriarPedidoDto): Promise<Pedido> => {
   }
 
   // 3. Calcular totais
+  console.log('💰 Calculando totais do pedido...');
   let subtotal = 0;
   const itensComPreco = dados.itens.map(item => {
     const produto = produtos.find(p => p.id === item.id_produto);
@@ -158,26 +194,49 @@ export const criarPedido = async (dados: CriarPedidoDto): Promise<Pedido> => {
   const taxaEntrega = dados.taxa_entrega || 0;
   const taxaServico = subtotal * 0.1; // 10% de taxa de serviço
   const total = subtotal + taxaEntrega + taxaServico;
+  
+  console.log('💰 Totais calculados:', JSON.stringify({
+    subtotal,
+    taxa_entrega: taxaEntrega,
+    taxa_servico: taxaServico,
+    total,
+  }, null, 2));
 
   // 4. Criar pedido
   // Log para debug: verificar se está tentando criar pedido de mesa sem autenticação
-  if (dados.id_mesa && !userId) {
-    console.log('📝 Criando pedido de mesa (anon):', {
+  const isPedidoAnonimo = dados.id_mesa && !userId;
+  
+  if (isPedidoAnonimo) {
+    console.log('📝 Criando pedido de mesa (anon):', JSON.stringify({
       id_mesa: dados.id_mesa,
       quantidade_itens: dados.itens.length,
-    });
+    }, null, 2));
     
-    // Para pedidos anônimos, garantir que não há sessão interferindo
-    // Limpar qualquer sessão existente no client anon
+    // ISOLAMENTO CRÍTICO: Garantir que não há sessão interferindo
+    // Limpar qualquer sessão existente no client anon ANTES de usar
+    console.log('🔒 Limpando sessão do supabaseAnon...');
     try {
       await supabaseAnon.auth.signOut();
+      console.log('✅ Sessão do supabaseAnon limpa');
     } catch (e) {
-      // Ignorar erros ao limpar sessão
+      console.warn('⚠️ Erro ao limpar sessão do supabaseAnon (pode ser normal):', JSON.stringify(e, null, 2));
+    }
+    
+    // Verificar se há sessão no supabase principal que possa interferir
+    const { data: sessionPrincipal } = await supabase.auth.getSession();
+    if (sessionPrincipal?.session) {
+      console.warn('⚠️ ATENÇÃO: Há sessão no supabase principal, mas usando supabaseAnon para pedido anônimo');
     }
   }
 
   // Usar client anon para pedidos de mesa sem usuário, client normal caso contrário
-  const client = (dados.id_mesa && !userId) ? supabaseAnon : supabase;
+  const client = isPedidoAnonimo ? supabaseAnon : supabase;
+  
+  console.log('🔧 Cliente selecionado:', JSON.stringify({
+    tipo: client === supabaseAnon ? 'anon' : 'authenticated',
+    id_mesa: dados.id_mesa,
+    tem_user_id: !!userId,
+  }, null, 2));
 
   const { data: pedido, error: pedidoError } = await client
     .from('pedidos')
@@ -219,11 +278,46 @@ export const criarPedido = async (dados: CriarPedidoDto): Promise<Pedido> => {
     throw new Error(`${mensagemErro} (Código: ${codigoErro})`);
   }
 
-  console.log('✅ Pedido criado com sucesso:', {
+  console.log('✅ Pedido criado com sucesso:', JSON.stringify({
     id: pedido.id,
     id_mesa: pedido.id_mesa,
     id_usuario: pedido.id_usuario,
-  });
+    status: pedido.status,
+    total: pedido.total,
+  }, null, 2));
+
+  // 4.1. VALIDAÇÃO CRÍTICA: Verificar se pedido realmente existe no banco
+  // Isso garante que o INSERT foi bem-sucedido e o pedido está persistido
+  console.log('🔍 Validando se pedido existe no banco...');
+  const { data: pedidoVerificado, error: erroVerificacao } = await client
+    .from('pedidos')
+    .select('id, id_mesa, id_usuario, status')
+    .eq('id', pedido.id)
+    .single();
+
+  if (erroVerificacao || !pedidoVerificado) {
+    const erroSerializado = JSON.stringify({
+      error: erroVerificacao ? {
+        message: erroVerificacao.message,
+        code: erroVerificacao.code,
+        details: erroVerificacao.details,
+        hint: erroVerificacao.hint,
+      } : null,
+      id_pedido_criado: pedido.id,
+      cliente: client === supabaseAnon ? 'anon' : 'authenticated',
+      problema: 'Pedido não encontrado após criação',
+    }, null, 2);
+    
+    console.error('❌ ERRO CRÍTICO: Pedido não existe no banco após criação!', erroSerializado);
+    throw new Error(`Falha ao criar pedido: pedido não foi persistido no banco de dados. (Código: ${erroVerificacao?.code || 'NOT_FOUND'})`);
+  }
+
+  console.log('✅ Validação: Pedido confirmado no banco:', JSON.stringify({
+    id: pedidoVerificado.id,
+    id_mesa: pedidoVerificado.id_mesa,
+    id_usuario: pedidoVerificado.id_usuario,
+    status: pedidoVerificado.status,
+  }, null, 2));
 
   // 5. Criar itens do pedido
   const itensParaInserir = itensComPreco.map(item => ({
@@ -236,6 +330,12 @@ export const criarPedido = async (dados: CriarPedidoDto): Promise<Pedido> => {
   }));
 
   // Usar o mesmo client (anon ou normal) para criar itens
+  console.log('📦 Criando itens do pedido:', JSON.stringify({
+    quantidade_itens: itensParaInserir.length,
+    id_pedido: pedido.id,
+    cliente: client === supabaseAnon ? 'anon' : 'authenticated',
+  }, null, 2));
+  
   const { error: itensError } = await client
     .from('itens_pedido')
     .insert(itensParaInserir);
@@ -268,7 +368,59 @@ export const criarPedido = async (dados: CriarPedidoDto): Promise<Pedido> => {
   // 6. Buscar pedido completo com relacionamentos
   // IMPORTANTE: Usar o mesmo cliente (anon ou normal) para buscar o pedido
   // Isso garante que as RLS policies permitam a leitura
-  return await buscarPedidoPorIdComCliente(pedido.id, client);
+  console.log('🔍 Buscando pedido completo com relacionamentos...');
+  
+  try {
+    const pedidoCompleto = await buscarPedidoPorIdComCliente(pedido.id, client);
+    console.log('✅ Pedido completo buscado com sucesso:', JSON.stringify({
+      id: pedidoCompleto.id,
+      quantidade_itens: pedidoCompleto.itens?.length || 0,
+      tem_mesa: !!pedidoCompleto.mesa,
+      tem_usuario: !!pedidoCompleto.usuario,
+    }, null, 2));
+    return pedidoCompleto;
+  } catch (erroBusca: any) {
+    // Se buscar pedido completo falhar, retornar pedido básico formatado
+    // Isso evita que um erro na busca faça o pedido parecer não criado
+    console.warn('⚠️ Erro ao buscar pedido completo, retornando pedido básico:', JSON.stringify({
+      error: {
+        message: erroBusca?.message,
+        code: erroBusca?.code,
+      },
+      id_pedido: pedido.id,
+      cliente: client === supabaseAnon ? 'anon' : 'authenticated',
+    }, null, 2));
+    
+    // Retornar pedido básico formatado manualmente
+    // Isso garante que a função sempre retorna um Pedido válido
+    const pedidoBasico: Pedido = {
+      id: pedido.id,
+      numero_pedido: pedido.numero_pedido || 0,
+      status: pedido.status as StatusPedido,
+      tipo_pedido: pedido.tipo_pedido as any,
+      subtotal: pedido.subtotal,
+      taxa_entrega: pedido.taxa_entrega,
+      taxa_servico: pedido.taxa_servico,
+      total: pedido.total,
+      observacoes: pedido.observacoes || undefined,
+      endereco_entrega: pedido.endereco_entrega || undefined,
+      id_mesa: pedido.id_mesa || undefined,
+      status_pagamento: pedido.status_pagamento || undefined,
+      mesa: undefined, // Não foi possível buscar relacionamento
+      usuario: undefined, // Não foi possível buscar relacionamento
+      itens: [], // Itens serão buscados separadamente se necessário
+      data_criacao: pedido.data_criacao || new Date().toISOString(),
+      data_atualizacao: pedido.data_atualizacao || new Date().toISOString(),
+    };
+    
+    console.log('✅ Retornando pedido básico (sem relacionamentos):', JSON.stringify({
+      id: pedidoBasico.id,
+      id_mesa: pedidoBasico.id_mesa,
+      total: pedidoBasico.total,
+    }, null, 2));
+    
+    return pedidoBasico;
+  }
 };
 
 /**
@@ -352,6 +504,12 @@ const buscarPedidoPorIdComCliente = async (
   id: string, 
   cliente: SupabaseClient
 ): Promise<Pedido> => {
+  const tipoCliente = cliente === supabaseAnon ? 'anon' : 'authenticated';
+  console.log('🔍 Buscando pedido por ID:', JSON.stringify({
+    id_pedido: id,
+    cliente: tipoCliente,
+  }, null, 2));
+
   const { data, error } = await cliente
     .from('pedidos')
     .select(`
@@ -382,12 +540,20 @@ const buscarPedidoPorIdComCliente = async (
         hint: error.hint,
       } : null,
       id_pedido: id,
-      cliente: cliente === supabaseAnon ? 'anon' : 'authenticated',
+      cliente: tipoCliente,
+      problema: error ? 'Erro na query' : 'Dados não retornados',
     }, null, 2);
     
     console.error('❌ Erro ao buscar pedido por ID:', erroSerializado);
     throw new Error(error?.message || 'Pedido não encontrado');
   }
+
+  console.log('✅ Pedido encontrado:', JSON.stringify({
+    id: data.id,
+    id_mesa: data.id_mesa,
+    id_usuario: data.id_usuario,
+    quantidade_itens: data.itens?.length || 0,
+  }, null, 2));
 
   return formatarPedido(data);
 };
