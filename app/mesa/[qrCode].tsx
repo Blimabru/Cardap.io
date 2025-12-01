@@ -90,11 +90,12 @@ function MesaCardapioContent() {
       
       const mesa = await qrcodeService.validarQRCode(qrCode);
       
-      console.log('✅ Mesa validada:', {
+      console.log('✅ Mesa validada:', JSON.stringify({
         id: mesa.id,
         numero: mesa.numero,
         status: mesa.status,
-      });
+        qr_code: mesa.qr_code,
+      }, null, 2));
       
       setMesaValidada(mesa);
       // Definir mesa no contexto
@@ -197,24 +198,33 @@ function MesaCardapioContent() {
 
     setEnviandoPedido(true);
     try {
-      console.log('📝 Iniciando criação de pedido:', {
+      const dadosPedido = {
         id_mesa: idMesa,
         quantidade_itens: itens.length,
         mesa_numero: mesaValidada?.numero,
-      });
-
-      await pedidosService.criarPedido({
         itens: itens.map((item) => ({
           id_produto: item.produto.id,
           quantidade: item.quantidade,
           observacoes: item.observacoes,
         })),
+      };
+      
+      console.log('📝 Iniciando criação de pedido:', JSON.stringify(dadosPedido, null, 2));
+
+      const pedidoCriado = await pedidosService.criarPedido({
+        itens: dadosPedido.itens,
         tipo_pedido: TipoPedido.LOCAL,
         id_mesa: idMesa,
         observacoes: observacoesPedido || undefined,
       });
 
-      console.log('✅ Pedido criado com sucesso');
+      console.log('✅ Pedido criado com sucesso:', JSON.stringify({
+        id: pedidoCriado.id,
+        id_mesa: pedidoCriado.id_mesa,
+        id_usuario: pedidoCriado.id_usuario,
+        status: pedidoCriado.status,
+        total: pedidoCriado.total,
+      }, null, 2));
 
       limparCarrinho();
       setObservacoesPedido('');
