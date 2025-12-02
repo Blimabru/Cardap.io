@@ -1,43 +1,107 @@
 /**
- * Tela de Pedidos
+ * ============================================================================
+ * PEDIDOS.TSX - TELA DE LISTAGEM DE PEDIDOS
+ * ============================================================================
  * 
- * Lista pedidos do usuário autenticado
+ * Esta tela exibe a lista de pedidos do usuário autenticado ou todos os pedidos
+ * (se for Admin/Dono).
+ * 
+ * FUNCIONALIDADES PRINCIPAIS:
+ * - Lista pedidos do usuário autenticado
+ * - Lista todos os pedidos (se Admin/Dono)
+ * - Exibe informações detalhadas de cada pedido
+ * - Permite cancelar pedidos (se status permitir)
+ * - Permite atualizar status (apenas Admin/Dono)
+ * - Pull-to-refresh para atualizar lista
+ * - Modal para seleção de novo status
+ * - Exibe número da mesa para pedidos de mesa
+ * 
+ * COMPORTAMENTO CONDICIONAL:
+ * - Usuário comum: vê apenas seus próprios pedidos
+ * - Admin/Dono: vê todos os pedidos + pode atualizar status
+ * - Usuário não logado: exibe mensagem para fazer login
+ * 
+ * FLUXO DE ATUALIZAÇÃO DE STATUS:
+ * 1. Admin/Dono clica no badge de status
+ * 2. Abre modal com opções de status
+ * 3. Seleciona novo status
+ * 4. Atualiza no backend
+ * 5. Atualiza lista de pedidos
+ * 
+ * ESTADO GERENCIADO:
+ * - pedidos: Lista de pedidos a serem exibidos
+ * - carregando: Estado de carregamento inicial
+ * - atualizando: Estado de atualização (pull-to-refresh)
+ * - modalStatusVisivel: Controla visibilidade do modal de status
+ * - pedidoSelecionado: Pedido selecionado para atualizar status
  */
 
+// Importação de ícones Material Design
 import { MaterialIcons as Icon } from '@expo/vector-icons';
+// Importação do hook de navegação do Expo Router
 import { useRouter } from 'expo-router';
+// Importação do React e hooks necessários
 import React, { useEffect, useState } from 'react';
+// Importação de componentes do React Native
 import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  Modal,
-  RefreshControl,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  useWindowDimensions,
-  View,
+  ActivityIndicator, // Componente de loading (spinner)
+  Alert, // Componente para exibir alertas/diálogos
+  FlatList, // Lista otimizada para muitos itens
+  Modal, // Componente de modal/overlay
+  RefreshControl, // Controle de pull-to-refresh
+  StyleSheet, // Utilitário para criar estilos otimizados
+  Text, // Componente de texto
+  TouchableOpacity, // Botão tocável com feedback visual
+  useWindowDimensions, // Hook para obter dimensões da janela/tela
+  View, // Container básico
 } from 'react-native';
+// Importação do contexto de autenticação
 import { useAuth } from '../../contexts/AuthContext';
+// Importação de funções do serviço de pedidos
 import { atualizarStatusPedido, cancelarPedido, corDoStatus, formatarStatus, listarMeusPedidos, listarTodosPedidos } from '../../services/pedidos.service';
+// Importação de tipos TypeScript
 import { Pedido, StatusPedido } from '../../types';
+// Importação do componente de header
 import HomeHeader from '../../components/HomeHeader';
 
+/**
+ * Componente principal da tela de pedidos
+ * 
+ * @returns JSX.Element - Renderiza a lista de pedidos
+ */
 export default function PedidosScreen() {
+  // ============================================================================
+  // HOOKS E VARIÁVEIS INICIAIS
+  // ============================================================================
+  // Hook de navegação para mudanças de tela
   const router = useRouter();
+  // Obtém a largura da tela para cálculos responsivos
   const { width: screenWidth } = useWindowDimensions();
+  // Estado de autenticação e permissões do usuário
   const { autenticado, podeGerenciar } = useAuth();
 
-  // Variáveis responsivas baseadas na largura da tela
+  // ============================================================================
+  // VARIÁVEIS RESPONSIVAS - Breakpoints para diferentes tamanhos de tela
+  // ============================================================================
+  // Telas pequenas: menor que 375px (ex: iPhone SE)
   const isSmallScreen = screenWidth < 375;
+  // Telas médias: entre 375px e 412px (ex: iPhone 12/13)
   const isMediumScreen = screenWidth >= 375 && screenWidth < 412;
+  // Telas grandes: 412px ou maior (ex: tablets, web)
   const isLargeScreen = screenWidth >= 412;
 
+  // ============================================================================
+  // ESTADOS LOCAIS - Gerenciam o estado da tela
+  // ============================================================================
+  // Lista de pedidos a serem exibidos
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
+  // Estado de carregamento inicial (enquanto busca pedidos pela primeira vez)
   const [carregando, setCarregando] = useState(true);
+  // Estado de atualização (durante pull-to-refresh)
   const [atualizando, setAtualizando] = useState(false);
+  // Controla se o modal de atualização de status está visível
   const [modalStatusVisivel, setModalStatusVisivel] = useState(false);
+  // Pedido selecionado para atualizar status (null = nenhum selecionado)
   const [pedidoSelecionado, setPedidoSelecionado] = useState<Pedido | null>(null);
 
   useEffect(() => {

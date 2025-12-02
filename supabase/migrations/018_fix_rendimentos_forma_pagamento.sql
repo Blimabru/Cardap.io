@@ -28,3 +28,4 @@ COMMENT ON COLUMN rendimentos.forma_pagamento IS 'Forma de pagamento: dinheiro, 
 -- FIM DA MIGRATION
 -- ============================================================================
 
+

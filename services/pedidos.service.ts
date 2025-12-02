@@ -1,15 +1,61 @@
 /**
- * Service de Pedidos
+ * ============================================================================
+ * PEDIDOS.SERVICE.TS - SERVIÇO DE GERENCIAMENTO DE PEDIDOS
+ * ============================================================================
  * 
- * Gerencia pedidos do sistema usando Supabase
+ * Este serviço gerencia todas as operações relacionadas a pedidos no sistema.
+ * 
+ * RESPONSABILIDADES:
+ * - Criar novos pedidos (com/sem mesa, autenticado/anônimo)
+ * - Listar pedidos (do usuário ou todos para admin)
+ * - Atualizar status de pedidos
+ * - Cancelar pedidos
+ * - Buscar pedidos por ID
+ * - Obter estatísticas de pedidos
+ * - Formatar dados do Supabase para tipos TypeScript
+ * 
+ * FUNCIONALIDADES PRINCIPAIS:
+ * 1. criarPedido: Cria pedido com transação (pedido + itens)
+ * 2. listarMeusPedidos: Lista pedidos do usuário autenticado
+ * 3. listarTodosPedidos: Lista todos os pedidos (apenas admin/dono)
+ * 4. atualizarStatusPedido: Atualiza status (pendente, em preparo, pronto, etc)
+ * 5. cancelarPedido: Cancela um pedido
+ * 6. buscarPedidoPorId: Busca pedido específico por ID
+ * 7. obterEstatisticas: Retorna estatísticas de pedidos
+ * 
+ * DIFERENÇA ENTRE SUPABASE E SUPABASEANON:
+ * - supabase: Cliente autenticado (requer login)
+ * - supabaseAnon: Cliente anônimo (para pedidos de mesa via QR code)
+ * 
+ * RLS (Row Level Security):
+ * - Políticas de segurança do Supabase controlam acesso
+ * - Usuários só veem seus próprios pedidos
+ * - Admin/Dono veem todos os pedidos
+ * - Anônimos podem criar pedidos de mesa
  */
 
+// Importação do tipo SupabaseClient do Supabase
 import { SupabaseClient } from '@supabase/supabase-js';
+// Importação dos clientes Supabase (autenticado e anônimo)
 import { supabase, supabaseAnon } from '../lib/supabase';
+// Importação de tipos TypeScript do projeto
 import { Pedido, CriarPedidoDto, StatusPedido, EstatisticasPedidos, ItemPedido, Usuario, Produto } from '../types';
 
 /**
- * Formata dados do Supabase para o tipo Pedido
+ * ============================================================================
+ * FUNÇÃO AUXILIAR: formatarPedido
+ * ============================================================================
+ * 
+ * Converte dados brutos do Supabase para o tipo Pedido do TypeScript.
+ * 
+ * Esta função é necessária porque:
+ * - Supabase retorna dados em formato diferente
+ * - Preços podem vir como string ou number
+ * - Relacionamentos (mesa, usuario, itens) precisam ser formatados
+ * - Valores nulos precisam ser tratados
+ * 
+ * @param data - Dados brutos retornados do Supabase
+ * @returns Pedido - Objeto formatado no tipo Pedido
  */
 const formatarPedido = (data: any): Pedido => {
   return {
