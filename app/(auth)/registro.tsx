@@ -1,43 +1,98 @@
 /**
- * Tela de Registro
+ * ============================================================================
+ * REGISTRO.TSX - TELA DE CADASTRO DE NOVOS USUÁRIOS
+ * ============================================================================
  * 
- * Permite que novos usuários se cadastrem como clientes
+ * Esta tela permite que novos usuários se cadastrem no sistema Cardap.io.
+ * 
+ * FUNCIONALIDADES:
+ * - Formulário de cadastro com campos: nome completo, email, telefone, senha
+ * - Validação de campos obrigatórios
+ * - Validação de confirmação de senha
+ * - Validação de tamanho mínimo de senha (6 caracteres)
+ * - Integração com contexto de autenticação (AuthContext)
+ * - Navegação para tela de login
+ * - Layout responsivo para diferentes tamanhos de tela
+ * - ScrollView para acomodar formulário em telas pequenas
+ * 
+ * FLUXO DE CADASTRO:
+ * 1. Usuário preenche todos os campos obrigatórios
+ * 2. Clica em "Criar Conta"
+ * 3. Sistema valida campos e senhas
+ * 4. Chama função registro() do AuthContext
+ * 5. Se sucesso: redireciona para tela principal (/(tabs))
+ * 6. Se erro: exibe mensagem de erro
+ * 
+ * ESTADO GERENCIADO:
+ * - nomeCompleto: string - Nome completo do usuário
+ * - email: string - Email do usuário
+ * - telefone: string - Telefone do usuário (opcional)
+ * - senha: string - Senha escolhida pelo usuário
+ * - confirmarSenha: string - Confirmação da senha
+ * - carregando: boolean - Indica se está processando o cadastro
  */
 
+// Importação do React e hooks necessários
 import React, { useState } from 'react';
+// Importação de componentes do React Native
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Image,
-  useWindowDimensions,
+  View, // Container básico
+  Text, // Componente de texto
+  TextInput, // Componente de input de texto
+  TouchableOpacity, // Botão tocável com feedback visual
+  StyleSheet, // Utilitário para criar estilos otimizados
+  Alert, // Componente para exibir alertas/diálogos
+  ActivityIndicator, // Componente de loading (spinner)
+  KeyboardAvoidingView, // Componente que ajusta layout quando teclado aparece
+  Platform, // Utilitário para detectar plataforma (iOS/Android/Web)
+  ScrollView, // Componente de scroll para conteúdo longo
+  Image, // Componente para exibir imagens
+  useWindowDimensions, // Hook para obter dimensões da janela/tela
 } from 'react-native';
+// Importação do hook de navegação do Expo Router
 import { useRouter } from 'expo-router';
+// Importação do contexto de autenticação
 import { useAuth } from '../../contexts/AuthContext';
 
+/**
+ * Componente principal da tela de registro
+ * 
+ * @returns JSX.Element - Renderiza a interface de cadastro
+ */
 export default function RegistroScreen() {
+  // Hook de navegação para mudar de tela após registro bem-sucedido
   const router = useRouter();
+  // Função de registro do contexto de autenticação
   const { registro } = useAuth();
+  // Obtém a largura da tela para cálculos responsivos
   const { width: screenWidth } = useWindowDimensions();
 
-  // Variáveis responsivas baseadas na largura da tela
+  // ============================================================================
+  // VARIÁVEIS RESPONSIVAS - Breakpoints para diferentes tamanhos de tela
+  // ============================================================================
+  // Telas pequenas: menor que 375px (ex: iPhone SE)
   const isSmallScreen = screenWidth < 375;
+  // Telas médias: entre 375px e 412px (ex: iPhone 12/13)
   const isMediumScreen = screenWidth >= 375 && screenWidth < 412;
+  // Telas grandes: 412px ou maior (ex: tablets, web)
   const isLargeScreen = screenWidth >= 412;
+  // Detecta se está rodando na web
   const isWeb = Platform.OS === 'web';
 
+  // ============================================================================
+  // ESTADOS LOCAIS - Gerenciam o estado do formulário
+  // ============================================================================
+  // Estado para armazenar o nome completo digitado pelo usuário
   const [nomeCompleto, setNomeCompleto] = useState('');
+  // Estado para armazenar o email digitado pelo usuário
   const [email, setEmail] = useState('');
+  // Estado para armazenar o telefone digitado pelo usuário (opcional)
   const [telefone, setTelefone] = useState('');
+  // Estado para armazenar a senha digitada pelo usuário
   const [senha, setSenha] = useState('');
+  // Estado para armazenar a confirmação da senha
   const [confirmarSenha, setConfirmarSenha] = useState('');
+  // Estado para controlar o loading durante o processo de registro
   const [carregando, setCarregando] = useState(false);
 
   // Função para criar estilos dinâmicos baseados no tamanho da tela
